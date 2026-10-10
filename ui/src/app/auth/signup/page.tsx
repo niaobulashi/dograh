@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function SignupPage() {
+  const t = useTranslations("Auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,12 +23,12 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      toast.error(t("passwordTooShort"));
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -39,7 +41,7 @@ export default function SignupPage() {
 
       if (res.error || !res.data) {
         const detail = (res.error as { detail?: string })?.detail;
-        toast.error(detail || "Signup failed");
+        toast.error(detail || t("signupFailed"));
         return;
       }
 
@@ -52,7 +54,7 @@ export default function SignupPage() {
 
       window.location.href = "/after-sign-in";
     } catch {
-      toast.error("An error occurred. Please try again.");
+      toast.error(t("genericError"));
     } finally {
       setLoading(false);
     }
@@ -61,28 +63,28 @@ export default function SignupPage() {
   return (
     <AuthShell enterpriseSlot={<AuthEnterpriseCTA />}>
       <div className="space-y-1.5 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-        <p className="text-sm text-muted-foreground">Enter your details to get started</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("signUpTitle")}</h1>
+        <p className="text-sm text-muted-foreground">{t("signUpSubtitle")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("emailLabel")}</Label>
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("passwordLabel")}</Label>
           <Input
             id="password"
             type="password"
-            placeholder="At least 8 characters"
+            placeholder={t("passwordHint")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -90,11 +92,11 @@ export default function SignupPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword">{t("confirmPasswordLabel")}</Label>
           <Input
             id="confirmPassword"
             type="password"
-            placeholder="Confirm your password"
+            placeholder={t("confirmPasswordPlaceholder")}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
@@ -102,14 +104,14 @@ export default function SignupPage() {
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating account..." : "Create account"}
+          {loading ? t("creatingAccount") : t("createAccountButton")}
         </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("alreadyHaveAccount")}{" "}
         <Link href="/auth/login" className="text-primary underline-offset-4 hover:underline">
-          Sign in
+          {t("signInButton")}
         </Link>
       </p>
     </AuthShell>

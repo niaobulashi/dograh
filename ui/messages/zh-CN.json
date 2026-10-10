@@ -1,0 +1,75 @@
+{
+  "LocaleSwitcher": {
+    "label": "语言"
+  },
+  "Common": {
+    "update": "更新",
+    "latest": "最新版",
+    "signOut": "退出登录",
+    "platformSettings": "平台设置",
+    "accountSettings": "账户设置",
+    "toggleTheme": "切换主题",
+    "hireExpert": "联系专家",
+    "goBack": "返回"
+  },
+  "Nav": {
+    "sections": {
+      "build": "构建",
+      "manage": "管理"
+    },
+    "overview": "总览",
+    "voiceAgents": "语音智能体",
+    "providers": "服务商",
+    "models": "模型",
+    "telephony": "电话线路",
+    "tools": "工具",
+    "credentials": "凭证",
+    "files": "文件",
+    "campaigns": "外呼任务",
+    "recordings": "录音",
+    "developers": "开发者",
+    "agentRuns": "运行记录",
+    "billing": "计费",
+    "reports": "报表"
+  },
+  "Sidebar": {
+    "latestTooltip": "最新版本：{version}，点击查看更新指引",
+    "isLatestTooltip": "你正在使用最新版本",
+    "actionRequired": "需要处理",
+    "telephonyWarningAria": "有电话线路配置需要处理"
+  },
+  "Auth": {
+    "brandHeadline": "开源的语音 AI 平台。",
+    "highlightSpeechToSpeech": "语音直连语音",
+    "highlightMcp": "原生支持 MCP",
+    "highlightByok": "自带密钥 · 任意模型",
+    "enterpriseTitle": "需要私有化部署、数据驻留与数据边界？",
+    "enterpriseBody": "我们可将 Dograh 部署在你的自有环境中，满足受监管与大规模团队的需求。",
+    "signInTitle": "登录",
+    "signInSubtitle": "输入邮箱和密码以继续",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "signInButton": "登录",
+    "signingIn": "登录中…",
+    "noAccount": "还没有账号？",
+    "signUp": "注册",
+    "signUpTitle": "创建账号",
+    "signUpSubtitle": "填写相关信息即可开始使用",
+    "confirmPasswordLabel": "确认密码",
+    "confirmPasswordPlaceholder": "请再次输入密码",
+    "passwordHint": "至少 8 个字符",
+    "createAccountButton": "创建账号",
+    "creatingAccount": "正在创建账号…",
+    "alreadyHaveAccount": "已有账号？",
+    "passwordTooShort": "密码至少需要 8 个字符",
+    "passwordsDoNotMatch": "两次输入的密码不一致",
+    "signupFailed": "注册失败",
+    "enterpriseCta": "企业咨询",
+    "localAuthModeTitle": "本地认证模式",
+    "localAuthModeBody": "使用本地认证方式时，Stack Auth 处理器已被禁用。",
+    "loginFailed": "登录失败",
+    "genericError": "出错了，请重试。"
+  }
+}

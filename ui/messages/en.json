@@ -1,0 +1,75 @@
+{
+  "LocaleSwitcher": {
+    "label": "Language"
+  },
+  "Common": {
+    "update": "Update",
+    "latest": "Latest",
+    "signOut": "Sign out",
+    "platformSettings": "Platform Settings",
+    "accountSettings": "Account settings",
+    "toggleTheme": "Toggle theme",
+    "hireExpert": "Hire an Expert",
+    "goBack": "Go Back"
+  },
+  "Nav": {
+    "sections": {
+      "build": "BUILD",
+      "manage": "MANAGE"
+    },
+    "overview": "Overview",
+    "voiceAgents": "Voice Agents",
+    "providers": "Providers",
+    "models": "Models",
+    "telephony": "Telephony",
+    "tools": "Tools",
+    "credentials": "Credentials",
+    "files": "Files",
+    "campaigns": "Campaigns",
+    "recordings": "Recordings",
+    "developers": "Developers",
+    "agentRuns": "Agent Runs",
+    "billing": "Billing",
+    "reports": "Reports"
+  },
+  "Sidebar": {
+    "latestTooltip": "Latest: {version} - click to see the update guide",
+    "isLatestTooltip": "You're running the latest release",
+    "actionRequired": "Action required",
+    "telephonyWarningAria": "Action required on a telephony configuration"
+  },
+  "Auth": {
+    "brandHeadline": "The open-source voice AI platform.",
+    "highlightSpeechToSpeech": "Speech-to-speech",
+    "highlightMcp": "MCP-native",
+    "highlightByok": "BYOK - any model",
+    "enterpriseTitle": "Need on-prem, data residency & a data perimeter?",
+    "enterpriseBody": "We deploy Dograh inside your environment for regulated and high-scale teams.",
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Enter your email and password to continue",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "signUpTitle": "Create an account",
+    "signUpSubtitle": "Enter your details to get started",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "passwordHint": "At least 8 characters",
+    "createAccountButton": "Create account",
+    "creatingAccount": "Creating account...",
+    "alreadyHaveAccount": "Already have an account?",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "signupFailed": "Signup failed",
+    "enterpriseCta": "Enterprise Enquiry",
+    "localAuthModeTitle": "Local Auth Mode",
+    "localAuthModeBody": "Stack Auth handler is disabled when using local authentication.",
+    "loginFailed": "Login failed",
+    "genericError": "An error occurred. Please try again."
+  }
+}

@@ -1,4 +1,5 @@
 import { StackHandler, StackTheme } from "@stackframe/stack";
+import { getTranslations } from "next-intl/server";
 
 import { AuthEnterpriseCTA } from "@/components/auth/AuthEnterpriseCTA";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -27,12 +28,13 @@ export default async function Handler(props: unknown) {
   const authProvider = await getAuthProvider();
 
   if (authProvider === "local") {
+    const t = await getTranslations("Auth");
     return (
       <AuthShell enterpriseSlot={<AuthEnterpriseCTA />}>
         <div className="space-y-2 text-center text-zinc-200">
-          <h1 className="text-xl font-semibold">Local Auth Mode</h1>
+          <h1 className="text-xl font-semibold">{t("localAuthModeTitle")}</h1>
           <p className="text-sm text-muted-foreground">
-            Stack Auth handler is disabled when using local authentication.
+            {t("localAuthModeBody")}
           </p>
         </div>
       </AuthShell>
