@@ -1,0 +1,13 @@
+# 换行符约定 —— 防止 Windows 检出把 Linux 脚本写成 CRLF
+#
+# 背景：本机 git 全局配置 core.autocrlf=true，会在检出时把所有文本文件写成 CRLF。
+# shell 脚本被写坏后，容器里 shebang 变成 "#!/usr/bin/env bash\r"，执行时报：
+#   env: 'bash\r': No such file or directory
+#   env: use -[v]S to pass options in shebang lines
+# .gitattributes 里的 eol 属性优先级高于 core.autocrlf，故在这里钉死。
+#
+# 若已存在的文件工作区仍是 CRLF，先执行一次（转换结果对 git 是透明的，不会产生 diff）：
+#   git ls-files '*.sh' | xargs sed -i 's/\r$//'
+
+*.sh    text eol=lf
+*.bash  text eol=lf
