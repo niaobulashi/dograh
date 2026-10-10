@@ -8,6 +8,7 @@
 // token-gated /leads/enterprise. Shared by the Stack Auth handler and the
 // local/OSS auth pages.
 
+import { useTranslations } from "next-intl";
 import posthog from "posthog-js";
 import { useState } from "react";
 
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { PostHogEvent } from "@/constants/posthog-events";
 
 export function AuthEnterpriseCTA() {
+  const t = useTranslations("Auth");
   const [open, setOpen] = useState(false);
 
   const openModal = () => {
@@ -30,7 +32,7 @@ export function AuthEnterpriseCTA() {
         onClick={openModal}
         className="w-full border-white/20 bg-white/5 text-zinc-100 hover:bg-white/10 hover:text-white"
       >
-        Enterprise Enquiry
+        {t("enterpriseCta")}
       </Button>
       <EnterpriseModal open={open} onOpenChange={setOpen} source="auth_page" />
     </>

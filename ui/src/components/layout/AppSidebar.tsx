@@ -26,10 +26,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import React from "react";
 
 import { BrandLogo } from "@/components/BrandLogo";
 import { SidebarTeamSwitcher } from "@/components/layout/SidebarTeamSwitcher";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import ThemeToggle from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,100 +66,100 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type SidebarNavItem = {
-  title: string;
+  /** next-intl message key under the `Nav` namespace. */
+  titleKey: string;
   url: string;
   icon: LucideIcon;
   showsTelephonyWarning?: boolean;
 };
 
 type SidebarNavSection = {
-  label?: string;
+  /** next-intl message key under the `Nav` namespace. */
+  labelKey?: string;
   items: SidebarNavItem[];
 };
-
-const TELEPHONY_WARNING_COPY = "Action required";
 
 const NAV_SECTIONS: SidebarNavSection[] = [
   {
     items: [
       {
-        title: "Overview",
+        titleKey: "Nav.overview",
         url: "/overview",
         icon: Home,
       },
     ],
   },
   {
-    label: "BUILD",
+    labelKey: "Nav.sections.build",
     items: [
       {
-        title: "Voice Agents",
+        titleKey: "Nav.voiceAgents",
         url: "/workflow",
         icon: Workflow,
       },
       {
-        title: "Providers",
+        titleKey: "Nav.providers",
         url: "/provider-connections",
         icon: Plug,
       },
       {
-        title: "Models",
+        titleKey: "Nav.models",
         url: "/model-configurations",
         icon: Brain,
       },
       {
-        title: "Telephony",
+        titleKey: "Nav.telephony",
         url: "/telephony-configurations",
         icon: Phone,
         showsTelephonyWarning: true,
       },
       {
-        title: "Tools",
+        titleKey: "Nav.tools",
         url: "/tools",
         icon: Wrench,
       },
       {
-        title: "Credentials",
+        titleKey: "Nav.credentials",
         url: "/credentials",
         icon: ShieldCheck,
       },
       {
-        title: "Files",
+        titleKey: "Nav.files",
         url: "/files",
         icon: Database,
       },
       {
-        title: "Campaigns",
+        titleKey: "Nav.campaigns",
         url: "/campaigns",
         icon: Megaphone,
       },
       {
-        title: "Recordings",
+        titleKey: "Nav.recordings",
         url: "/recordings",
         icon: AudioLines,
       },
       {
-        title: "Developers",
+        titleKey: "Nav.developers",
         url: "/api-keys",
         icon: Key,
       },
     ],
   },
   {
-    label: "MANAGE",
+    labelKey: "Nav.sections.manage",
     items: [
       {
-        title: "Agent Runs",
+        titleKey: "Nav.agentRuns",
         url: "/usage",
         icon: TrendingUp,
       },
       {
-        title: "Billing",
+        titleKey: "Nav.billing",
         url: "/billing",
         icon: CircleDollarSign,
       },
       {
-        title: "Reports",
+        titleKey: "Nav.reports",
         url: "/reports",
         icon: FileText,
       }
@@ -166,6 +168,7 @@ const NAV_SECTIONS: SidebarNavSection[] = [
 ];
 
 export function AppSidebar() {
+  const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -205,16 +208,16 @@ export function AppSidebar() {
     const tooltip = {
       children: (
         <div className="notranslate" translate="no">
-          <p>{item.title}</p>
+          <p>{t(item.titleKey)}</p>
           {showWarningDot && (
-            <p className="text-amber-600 dark:text-amber-400">{TELEPHONY_WARNING_COPY}</p>
+            <p className="text-amber-600 dark:text-amber-400">{t("Sidebar.actionRequired")}</p>
           )}
         </div>
       ),
     };
     const warningIndicator = (
       <AlertTriangle
-        aria-label="Action required on a telephony configuration"
+        aria-label={t("Sidebar.telephonyWarningAria")}
         className={cn(
           "text-amber-500",
           isCollapsed ? "absolute -right-0.5 -top-0.5 h-3 w-3" : "ml-auto h-3.5 w-3.5"
@@ -254,7 +257,7 @@ export function AppSidebar() {
             className={cn("notranslate min-w-0 flex-1 truncate", isCollapsed && "sr-only")}
             translate="no"
           >
-            {item.title}
+            {t(item.titleKey)}
           </span>
           {showWarningDot && (
             isCollapsed ? (
@@ -265,7 +268,7 @@ export function AppSidebar() {
                   {warningIndicator}
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <p>{TELEPHONY_WARNING_COPY}</p>
+                  <p>{t("Sidebar.actionRequired")}</p>
                 </TooltipContent>
               </Tooltip>
             )
@@ -309,13 +312,13 @@ export function AppSidebar() {
           size="icon"
           className="h-7 w-7 rounded-full"
           onClick={() => openHireExpert("sidebar")}
-          aria-label="Hire an Expert"
+          aria-label={t("Common.hireExpert")}
         >
           <UserRound className="h-3.5 w-3.5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">
-        <p>Hire an Expert</p>
+        <p>{t("Common.hireExpert")}</p>
       </TooltipContent>
     </Tooltip>
   ) : (
@@ -325,7 +328,7 @@ export function AppSidebar() {
       onClick={() => openHireExpert("sidebar")}
     >
       <UserRound className="h-3.5 w-3.5" />
-      Hire an Expert
+      {t("Common.hireExpert")}
     </Button>
   );
 
@@ -359,11 +362,11 @@ export function AppSidebar() {
                     className="inline-flex items-center gap-1 rounded-md border bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-900 transition-opacity hover:opacity-80 dark:bg-amber-950 dark:text-amber-200"
                   >
                     <ArrowUpCircle className="h-3 w-3" />
-                    Update
+                    {t("Common.update")}
                   </a>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>Latest: {latestRelease} - click to see the update guide</p>
+                  <p>{t("Sidebar.latestTooltip", { version: latestRelease })}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -371,11 +374,11 @@ export function AppSidebar() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center rounded-md border bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                    Latest
+                    {t("Common.latest")}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>You&apos;re running the latest release</p>
+                  <p>{t("Sidebar.isLatestTooltip")}</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -400,10 +403,10 @@ export function AppSidebar() {
       <SidebarContent className={cn("notranslate", isCollapsed && "px-0")} translate="no">
         {NAV_SECTIONS.map((section, index) => (
           <SidebarGroup
-            key={section.label ?? "overview"}
+            key={section.labelKey ?? "overview"}
             className={index === 0 ? "mt-2" : "mt-6"}
           >
-            {section.label && (
+            {section.labelKey && (
               <SidebarGroupLabel
                 className={cn(
                   "notranslate text-xs font-semibold uppercase tracking-wider text-muted-foreground",
@@ -411,12 +414,12 @@ export function AppSidebar() {
                 )}
                 translate="no"
               >
-                {section.label}
+                {t(section.labelKey)}
               </SidebarGroupLabel>
             )}
             <SidebarMenu>
               {section.items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarLink item={item} />
                 </SidebarMenuItem>
               ))}
@@ -452,11 +455,11 @@ export function AppSidebar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    Platform Settings
+                    {t("Common.platformSettings")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    {t("Common.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -489,15 +492,15 @@ export function AppSidebar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push("/handler/account-settings")} className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    Account settings
+                    {t("Common.accountSettings")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    Platform Settings
+                    {t("Common.platformSettings")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    {t("Common.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -505,7 +508,17 @@ export function AppSidebar() {
             </div>
           )}
 
-          <div className="mt-1 flex justify-center">
+          <div className="mt-1 flex items-center justify-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="notranslate" translate="no">
+                  <LocaleSwitcher side="top" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side={isCollapsed ? "right" : "top"}>
+                <p>{t("LocaleSwitcher.label")}</p>
+              </TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="notranslate" translate="no">
@@ -516,7 +529,7 @@ export function AppSidebar() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side={isCollapsed ? "right" : "top"}>
-                <p>Toggle theme</p>
+                <p>{t("Common.toggleTheme")}</p>
               </TooltipContent>
             </Tooltip>
           </div>

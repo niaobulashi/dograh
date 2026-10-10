@@ -2,6 +2,8 @@ import "./globals.css";
 
 import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 
@@ -37,11 +39,13 @@ export const metadata: Metadata = {
   description: "Open Source Voice Assistant Workflow Builder",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: {
   children: React.ReactNode
 }) {
+  // Locale comes from the DOGRAH_LOCALE cookie (see src/i18n/request.ts).
+  const locale = await getLocale();
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID?.trim();
   const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
   const reoClientId = process.env.NEXT_PUBLIC_REO_CLIENT_ID?.trim();
@@ -50,7 +54,7 @@ export default function RootLayout({
   const showEventBanner = process.env.NEXT_PUBLIC_EVENT_BANNER?.trim() === "1";
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <head>
         {/* Inline script to prevent flash of light theme - runs before React hydrates.
             Dark is the locked default: only an explicit stored 'light' opts out. */}
@@ -78,6 +82,9 @@ export default function RootLayout({
         {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
         {metaPixelId ? <MetaPixel pixelId={metaPixelId} /> : null}
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          {/* Provides locale + messages to every client component below.
+              Inherits both from the server request config — no props needed. */}
+          <NextIntlClientProvider>
           <SentryErrorBoundary>
             {/* Above the app chrome on every route (auth pages included). It
                 is sticky at top-0 and publishes --event-banner-h, which the
@@ -103,6 +110,7 @@ export default function RootLayout({
               </AppConfigProvider>
             </AuthProvider>
           </SentryErrorBoundary>
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

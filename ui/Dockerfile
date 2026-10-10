@@ -34,6 +34,12 @@ COPY ui/sentry.server.config.ts ./
 COPY ui/postcss.config.mjs ./
 COPY ui/public ./public
 COPY ui/src ./src
+# Translation catalogs, resolved by src/i18n/request.ts via
+# `import('../../messages/<locale>.json')`. The build context is the repo root
+# and this stage copies an explicit allowlist, so without this line `next build`
+# fails to resolve the message imports. The JSON ends up inlined into the
+# .next/server chunks by webpack, so the runner stage needs no copy.
+COPY ui/messages ./messages
 
 # Set build-time environment variables (needed for Next.js build)
 ENV NEXT_PUBLIC_NODE_ENV="oss"

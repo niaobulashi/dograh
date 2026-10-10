@@ -1,0 +1,37 @@
+# Local build override — 让 docker compose 用本地源码构建 ui 镜像。
+#
+# 背景：docker-compose.yaml 里 ui 服务只有 image、没有 build 段，默认拉
+# 官方预构建镜像；不加这层 override，本地代码改动（包括中文化）不会生效。
+#
+# ui 与 api 都必须从本地源码构建。
+#
+# 为什么 api 也要本地构建：模型连接（/api/v1/model-connections/*）后端路由是在
+# 2026-10-07 的 commit 96a4cd0f (#866) 才加进仓库的，而 Docker Hub 上的
+# dograhai/dograh-api:latest 构建于 2026-10-03，不含这批路由。前端一旦用新源码
+# 构建（会去调这些接口），而后端还是旧镜像，就会整片 404。
+# 两者版本必须同步从本地源码构建。
+#
+# 重新构建并生效：
+#   docker compose up -d --build ui api
+# 只重建后端：
+#   docker compose up -d --build api
+# 注意：不要用 `down -v`，会连同 postgres 数据卷一起删除。
+services:
+  # 宿主机 5432 已被原生 Windows PostgreSQL 18 服务（postgresql-x64-18）占用，
+  # 导致 Navicat/psql 连 127.0.0.1:5432 会命中原生库而非本容器，密码认证失败。
+  # 故把 Dograh 的 pg 宿主端口改到 5433（容器内部仍是 5432，api 走 app-network 不受影响）。
+  postgres:
+    ports: !override
+      - "5433:5432"
+
+  ui:
+    image: dograh-ui:local
+    build:
+      context: .
+      dockerfile: ui/Dockerfile
+
+  api:
+    image: dograh-api:local
+    build:
+      context: .
+      dockerfile: api/Dockerfile

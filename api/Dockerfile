@@ -7,7 +7,14 @@ FROM python:3.13-slim AS builder
 WORKDIR /app
 
 # Install git in builder stage (needed for any pip install from git URLs)
-RUN apt-get update && apt-get install -y \
+#
+# LOCAL PATCH (国内网络): 换用清华 Debian 镜像。
+# 实测同一文件 deb.debian.org 只有 20 kB/s、tuna 有 1.0 MB/s（约 50x），
+# 不换源这一层会卡几分钟并最终被 OOM kill。回退时删掉那行 sed 即可。
+RUN set -eux; \
+    sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list 2>/dev/null || true; \
+    apt-get update && apt-get install -y \
     git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -21,6 +28,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 ENV VIRTUAL_ENV=/opt/venv \
     PATH=/opt/venv/bin:$PATH
 RUN python -m venv "$VIRTUAL_ENV"
+
+# LOCAL PATCH (国内网络): uv 走清华 PyPI 镜像。
+# 实测 files.pythonhosted.org 只有 ~5 kB/s，装 pipecat 那一大坨 extras 会跑到天荒地老。
+# UV_DEFAULT_INDEX 是新名字，UV_INDEX_URL 是旧名字，两个都设上以兼容不同 uv 版本。
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple \
+    UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
+    UV_HTTP_TIMEOUT=120
 
 # Layer 1: API deps. Cache invalidates only when requirements.txt changes.
 RUN --mount=type=bind,source=api/requirements.txt,target=/tmp/req.txt \
@@ -50,7 +64,9 @@ RUN find /opt/venv -type f -name '*.pyc' -delete && \
 FROM node:22-slim AS ts-deps
 WORKDIR /ts_validator
 COPY api/mcp_server/ts_validator/package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# LOCAL PATCH (国内网络): npm 走 npmmirror。
+RUN npm config set registry https://registry.npmmirror.com \
+ && npm ci --omit=dev && npm cache clean --force
 
 # Stage 3: Static ffmpeg binary (avoids apt ffmpeg pulling mesa/libllvm for
 # hardware acceleration we don't use server-side).
@@ -73,11 +89,21 @@ RUN npm ci --omit=dev && npm cache clean --force
 # (the cause of "stuck" builds) without killing a slow-but-progressing
 # download; `--max-time` is a hard backstop; `--retry` rides out transient CDN
 # hiccups. The archive nests binaries under bin/, so locate them with `find`.
+#
+# LOCAL PATCH (国内网络): 两处改动。
+#   1) apt 换清华源（同 builder 阶段，理由见上）。
+#   2) GitHub 直连实测只有 ~55 kB/s，35MB 的包在原来的 --max-time 600 内根本拉不完
+#      （重试 3 次也是死）。改成按顺序试国内加速源，最后一个才回落 GitHub 直连；
+#      每试一个都过一遍 sha256，校验不过就换下一个源。因为 sha256 是钉死的，
+#      走第三方加速源不影响供应链安全。
+#      实测：gh-proxy.com 1.06 MB/s、ghfast.top 0.93 MB/s、github 直连 0.055 MB/s。
 FROM debian:trixie-slim AS ffmpeg-static
 ARG TARGETARCH
 ARG BTBN_TAG=autobuild-2026-05-31-13-22
 ARG BTBN_REV=N-124714-g49a77d37be
 RUN set -eu ; \
+    sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' \
+        /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list 2>/dev/null || true ; \
     apt-get update && apt-get install -y --no-install-recommends \
         curl ca-certificates xz-utils ; \
     rm -rf /var/lib/apt/lists/* ; \
@@ -88,13 +114,24 @@ RUN set -eu ; \
              sha256=e97545305043794cdf7b698d713e29291464e0c35bb8e0f3ff1f62e4c56eedd6 ;; \
       *) echo "unsupported TARGETARCH: ${TARGETARCH}" >&2 ; exit 1 ;; \
     esac ; \
-    url="https://github.com/BtbN/FFmpeg-Builds/releases/download/${BTBN_TAG}/ffmpeg-${BTBN_REV}-${btbn_arch}-gpl.tar.xz" ; \
+    upstream="https://github.com/BtbN/FFmpeg-Builds/releases/download/${BTBN_TAG}/ffmpeg-${BTBN_REV}-${btbn_arch}-gpl.tar.xz" ; \
     mkdir -p /tmp/ffmpeg ; cd /tmp/ffmpeg ; \
-    echo "Downloading ffmpeg (${BTBN_TAG}) from ${url}" ; \
-    curl -fsSL --connect-timeout 20 --speed-limit 1024 --speed-time 30 \
-         --max-time 600 --retry 3 --retry-delay 5 --retry-all-errors \
-         -o ffmpeg.tar.xz "${url}" ; \
-    echo "${sha256}  ffmpeg.tar.xz" | sha256sum -c - ; \
+    got=0 ; \
+    for src in \
+        "https://gh-proxy.com/${upstream}" \
+        "https://ghfast.top/${upstream}" \
+        "${upstream}" ; do \
+      echo "Downloading ffmpeg (${BTBN_TAG}) from ${src}" ; \
+      if curl -fsSL --connect-timeout 20 --speed-limit 1024 --speed-time 30 \
+              --max-time 900 --retry 2 --retry-delay 5 --retry-all-errors \
+              -o ffmpeg.tar.xz "${src}" \
+         && echo "${sha256}  ffmpeg.tar.xz" | sha256sum -c - ; then \
+        got=1 ; break ; \
+      fi ; \
+      echo "  -> ${src} failed (download or sha256), trying next mirror" ; \
+      rm -f ffmpeg.tar.xz ; \
+    done ; \
+    [ "${got}" = 1 ] ; \
     tar -xJf ffmpeg.tar.xz ; \
     ffmpeg_bin="$(find /tmp/ffmpeg -type f -name ffmpeg | head -n1)" ; \
     ffprobe_bin="$(find /tmp/ffmpeg -type f -name ffprobe | head -n1)" ; \
