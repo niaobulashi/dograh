@@ -76,6 +76,14 @@ STACK_PUBLISHABLE_CLIENT_KEY = os.getenv("STACK_PUBLISHABLE_CLIENT_KEY")
 DOGRAH_MPS_SECRET_KEY = os.getenv("DOGRAH_MPS_SECRET_KEY", None)
 MPS_API_URL = os.getenv("MPS_API_URL", "https://services.dograh.com")
 DOGRAH_DEVOPS_SECRET = os.getenv("DOGRAH_DEVOPS_SECRET") or None
+
+# Local workflow-template generation (replaces the MPS create-workflow call).
+# Set WORKFLOW_TEMPLATE_GENERATOR=local to generate from a self-hosted LLM
+# (DeepSeek by default) instead of delegating to MPS.
+WORKFLOW_TEMPLATE_GENERATOR = os.getenv("WORKFLOW_TEMPLATE_GENERATOR", "mps").lower()
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
 ENABLE_PROMETHEUS_METRICS = (
     os.getenv("ENABLE_PROMETHEUS_METRICS", "false").lower() == "true"
 )

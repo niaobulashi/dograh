@@ -10,7 +10,7 @@ from httpx import HTTPStatusError, RequestError
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
-from api.constants import DEPLOYMENT_MODE
+from api.constants import DEPLOYMENT_MODE, WORKFLOW_TEMPLATE_GENERATOR
 from api.db import db_client
 from api.db.agent_trigger_client import TriggerPathConflictError
 from api.db.models import UserModel
@@ -36,6 +36,7 @@ from api.services.configuration.masking import (
 )
 from api.services.mps_service_key_client import mps_service_key_client
 from api.services.posthog_client import capture_event
+from api.services.workflow.local_template_generator import generate_workflow_from_template
 from api.services.reports import generate_workflow_report_csv
 from api.services.storage import storage_fs
 from api.services.workflow.configuration_policy import (
@@ -398,6 +399,9 @@ class CreateWorkflowTemplateRequest(BaseModel):
     call_type: Literal[CallType.INBOUND.value, CallType.OUTBOUND.value]
     use_case: str
     activity_description: str
+    # Language for the generated workflow (prompts, greetings, node copy).
+    # Defaults to Chinese so new agents read in the user's primary language.
+    language: str = "zh"
 
 
 @router.post("/{workflow_id}/validate")
@@ -577,12 +581,22 @@ async def create_workflow_from_template(
         HTTPException: If MPS API call fails
     """
     try:
-        # Call MPS API to generate workflow using the client
-        if DEPLOYMENT_MODE == "oss":
+        # Generate the workflow definition. By default delegate to MPS; when
+        # WORKFLOW_TEMPLATE_GENERATOR=local, build it locally with a
+        # self-hosted LLM (DeepSeek) so the endpoint has no MPS dependency.
+        if WORKFLOW_TEMPLATE_GENERATOR == "local":
+            workflow_data = await generate_workflow_from_template(
+                call_type=request.call_type.upper(),
+                use_case=request.use_case,
+                activity_description=request.activity_description,
+                language=request.language,
+            )
+        elif DEPLOYMENT_MODE == "oss":
             workflow_data = await mps_service_key_client.call_workflow_api(
                 call_type=request.call_type.upper(),
                 use_case=request.use_case,
                 activity_description=request.activity_description,
+                language=request.language,
                 created_by=str(user.provider_id),
             )
         else:
@@ -593,6 +607,7 @@ async def create_workflow_from_template(
                 call_type=request.call_type.upper(),
                 use_case=request.use_case,
                 activity_description=request.activity_description,
+                language=request.language,
                 organization_id=user.selected_organization_id,
             )
 
