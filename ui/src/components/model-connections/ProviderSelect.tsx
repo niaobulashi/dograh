@@ -2,6 +2,7 @@
 
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -77,11 +78,12 @@ export function AddProviderDialog({ open, onOpenChange, title, catalog, provider
     role?: ServiceRole;
     onSaved: (connection: ProviderConnection) => void;
 }) {
+    const t = useTranslations("Models");
     return <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
             <DialogHeader>
                 <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>Connect an account with its API key. It is saved to Providers, so every model configuration can use it.</DialogDescription>
+                <DialogDescription>{t("connectAccountWithApiKey")}</DialogDescription>
             </DialogHeader>
             <ConnectionEditor embedded catalog={catalog} providerKeys={providerKeys} role={role} onSaved={async (_, connection) => onSaved(connection)} />
         </DialogContent>

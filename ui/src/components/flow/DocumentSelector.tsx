@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink, FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -25,10 +26,13 @@ export const DocumentSelector = ({
     onChange,
     documents,
     disabled = false,
-    label = "Knowledge Base Documents",
-    description = "Select documents that the agent can reference during conversations.",
+    label,
+    description,
     showLabel = true,
 }: DocumentSelectorProps) => {
+    const t = useTranslations("Workflow");
+    const resolvedLabel = label ?? t("knowledgeBaseDocuments");
+    const resolvedDescription = description ?? t("selectDocumentsDescription");
     // Only show completed documents
     const completedDocuments = useMemo(
         () => documents.filter((doc) => doc.processing_status === "completed"),
@@ -56,24 +60,24 @@ export const DocumentSelector = ({
             <div className="space-y-2">
                 {showLabel && (
                     <>
-                        <Label>{label}</Label>
-                        {description && (
+                        <Label>{resolvedLabel}</Label>
+                        {resolvedDescription && (
                             <Label className="text-xs text-muted-foreground">
-                            {description}{" "}
-                            <a href={KNOWLEDGE_BASE_DOC_URL} target="_blank" rel="noopener noreferrer" className="underline">Learn more</a>
+                            {resolvedDescription}{" "}
+                            <a href={KNOWLEDGE_BASE_DOC_URL} target="_blank" rel="noopener noreferrer" className="underline">{t("learnMore")}</a>
                         </Label>
                         )}
                     </>
                 )}
                 <div className="border rounded-md p-4 space-y-3">
                     <div className="text-sm text-muted-foreground text-center">
-                        No documents available. Upload documents to the knowledge base first.
+                        {t("noDocumentsAvailable")}
                     </div>
                     <div className="flex justify-center">
                         <Button variant="outline" size="sm" asChild>
                             <Link href="/files" target="_blank">
                                 <ExternalLink className="h-4 w-4 mr-2" />
-                                Upload Documents
+                                {t("uploadDocuments")}
                             </Link>
                         </Button>
                     </div>
@@ -86,11 +90,11 @@ export const DocumentSelector = ({
         <div className="space-y-2">
             {showLabel && (
                 <>
-                    <Label>{label}</Label>
-                    {description && (
+                    <Label>{resolvedLabel}</Label>
+                    {resolvedDescription && (
                         <Label className="text-xs text-muted-foreground">
-                            {description}{" "}
-                            <a href={KNOWLEDGE_BASE_DOC_URL} target="_blank" rel="noopener noreferrer" className="underline">Learn more</a>
+                            {resolvedDescription}{" "}
+                            <a href={KNOWLEDGE_BASE_DOC_URL} target="_blank" rel="noopener noreferrer" className="underline">{t("learnMore")}</a>
                         </Label>
                     )}
                 </>
@@ -123,7 +127,7 @@ export const DocumentSelector = ({
                                             {doc.filename}
                                         </div>
                                         <div className="text-xs text-muted-foreground">
-                                            {formatFileSize(doc.file_size_bytes)} • {doc.retrieval_mode === 'full_document' ? 'Full Document' : `${doc.total_chunks} chunks`}
+                                            {formatFileSize(doc.file_size_bytes)} • {doc.retrieval_mode === 'full_document' ? t("fullDocument") : t("chunksCount", { count: doc.total_chunks })}
                                         </div>
                                     </div>
                                 </label>
@@ -132,8 +136,8 @@ export const DocumentSelector = ({
                                 href={`/files?document=${doc.document_uuid}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label={`Open ${doc.filename} details`}
-                                title="Open document details"
+                                aria-label={t("openDocumentDetails", { name: doc.filename })}
+                                title={t("openDocumentDetailsTitle")}
                                 className="shrink-0 self-center p-1 rounded text-muted-foreground hover:text-foreground"
                             >
                                 <ExternalLink className="h-3.5 w-3.5" />
@@ -148,14 +152,14 @@ export const DocumentSelector = ({
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                     >
                         <ExternalLink className="h-4 w-4" />
-                        Manage Documents
+                        {t("manageDocuments")}
                     </Link>
                 </div>
             </div>
 
             {value.length > 0 && (
                 <p className="text-xs text-muted-foreground">
-                    {value.length} {value.length === 1 ? "document" : "documents"} selected
+                    {t("documentsSelected", { count: value.length })}
                 </p>
             )}
         </div>

@@ -85,7 +85,7 @@ function conversationItemsFromTextChatEvents(
                 turnId,
                 timestamp,
                 tone: "error",
-                title: "Execution Error",
+                title: "noticeExecutionError",
                 text: asString(payload.message) ?? "Execution error",
                 fatal: true,
             });

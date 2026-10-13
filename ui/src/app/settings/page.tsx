@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { CallEventsSection } from "@/components/CallEventsSection";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -16,15 +17,15 @@ import {
 } from "@/components/ui/card";
 
 export default function SettingsPage() {
+  const t = useTranslations("Settings");
   return (
-    <PageLayout title="Platform Settings" description="Manage your platform configuration and integrations." width="narrow">
+    <PageLayout title={t("title")} description={t("description")} width="narrow">
 
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
+          <CardTitle>{t("preferencesTitle")}</CardTitle>
           <CardDescription>
-            Set organization-wide defaults such as the test phone number and
-            timezone.
+            {t("preferencesDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -34,17 +35,16 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>MCP Server</CardTitle>
+          <CardTitle>{t("mcpSectionTitle")}</CardTitle>
           <CardDescription>
-            Let AI agents access your Dograh workspace and documentation via
-            the Model Context Protocol.{" "}
+            {t("mcpSectionDescription")}{" "}
             <a
               href="https://docs.dograh.com/integrations/mcp"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-0.5 underline"
             >
-              Learn more <ExternalLink className="h-3 w-3" />
+              {t("learnMore")} <ExternalLink className="h-3 w-3" />
             </a>
           </CardDescription>
         </CardHeader>
@@ -55,16 +55,16 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Telemetry</CardTitle>
+          <CardTitle>{t("telemetryTitle")}</CardTitle>
           <CardDescription>
-            Configure Langfuse tracing for your voice agent calls.{" "}
+            {t("telemetryDescription")}{" "}
             <a
               href="https://docs.dograh.com/configurations/tracing"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-0.5 underline"
             >
-              Learn more <ExternalLink className="h-3 w-3" />
+              {t("learnMore")} <ExternalLink className="h-3 w-3" />
             </a>
           </CardDescription>
         </CardHeader>
@@ -74,8 +74,8 @@ export default function SettingsPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Call events</CardTitle>
-          <CardDescription>Configure where your organization sends call diagnostics.</CardDescription>
+          <CardTitle>{t("callEventsTitle")}</CardTitle>
+          <CardDescription>{t("callEventsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <CallEventsSection />

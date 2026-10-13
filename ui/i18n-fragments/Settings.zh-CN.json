@@ -1,0 +1,13 @@
+{
+  "title": "平台设置",
+  "description": "管理你的平台配置和集成。",
+  "preferencesTitle": "首选项",
+  "preferencesDescription": "设置组织范围内的默认值，例如测试电话号码和时区。",
+  "mcpSectionTitle": "MCP 服务端",
+  "mcpSectionDescription": "让 AI 智能体通过 Model Context Protocol 访问你的 Dograh 工作区和文档。",
+  "learnMore": "了解更多",
+  "telemetryTitle": "遥测",
+  "telemetryDescription": "为语音智能体通话配置 Langfuse 追踪。",
+  "callEventsTitle": "通话事件",
+  "callEventsDescription": "配置组织将通话诊断数据发送到哪里。"
+}

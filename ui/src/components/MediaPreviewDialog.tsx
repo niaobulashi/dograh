@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy, Headphones, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import posthog from 'posthog-js';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ import { copyTextToClipboard } from '@/lib/clipboard';
 import { downloadFile, getSignedUrl } from '@/lib/files';
 
 export function MediaPreviewDialog() {
+    const t = useTranslations('Shared');
     const [isOpen, setIsOpen] = useState(false);
     const [audioSignedUrl, setAudioSignedUrl] = useState<string | null>(null);
     const [transcriptContent, setTranscriptContent] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export function MediaPreviewDialog() {
                     });
                 } catch (error) {
                     console.error('Error fetching transcript:', error);
-                    toast.error('Failed to load transcript');
+                    toast.error(t('loadTranscriptFailed'));
                 }
             }
 
@@ -76,9 +78,9 @@ export function MediaPreviewDialog() {
 
         try {
             await copyTextToClipboard(transcriptContent);
-            toast.success('Transcript copied to clipboard');
+            toast.success(t('transcriptCopied'));
         } catch {
-            toast.error('Failed to copy transcript');
+            toast.error(t('copyTranscriptFailed'));
         }
     };
 
@@ -89,15 +91,15 @@ export function MediaPreviewDialog() {
                 <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
-                            Run Preview
-                            {selectedRunId && ` - Run #${selectedRunId}`}
+                            {t('runPreview')}
+                            {selectedRunId && t('runNumber', { id: selectedRunId })}
                         </DialogTitle>
                     </DialogHeader>
 
                     {mediaLoading && (
                         <div className="flex items-center justify-center py-8 space-x-2">
                             <Loader2 className="h-6 w-6 animate-spin" />
-                            <span>Loading...</span>
+                            <span>{t('loading')}</span>
                         </div>
                     )}
 
@@ -117,10 +119,10 @@ export function MediaPreviewDialog() {
                     {!mediaLoading && transcriptContent && (
                         <div className="mt-4 space-y-2">
                             <div className="flex items-center justify-between gap-2">
-                                <span className="text-sm font-medium">Transcript</span>
+                                <span className="text-sm font-medium">{t('transcript')}</span>
                                 <Button variant="outline" size="sm" onClick={copyTranscript}>
                                     <Copy className="h-4 w-4" />
-                                    Copy transcript
+                                    {t('copyTranscript')}
                                 </Button>
                             </div>
                             <pre className="w-full h-[60vh] overflow-auto border rounded-md p-4 bg-muted text-sm whitespace-pre-wrap font-mono">
@@ -131,23 +133,23 @@ export function MediaPreviewDialog() {
 
                     {!mediaLoading && !audioSignedUrl && !transcriptContent && (
                         <div className="flex items-center justify-center py-8 text-muted-foreground">
-                            No recording or transcript available.
+                            {t('noRecordingOrTranscript')}
                         </div>
                     )}
 
                     <DialogFooter className="pt-4">
                         <DialogClose asChild>
-                            <Button variant="secondary">Close</Button>
+                            <Button variant="secondary">{t('close')}</Button>
                         </DialogClose>
                         <div className="flex gap-2">
                             {recordingKey && (
                                 <Button variant="outline" onClick={() => downloadFile(recordingKey)}>
-                                    Download Recording
+                                    {t('downloadRecording')}
                                 </Button>
                             )}
                             {transcriptKey && (
                                 <Button variant="outline" onClick={() => downloadFile(transcriptKey)}>
-                                    Download Transcript
+                                    {t('downloadTranscript')}
                                 </Button>
                             )}
                         </div>

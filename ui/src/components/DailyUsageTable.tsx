@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+
 import type { DailyUsageBreakdownResponse } from '@/client/types.gen';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,12 +19,13 @@ interface DailyUsageTableProps {
 }
 
 export function DailyUsageTable({ data, isLoading }: DailyUsageTableProps) {
+    const t = useTranslations('Shared');
     if (isLoading) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Daily Usage Breakdown</CardTitle>
-                    <CardDescription>Last 7 days of usage</CardDescription>
+                    <CardTitle>{t('dailyUsageBreakdown')}</CardTitle>
+                    <CardDescription>{t('last7DaysUsage')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="animate-pulse space-y-3">
@@ -39,11 +42,11 @@ export function DailyUsageTable({ data, isLoading }: DailyUsageTableProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Daily Usage Breakdown</CardTitle>
-                    <CardDescription>Last 7 days of usage</CardDescription>
+                    <CardTitle>{t('dailyUsageBreakdown')}</CardTitle>
+                    <CardDescription>{t('last7DaysUsage')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center py-8 text-gray-500">No usage data available</p>
+                    <p className="text-center py-8 text-gray-500">{t('noUsageData')}</p>
                 </CardContent>
             </Card>
         );
@@ -60,10 +63,10 @@ export function DailyUsageTable({ data, isLoading }: DailyUsageTableProps) {
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-gray-50">
-                                <TableHead className="font-semibold">Date</TableHead>
-                                <TableHead className="font-semibold text-right">Usage (minutes)</TableHead>
-                                <TableHead className="font-semibold text-right">Cost (USD)</TableHead>
-                                <TableHead className="font-semibold text-right">Calls</TableHead>
+                                <TableHead className="font-semibold">{t('date')}</TableHead>
+                                <TableHead className="font-semibold text-right">{t('usageMinutes')}</TableHead>
+                                <TableHead className="font-semibold text-right">{t('costUsd')}</TableHead>
+                                <TableHead className="font-semibold text-right">{t('calls')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -86,7 +89,7 @@ export function DailyUsageTable({ data, isLoading }: DailyUsageTableProps) {
                         </TableBody>
                         <TableFooter>
                             <TableRow className="bg-gray-50 font-semibold">
-                                <TableCell>Total</TableCell>
+                                <TableCell>{t('total')}</TableCell>
                                 <TableCell className="text-right">
                                     {data.total_minutes.toFixed(1)}
                                 </TableCell>

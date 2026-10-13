@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { PageLayout, PageSection } from "@/components/layout/PageLayout";
@@ -19,6 +20,7 @@ import DocumentList from "./DocumentList";
 import DocumentUpload from "./DocumentUpload";
 
 export default function FilesPage() {
+    const t = useTranslations("Files");
     const { user, redirectToLogin, loading } = useAuth();
     const [refreshKey, setRefreshKey] = useState(0);
     const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -37,7 +39,7 @@ export default function FilesPage() {
 
     if (loading || !user) {
         return (
-            <PageLayout title="Knowledge Base Files">
+            <PageLayout title={t("title")}>
                 <div className="space-y-4">
                     <Skeleton className="h-12 w-64" />
                     <Skeleton className="h-64 w-full" />
@@ -47,16 +49,16 @@ export default function FilesPage() {
     }
 
     return (
-        <PageLayout title="Knowledge Base Files" description={<>Upload and manage documents for your voice agents to reference.{" "}
+        <PageLayout title={t("title")} description={<>{t("description")}{" "}
             <a href="https://docs.dograh.com/voice-agent/knowledge-base" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
-                Learn more <ExternalLink className="h-3 w-3" />
+                {t("learnMore")} <ExternalLink className="h-3 w-3" />
             </a></>}>
 
-            <PageSection title="Your Documents"
-                description="Documents shared across all agents in your organization"
+            <PageSection title={t("yourDocuments")}
+                description={t("yourDocumentsDescription")}
                 actions={<Button onClick={() => setIsUploadOpen(true)}>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload Document
+                    {t("uploadDocument")}
                 </Button>}>
                 <DocumentList refreshTrigger={refreshKey} />
             </PageSection>
@@ -64,9 +66,9 @@ export default function FilesPage() {
             <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Upload Document</DialogTitle>
+                        <DialogTitle>{t("uploadDocument")}</DialogTitle>
                         <DialogDescription>
-                            Upload a PDF or document file to add to your knowledge base
+                            {t("uploadDialogDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <DocumentUpload onUploadSuccess={handleUploadSuccess} />

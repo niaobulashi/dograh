@@ -1,6 +1,7 @@
 'use client';
 
 import { FileText, Upload, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = ['.pdf', '.docx', '.doc', '.txt', '.json', '.md'];
 
 export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps) {
+  const t = useTranslations('Files');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [retrievalMode, setRetrievalMode] = useState<string>('full_document');
   const [uploading, setUploading] = useState(false);
@@ -35,12 +37,12 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
   const validateFile = (file: File): boolean => {
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!ACCEPTED_FILE_TYPES.includes(fileExtension)) {
-      toast.error(`Please select a supported file type: ${ACCEPTED_FILE_TYPES.join(', ')}`);
+      toast.error(t('unsupportedFileType', { types: ACCEPTED_FILE_TYPES.join(', ') }));
       return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      toast.error('File size must be less than 5MB');
+      toast.error(t('fileTooLarge'));
       return false;
     }
 
@@ -85,7 +87,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
       });
 
       if (uploadUrlResponse.error || !uploadUrlResponse.data) {
-        throw new Error('Failed to get upload URL');
+        throw new Error(t('uploadUrlError'));
       }
 
       const uploadData: DocumentUploadResponseSchema = uploadUrlResponse.data;
@@ -100,7 +102,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file to storage');
+        throw new Error(t('storageUploadError'));
       }
 
       setUploadProgress(75);
@@ -114,16 +116,16 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
       });
 
       if (processResponse.error) {
-        throw new Error('Failed to trigger processing');
+        throw new Error(t('processingTriggerError'));
       }
 
       setUploadProgress(100);
-      toast.success(`File uploaded: ${selectedFile.name}. Processing started.`);
+      toast.success(t('uploadSuccess', { filename: selectedFile.name }));
       clearSelectedFile();
       onUploadSuccess();
     } catch (error) {
       logger.error('Error uploading document:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to upload document');
+      toast.error(error instanceof Error ? error.message : t('uploadError'));
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -183,7 +185,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
 
         {/* Retrieval mode selection */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium">How should the agent use this document?</Label>
+          <Label className="text-sm font-medium">{t('retrievalModeQuestion')}</Label>
           <RadioGroup value={retrievalMode} onValueChange={setRetrievalMode}>
             <label
               htmlFor="full_document"
@@ -193,10 +195,9 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
             >
               <RadioGroupItem value="full_document" id="full_document" className="mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Full Document</p>
+                <p className="font-medium text-sm">{t('fullDocument')}</p>
                 <p className="text-xs text-muted-foreground">
-                  The entire document is provided to the agent on each retrieval.
-                  Best for menus, price lists, FAQs, and other small reference documents.
+                  {t('fullDocumentDescription')}
                 </p>
               </div>
             </label>
@@ -208,10 +209,9 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
             >
               <RadioGroupItem value="chunked" id="chunked" className="mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Chunked Search</p>
+                <p className="font-medium text-sm">{t('chunkedSearch')}</p>
                 <p className="text-xs text-muted-foreground">
-                  The document is split into chunks and the most relevant ones are retrieved.
-                  Better for large documents like manuals or policies.
+                  {t('chunkedSearchDescription')}
                 </p>
               </div>
             </label>
@@ -220,7 +220,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
 
         {/* Upload button */}
         <Button onClick={uploadFile} className="w-full">
-          Upload & Process
+          {t('uploadAndProcess')}
         </Button>
       </div>
     );
@@ -253,13 +253,13 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
       >
         <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
         <p className="text-lg font-medium mb-2">
-          {uploading ? 'Uploading...' : 'Drop your document here'}
+          {uploading ? t('uploading') : t('dropHere')}
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          or click to browse
+          {t('orClickBrowse')}
         </p>
         <p className="text-xs text-muted-foreground">
-          Supported formats: {ACCEPTED_FILE_TYPES.join(', ')} (Max 5MB)
+          {t('supportedFormats', { types: ACCEPTED_FILE_TYPES.join(', ') })}
         </p>
       </div>
 
@@ -267,7 +267,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
       {uploading && (
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Uploading...</span>
+            <span>{t('uploading')}</span>
             <span>{uploadProgress}%</span>
           </div>
           <Progress value={uploadProgress} />
@@ -282,7 +282,7 @@ export default function DocumentUpload({ onUploadSuccess }: DocumentUploadProps)
             variant="outline"
             onClick={handleButtonClick}
           >
-            Choose File
+            {t('chooseFile')}
           </Button>
         </div>
       )}

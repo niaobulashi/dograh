@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Download, Globe } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import TimezoneSelect, { type ITimezoneOption } from 'react-timezone-select';
@@ -33,6 +34,8 @@ import { decodeFiltersFromURL, encodeFiltersToURL } from '@/lib/filters';
 import type { ActiveFilter, DateRangeValue, FilterAttribute, NumberFilterOption } from '@/types/filters';
 
 const buildUsageFilterAttributes = (
+    agentLabel: string,
+    selectAgentPlaceholder: string,
     agentOptions: NumberFilterOption[] | null,
     isLoadingAgentOptions: boolean,
     dispositionCodes: string[]
@@ -44,12 +47,12 @@ const buildUsageFilterAttributes = (
 
         return {
             ...attribute,
-            label: 'Agent',
+            label: agentLabel,
             type: 'numberSelect',
             config: {
                 ...attribute.config,
-                placeholder: 'Select an agent',
-                numberSelectLabel: 'Agent',
+                placeholder: selectAgentPlaceholder,
+                numberSelectLabel: agentLabel,
                 ...(agentOptions || isLoadingAgentOptions
                     ? {
                         numberSelectOptions: agentOptions ?? [],
@@ -62,6 +65,7 @@ const buildUsageFilterAttributes = (
 };
 
 export default function UsagePage() {
+    const t = useTranslations('Usage');
     const router = useRouter();
     const searchParams = useSearchParams();
     const { organizationPricing } = useUserConfig();
@@ -89,8 +93,8 @@ export default function UsagePage() {
     const [isLoadingAgentFilterOptions, setIsLoadingAgentFilterOptions] = useState(false);
     const { codes: dispositionCodes } = useDispositionCodes();
     const availableUsageFilterAttributes = useMemo(
-        () => buildUsageFilterAttributes(agentFilterOptions, isLoadingAgentFilterOptions, dispositionCodes),
-        [agentFilterOptions, isLoadingAgentFilterOptions, dispositionCodes]
+        () => buildUsageFilterAttributes(t('agentLabel'), t('selectAnAgent'), agentFilterOptions, isLoadingAgentFilterOptions, dispositionCodes),
+        [t, agentFilterOptions, isLoadingAgentFilterOptions, dispositionCodes]
     );
 
     // Daily usage breakdown state (only for paid orgs)
@@ -271,11 +275,11 @@ export default function UsagePage() {
                 a.remove();
                 window.URL.revokeObjectURL(url);
             } else {
-                toast.error('Failed to download report');
+                toast.error(t('downloadReportFailed'));
             }
         } catch (error) {
             console.error('Failed to download usage report:', error);
-            toast.error('Failed to download report');
+            toast.error(t('downloadReportFailed'));
         } finally {
             setIsDownloadingReport(false);
         }
@@ -440,8 +444,8 @@ export default function UsagePage() {
     };
 
     return (
-        <PageLayout title="Agent Runs"
-            description="See all your Agent Runs across all Voice Agents. You can use filters to filter out required Agent Runs."
+        <PageLayout title={t('title')}
+            description={t('description')}
             actions={<div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <div className="w-[260px] sm:w-[300px]">
@@ -450,7 +454,7 @@ export default function UsagePage() {
                         value={selectedTimezone}
                         onChange={handleTimezoneChange}
                         isDisabled={savingTimezone || preferencesLoading}
-                        placeholder={preferencesLoading ? "Loading..." : "Select timezone"}
+                        placeholder={preferencesLoading ? t('loading') : t('selectTimezone')}
                         styles={{
                             control: (base, state) => ({
                                 ...base,
@@ -526,7 +530,7 @@ export default function UsagePage() {
             )}
 
             {/* Usage History */}
-            <PageSection title="All Runs" description="Every agent run across your organization, with usage details"
+            <PageSection title={t('allRunsTitle')} description={t('allRunsDescription')}
                 toolbar={<div className="space-y-3">
                     <FilterBuilder
                         availableAttributes={availableUsageFilterAttributes}
@@ -545,7 +549,7 @@ export default function UsagePage() {
                                 disabled={isDownloadingReport}
                             >
                                 <Download className="h-4 w-4 mr-2" />
-                                {isDownloadingReport ? 'Preparing...' : 'Download Filtered Results'}
+                                {isDownloadingReport ? t('preparing') : t('downloadFilteredResults')}
                             </Button>
                         </div>
                     )}
@@ -563,18 +567,18 @@ export default function UsagePage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-muted/50">
-                                        <TableHead className="font-semibold">Run ID</TableHead>
-                                        <TableHead className="font-semibold">Agent Name</TableHead>
-                                        <TableHead className="font-semibold">Call Type</TableHead>
-                                        <TableHead className="font-semibold">Phone Number</TableHead>
-                                        <TableHead className="font-semibold">Disposition</TableHead>
-                                        <TableHead className="font-semibold">Date</TableHead>
+                                        <TableHead className="font-semibold">{t('runId')}</TableHead>
+                                        <TableHead className="font-semibold">{t('agentName')}</TableHead>
+                                        <TableHead className="font-semibold">{t('callType')}</TableHead>
+                                        <TableHead className="font-semibold">{t('phoneNumber')}</TableHead>
+                                        <TableHead className="font-semibold">{t('disposition')}</TableHead>
+                                        <TableHead className="font-semibold">{t('date')}</TableHead>
                                         <TableHead
                                             className="font-semibold text-right cursor-pointer hover:bg-muted/50 select-none"
                                             onClick={() => handleSort('duration')}
                                         >
                                             <div className="flex items-center justify-end gap-1">
-                                                Duration
+                                                {t('duration')}
                                                 {sortBy === 'duration' ? (
                                                     sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                                                 ) : (
@@ -583,9 +587,9 @@ export default function UsagePage() {
                                             </div>
                                         </TableHead>
                                         {organizationPricing?.price_per_second_usd && (
-                                            <TableHead className="font-semibold text-right">Cost (USD)</TableHead>
+                                            <TableHead className="font-semibold text-right">{t('costUsd')}</TableHead>
                                         )}
-                                        <TableHead className="font-semibold">Actions</TableHead>
+                                        <TableHead className="font-semibold">{t('actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -599,7 +603,7 @@ export default function UsagePage() {
                                             >
                                                 #{run.id}
                                             </TableCell>
-                                            <TableCell>{run.workflow_name || 'Unknown'}</TableCell>
+                                            <TableCell>{run.workflow_name || t('unknown')}</TableCell>
                                             <TableCell>
                                                 <CallTypeCell mode={run.mode} callType={run.call_type} />
                                             </TableCell>
@@ -647,8 +651,8 @@ export default function UsagePage() {
                         {appliedFilters.length > 0 && (
                             <div className="mt-4 p-3 bg-muted rounded-md">
                                 <p className="text-sm text-muted-foreground">
-                                    Total for filtered period: <span className="font-semibold text-foreground">
-                                        {usageHistory.total_dograh_tokens.toLocaleString()} Dograh Tokens
+                                    {t('totalForFilteredPeriod')} <span className="font-semibold text-foreground">
+                                        {usageHistory.total_dograh_tokens.toLocaleString()} {t('dograhTokens')}
                                     </span>
                                     {' • '}
                                     <span className="font-semibold text-foreground">
@@ -662,7 +666,7 @@ export default function UsagePage() {
                         {usageHistory.total_pages > 1 && (
                             <div className="flex items-center justify-between mt-6">
                                 <p className="text-sm text-muted-foreground">
-                                    Page {usageHistory.page} of {usageHistory.total_pages} ({usageHistory.total_count} total runs)
+                                    {t('pagination', { page: usageHistory.page, totalPages: usageHistory.total_pages, totalCount: usageHistory.total_count })}
                                 </p>
                                 <div className="flex gap-2">
                                     <Button
@@ -672,7 +676,7 @@ export default function UsagePage() {
                                         disabled={currentPage === 1}
                                     >
                                         <ChevronLeft className="h-4 w-4" />
-                                        Previous
+                                        {t('previous')}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -680,7 +684,7 @@ export default function UsagePage() {
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === usageHistory.total_pages}
                                     >
-                                        Next
+                                        {t('next')}
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -688,7 +692,7 @@ export default function UsagePage() {
                         )}
                     </>
                 ) : (
-                    <p className="text-center py-8 text-muted-foreground">No runs found</p>
+                    <p className="text-center py-8 text-muted-foreground">{t('noRunsFound')}</p>
                 )}
             </PageSection>
 

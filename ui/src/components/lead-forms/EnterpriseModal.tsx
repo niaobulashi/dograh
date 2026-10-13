@@ -2,6 +2,7 @@
 
 import Cal from "@calcom/embed-react";
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ interface EnterpriseModalProps {
 }
 
 export function EnterpriseModal({ open, onOpenChange, source, prefill }: EnterpriseModalProps) {
+  const t = useTranslations("Campaigns");
   const { config } = useAppConfig();
   // Deployment provenance (analytics only); OSS submits via the public contact-sales path.
   const origin = config?.deploymentMode === "cloud" ? "cloud_app" : "oss_app";
@@ -80,9 +82,9 @@ export function EnterpriseModal({ open, onOpenChange, source, prefill }: Enterpr
   // Validate, then pop the anti-spam check on top of the modal.
   const handleSubmit = () => {
     const err = validateWorkEmail(value.workEmail);
-    if (err) { setEmailError(err); return; }
+    if (err) { setEmailError(t(err)); return; }
     if (!value.name.trim() || !value.company.trim() || !value.jobTitle.trim() || !value.phone.trim() || !value.volume) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("leadForm.errorFillAll"));
       return;
     }
     setCaptchaActive(true);

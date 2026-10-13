@@ -19,6 +19,7 @@
  * therefore receives the mocked hooks.
  */
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -131,6 +132,16 @@ const translationValue = {
   quetzalLocale: new Map<string, string>(),
 };
 
+// Minimal English messages for the keys SidebarTeamSwitcher reads via
+// `useTranslations("Shared")`, so the component renders without the full app
+// catalog.
+const messages = {
+  Shared: {
+    switchingTeams: "Switching teams...",
+    switchTeamsFailed: "Could not switch teams. Please try again.",
+  },
+};
+
 function withProviders(
   children: React.ReactNode,
   authValue?: AuthContextType
@@ -141,9 +152,11 @@ function withProviders(
     children
   );
   return (
-    <TranslationContext.Provider value={translationValue}>
-      {inner}
-    </TranslationContext.Provider>
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <TranslationContext.Provider value={translationValue}>
+        {inner}
+      </TranslationContext.Provider>
+    </NextIntlClientProvider>
   );
 }
 

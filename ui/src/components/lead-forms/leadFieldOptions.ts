@@ -20,11 +20,12 @@ export type LeadOrigin = "cloud_app" | "oss_app";
 
 // Monthly call-volume buckets. Values MUST match the backend qualifier enum
 // (user_onboarding flows): "0-5k" | "5k-100k" | "100k+" | "not-sure".
+// `labelKey` is a next-intl message key under the `Campaigns` namespace.
 export const VOLUME_OPTIONS = [
-  { value: "0-5k", label: "0–5k" },
-  { value: "5k-100k", label: "5k–100k" },
-  { value: "100k+", label: "100k+" },
-  { value: "not-sure", label: "Not sure" },
+  { value: "0-5k", labelKey: "options.volume0to5k" },
+  { value: "5k-100k", labelKey: "options.volume5kTo100k" },
+  { value: "100k+", labelKey: "options.volume100kPlus" },
+  { value: "not-sure", labelKey: "options.notSure" },
 ] as const;
 
 // Hire-an-Expert expected monthly call volume (shared bucket set).
@@ -45,9 +46,9 @@ export const ENTERPRISE_DEPLOYMENT_SOURCES: readonly LeadSource[] = [
 
 // Enterprise deployment need (conditional — see ENTERPRISE_DEPLOYMENT_SOURCES).
 export const ENTERPRISE_DEPLOYMENT_OPTIONS = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "maybe", label: "Maybe" },
+  { value: "yes", labelKey: "options.yes" },
+  { value: "no", labelKey: "options.no" },
+  { value: "maybe", labelKey: "options.maybe" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -57,42 +58,42 @@ export const ENTERPRISE_DEPLOYMENT_OPTIONS = [
 // Onboarding: are you migrating from another provider? (a trimmed competitor list).
 // "no" → not migrating; "other" → reveals a free-text provider field.
 export const ONBOARDING_MIGRATION_OPTIONS = [
-  { value: "no", label: "No, I'm not migrating" },
-  { value: "vapi", label: "Vapi" },
-  { value: "retell", label: "Retell" },
-  { value: "bland", label: "Bland" },
-  { value: "elevenlabs", label: "ElevenLabs" },
-  { value: "synthflow", label: "Synthflow" },
-  { value: "other", label: "Other" },
+  { value: "no", labelKey: "options.migrationNo" },
+  { value: "vapi", labelKey: "options.providerVapi" },
+  { value: "retell", labelKey: "options.providerRetell" },
+  { value: "bland", labelKey: "options.providerBland" },
+  { value: "elevenlabs", labelKey: "options.providerElevenlabs" },
+  { value: "synthflow", labelKey: "options.providerSynthflow" },
+  { value: "other", labelKey: "options.other" },
 ] as const;
 
 // Onboarding: how did you hear about us? (trimmed).
 export const ONBOARDING_HEARD_OPTIONS = [
-  { value: "github", label: "GitHub" },
-  { value: "search_engine", label: "Search engine" },
-  { value: "social_media", label: "Social media (Twitter, LinkedIn)" },
-  { value: "youtube", label: "YouTube" },
-  { value: "ai_tool", label: "AI tool (ChatGPT, Claude)" },
-  { value: "referral", label: "Someone told me about it" },
-  { value: "other", label: "Other" },
+  { value: "github", labelKey: "options.heardGithub" },
+  { value: "search_engine", labelKey: "options.heardSearchEngine" },
+  { value: "social_media", labelKey: "options.heardSocialMedia" },
+  { value: "youtube", labelKey: "options.heardYoutube" },
+  { value: "ai_tool", labelKey: "options.heardAiTool" },
+  { value: "referral", labelKey: "options.heardReferral" },
+  { value: "other", labelKey: "options.other" },
 ] as const;
 
 // Onboarding: expected monthly call volume. Its own set — value "exploring" is NOT
 // the qualifier's "not-sure"; onboarding has no flow, so this is analytics-only.
 export const ONBOARDING_VOLUME_OPTIONS = [
-  { value: "0-5k", label: "0–5k" },
-  { value: "5k-100k", label: "5k–100k" },
-  { value: "100k+", label: "100k+" },
-  { value: "exploring", label: "Exploring" },
+  { value: "0-5k", labelKey: "options.volume0to5k" },
+  { value: "5k-100k", labelKey: "options.volume5kTo100k" },
+  { value: "100k+", labelKey: "options.volume100kPlus" },
+  { value: "exploring", labelKey: "options.volumeExploring" },
 ] as const;
 
 // Onboarding: what best describes you.
 export const ONBOARDING_PERSONA_OPTIONS = [
-  { value: "enterprise_midmarket", label: "Enterprise / Mid-Market" },
-  { value: "agency", label: "Agency / consultancy building for clients" },
-  { value: "local_business", label: "Local business" },
-  { value: "startup", label: "Startup" },
-  { value: "solo", label: "Solo founder / builder" },
+  { value: "enterprise_midmarket", labelKey: "options.personaEnterprise" },
+  { value: "agency", labelKey: "options.personaAgency" },
+  { value: "local_business", labelKey: "options.personaLocalBusiness" },
+  { value: "startup", labelKey: "options.personaStartup" },
+  { value: "solo", labelKey: "options.personaSolo" },
 ] as const;
 
 // Persona values that unlock the on-prem conditional question.
@@ -100,7 +101,7 @@ export const ONBOARDING_ONPREM_PERSONAS: readonly string[] = ["enterprise_midmar
 
 // Onboarding: on-prem deployment need (conditional on Enterprise/Mid-Market).
 export const ONBOARDING_ONPREM_OPTIONS = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "not_sure", label: "Not sure" },
+  { value: "yes", labelKey: "options.yes" },
+  { value: "no", labelKey: "options.no" },
+  { value: "not_sure", labelKey: "options.notSure" },
 ] as const;

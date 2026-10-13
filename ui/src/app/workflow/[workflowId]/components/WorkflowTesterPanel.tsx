@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, MessageSquareText, Mic, Phone, RefreshCw, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ export function WorkflowTesterPanel({
     onClose,
     onRuntimeNodeTransition,
 }: WorkflowTesterPanelProps) {
+    const t = useTranslations("Workflow");
     const auth = useAuth();
     const { markActionCompleted } = useOnboarding();
     const { isAuthenticated, loading: authLoading, getAccessToken } = auth;
@@ -109,7 +111,7 @@ export function WorkflowTesterPanel({
             });
 
             if (response.error || !response.data?.id) {
-                throw new Error(extractSdkErrorMessage(response.error, "Failed to create browser test run"));
+                throw new Error(extractSdkErrorMessage(response.error, t("failedToCreateBrowserTestRun")));
             }
 
             markActionCompleted("web_call_started");
@@ -125,10 +127,10 @@ export function WorkflowTesterPanel({
         } finally {
             setCreatingVoiceRun(false);
         }
-    }, [accessToken, disabled, markActionCompleted, workflowId]);
+    }, [accessToken, disabled, markActionCompleted, t, workflowId]);
 
     const authUnavailableReason = tokenReady && !accessToken
-        ? "Authentication is required before testing can start."
+        ? t("authRequiredBeforeTesting")
         : null;
     const effectiveDisabledReason = disabledReason ?? authUnavailableReason;
     const testerBlocked = disabled || authUnavailableReason !== null;
@@ -166,11 +168,11 @@ export function WorkflowTesterPanel({
                         <TabsList className="grid h-9 flex-1 grid-cols-2 rounded-lg bg-muted/60 p-1">
                             <TabsTrigger value="audio" className="rounded-md text-sm">
                                 <Mic className="h-4 w-4" />
-                                Test Audio
+                                {t("testAudio")}
                             </TabsTrigger>
                             <TabsTrigger value="text" className="rounded-md text-sm">
                                 <MessageSquareText className="h-4 w-4" />
-                                Test Chat
+                                {t("testChat")}
                             </TabsTrigger>
                         </TabsList>
                         {onClose ? (
@@ -179,7 +181,7 @@ export function WorkflowTesterPanel({
                                 size="icon"
                                 onClick={onClose}
                                 className="shrink-0 text-muted-foreground hover:text-foreground"
-                                aria-label="Close tester panel"
+                                aria-label={t("closeTesterPanel")}
                             >
                                 <X className="h-4 w-4" />
                             </Button>
@@ -196,7 +198,7 @@ export function WorkflowTesterPanel({
                             </div>
                         ) : !accessToken ? (
                             <DisabledNotice
-                                reason={authUnavailableReason ?? "Authentication is required before browser tests can start."}
+                                reason={authUnavailableReason ?? t("authRequiredBeforeBrowserTests")}
                             />
                         ) : voiceRunId ? (
                             <EmbeddedVoiceTester
@@ -212,8 +214,8 @@ export function WorkflowTesterPanel({
                                 {effectiveDisabledReason ? <DisabledNotice reason={effectiveDisabledReason} /> : null}
                                 <EmptyState
                                     icon={<Phone className="h-7 w-7" />}
-                                    title="Call this agent in the browser"
-                                    description="Test the agent over a voice call. Some telephony-only tools, like call transfer, are not yet supported here."
+                                    title={t("callThisAgentInBrowser")}
+                                    description={t("callThisAgentInBrowserDescription")}
                                     action={
                                         <Button
                                             ref={runTestButtonRef}
@@ -223,12 +225,12 @@ export function WorkflowTesterPanel({
                                             {creatingVoiceRun ? (
                                                 <>
                                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                                    Starting test...
+                                                    {t("startingTest")}
                                                 </>
                                             ) : (
                                                 <>
                                                     <Phone className="h-4 w-4" />
-                                                    Run Test
+                                                    {t("runTest")}
                                                 </>
                                             )}
                                         </Button>
@@ -252,7 +254,7 @@ export function WorkflowTesterPanel({
                                     className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                                 >
                                     <RefreshCw className="h-3.5 w-3.5" />
-                                    Reset
+                                    {t("reset")}
                                 </Button>
                             ) : null}
                         </div>
@@ -278,8 +280,8 @@ export function WorkflowTesterPanel({
             <OnboardingTooltip
                 tooltipKey="web_call"
                 targetRef={runTestButtonRef}
-                title="Try Your First Web Call"
-                message="Start a browser call here to hear the agent, inspect the transcript, and validate the workflow before you customize it further."
+                title={t("tryYourFirstWebCall")}
+                message={t("tryYourFirstWebCallMessage")}
                 showNext={false}
                 enabled={runTestTooltipEnabled}
             />

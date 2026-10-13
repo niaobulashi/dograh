@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { FileDiff, FileText, LoaderCircle, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import type { WorkflowVersionMetadataResponse, WorkflowVersionResponse } from "@/client/types.gen";
@@ -26,9 +27,9 @@ interface VersionHistoryPanelProps {
 }
 
 const statusLabel: Record<string, string> = {
-    draft: "Draft",
-    published: "Published",
-    archived: "Archived",
+    draft: "draft",
+    published: "published",
+    archived: "archived",
 };
 
 const statusColor: Record<string, string> = {
@@ -52,6 +53,7 @@ export const VersionHistoryPanel = ({
     onLoadMore,
     onVersionUpdated,
 }: VersionHistoryPanelProps) => {
+    const t = useTranslations("Workflow");
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape" && !event.defaultPrevented && isOpen) {
@@ -71,12 +73,12 @@ export const VersionHistoryPanel = ({
             <div className="p-4 h-full overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-lg font-semibold text-white">
-                        Version History
+                        {t("versionHistory")}
                     </h2>
                     <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="Close version history"
+                        aria-label={t("closeVersionHistory")}
                         onClick={onClose}
                         className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
                     >
@@ -90,7 +92,7 @@ export const VersionHistoryPanel = ({
                     </div>
                 ) : versions.length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-8">
-                        No versions found.
+                        {t("noVersionsFound")}
                     </p>
                 ) : (
                     <div className="space-y-2">
@@ -100,8 +102,8 @@ export const VersionHistoryPanel = ({
                             const previousVersion = versions[index + 1];
                             const canCompare = Boolean(previousVersion) || hasMore;
                             const compareLabel = previousVersion
-                                ? `Compare v${version.version_number} with v${previousVersion.version_number}`
-                                : `Compare v${version.version_number} with its previous version`;
+                                ? t("compareVersions", { a: version.version_number, b: previousVersion.version_number })
+                                : t("compareWithPrevious", { a: version.version_number });
                             return (
                                 <div
                                     key={version.id}
@@ -129,7 +131,7 @@ export const VersionHistoryPanel = ({
                                                         statusColor[version.status] ?? ""
                                                     }`}
                                                 >
-                                                    {statusLabel[version.status] ?? version.status}
+                                                    {statusLabel[version.status] ? t(statusLabel[version.status]) : version.status}
                                                 </span>
                                             )}
                                         </div>
@@ -189,7 +191,7 @@ export const VersionHistoryPanel = ({
                                 {loadingMore ? (
                                     <LoaderCircle className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    "Load more"
+                                    t("loadMore")
                                 )}
                             </Button>
                         )}

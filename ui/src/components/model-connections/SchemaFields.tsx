@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink, Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ function optionLabel(name: string, value: string) {
 }
 
 function JsonInput({ id, value, onChange, required }: { id: string; value: unknown; onChange: (value: unknown) => void; required: boolean }) {
+    const t = useTranslations("Models");
     const serialized = value === undefined ? "" : JSON.stringify(value, null, 2);
     const [text, setText] = useState(serialized);
     useEffect(() => { setText(serialized); }, [serialized]);
@@ -34,25 +36,26 @@ function JsonInput({ id, value, onChange, required }: { id: string; value: unkno
             const parsed = next.trim() ? JSON.parse(next) : undefined;
             event.target.setCustomValidity("");
             onChange(parsed);
-        } catch { event.target.setCustomValidity("Enter valid JSON."); }
+        } catch { event.target.setCustomValidity(t("enterValidJson")); }
     }} />;
 }
 
 function StringListInput({ id, name, values, onChange, secret, required }: {
     id: string; name: string; values: string[]; onChange: (values: string[]) => void; secret: boolean; required: boolean;
 }) {
-    const label = name === "api_key" ? "API key" : name.replaceAll("_", " ");
+    const t = useTranslations("Models");
+    const label = name === "api_key" ? t("apiKeyLabel") : name.replaceAll("_", " ");
     return <div className="space-y-2">
         {values.map((value, index) => <div key={index} className="flex gap-2">
             <Input id={index === 0 ? id : `${id}-${index}`} aria-label={index ? `${label} ${index + 1}` : undefined}
                 type={secret ? "password" : "text"} autoComplete={secret ? "new-password" : "off"}
-                placeholder={`Enter ${label}`} value={value} required={required && index === 0}
+                placeholder={t("enterLabel", { label })} value={value} required={required && index === 0}
                 onChange={event => onChange(values.map((item, i) => i === index ? event.target.value : item))} />
-            {(!secret || values.length > 1) && <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label={`Remove ${label} ${index + 1}`}
+            {(!secret || values.length > 1) && <Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label={t("removeLabelNumbered", { label, index: index + 1 })}
                 onClick={() => onChange(values.filter((_, i) => i !== index))}><X className="h-4 w-4" /></Button>}
         </div>)}
         <Button type="button" variant="outline" size="sm" onClick={() => onChange([...values, ""])}>
-            <Plus className="h-4 w-4" />{name === "api_key" ? "Add API Key" : `Add ${label}`}
+            <Plus className="h-4 w-4" />{name === "api_key" ? t("addApiKey") : t("addLabel", { label })}
         </Button>
     </div>;
 }
@@ -68,6 +71,7 @@ function ValueInput({ id, name, schema, value, onChange, secret, required, provi
     const canPool = secret && alternatives.some(option => option.type === "array") && alternatives.some(option => option.type === "string");
     const options = schema.enum || concrete.enum || schema.examples;
     const [custom, setCustom] = useState(false);
+    const t = useTranslations("Models");
 
     if (canPool) {
         return <StringListInput id={id} name={name} secret required={required} values={Array.isArray(value) ? value : [String(value || "")]}
@@ -92,13 +96,13 @@ function ValueInput({ id, name, schema, value, onChange, secret, required, provi
     if (numeric) {
         return <Input id={id} type="number" value={value == null ? "" : String(value)} required={required && !nullable}
             min={schema.minimum ?? numeric.minimum} max={schema.maximum ?? numeric.maximum}
-            step={numeric.type === "integer" ? 1 : "any"} placeholder={nullable ? "Provider default" : undefined}
+            step={numeric.type === "integer" ? 1 : "any"} placeholder={nullable ? t("providerDefault") : undefined}
             onChange={event => onChange(event.target.value === "" ? (nullable ? null : undefined) : Number(event.target.value))} />;
     }
     if (concrete.type === "boolean") {
         return <ConfigurationSelect id={id} value={value == null ? (nullable ? PROVIDER_DEFAULT : "") : String(value)}
             onValueChange={next => onChange(next === PROVIDER_DEFAULT ? null : next === "true")}
-            options={[...(nullable ? [{ value: PROVIDER_DEFAULT, label: "Provider default" }] : []), { value: "true", label: "Enabled" }, { value: "false", label: "Disabled" }]} />;
+            options={[...(nullable ? [{ value: PROVIDER_DEFAULT, label: t("providerDefault") }] : []), { value: "true", label: t("enabled") }, { value: "false", label: t("disabled") }]} />;
     }
     if (concrete.type === "object" || concrete.properties) return <JsonInput id={id} value={value} onChange={onChange} required={required} />;
     if (schema.multiline) return <Textarea id={id} rows={4} required={required} autoComplete="off" spellCheck={false} className="font-mono text-xs"
@@ -107,22 +111,22 @@ function ValueInput({ id, name, schema, value, onChange, secret, required, provi
         const current = value == null ? "" : String(value);
         const customInput = schema.allow_custom_input && (custom || Boolean(current && !options.includes(current)));
         return <div className="space-y-2">
-            {customInput ? <Input id={id} value={current} required={required} placeholder={`Enter ${name.replaceAll("_", " ")}`} onChange={event => onChange(event.target.value)} />
+            {customInput ? <Input id={id} value={current} required={required} placeholder={t("enterLabel", { label: name.replaceAll("_", " ") })} onChange={event => onChange(event.target.value)} />
                 : <ConfigurationSelect id={id} value={value == null && nullable ? PROVIDER_DEFAULT : current} required={required}
-                    placeholder={`Select ${name.replaceAll("_", " ")}`} onValueChange={next => onChange(next === PROVIDER_DEFAULT ? null : next)}
-                    options={[...(nullable ? [{ value: PROVIDER_DEFAULT, label: "Provider default" }] : []),
+                    placeholder={t("selectLabel", { label: name.replaceAll("_", " ") })} onValueChange={next => onChange(next === PROVIDER_DEFAULT ? null : next)}
+                    options={[...(nullable ? [{ value: PROVIDER_DEFAULT, label: t("providerDefault") }] : []),
                         ...[...options, ...(!schema.allow_custom_input && current && !options.includes(current) ? [current] : [])].map(option => ({ value: option, label: optionLabel(name, option) }))]} />}
             {schema.allow_custom_input && <div className="flex items-center gap-2">
                 <Checkbox id={`${id}-custom`} checked={Boolean(customInput)} onCheckedChange={checked => {
                     setCustom(checked === true);
                     if (!checked) onChange(options[0]);
                 }} />
-                <Label htmlFor={`${id}-custom`} className="cursor-pointer text-sm font-normal">Enter Custom Value</Label>
+                <Label htmlFor={`${id}-custom`} className="cursor-pointer text-sm font-normal">{t("enterCustomValue")}</Label>
             </div>}
         </div>;
     }
     return <Input id={id} type={secret ? "password" : "text"} value={value == null ? "" : String(value)} required={required}
-        autoComplete={secret ? "new-password" : "off"} placeholder={nullable ? "Provider default" : undefined}
+        autoComplete={secret ? "new-password" : "off"} placeholder={nullable ? t("providerDefault") : undefined}
         onChange={event => onChange(event.target.value || (nullable ? null : ""))} />;
 }
 
@@ -135,6 +139,7 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
 }) {
     const prefix = useId();
     const [replacing, setReplacing] = useState<string[]>([]);
+    const t = useTranslations("Models");
     const resolvedValues = { ...schemaDefaults(schema), ...values };
     return <div className={className}>
         {Object.entries(schema.properties || {}).map(([name, raw]) => {
@@ -156,19 +161,19 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
                     value={Object.hasOwn(values, name) ? values[name] : field.default} secret={secret}
                     required={Boolean(schema.required?.includes(name))} onChange={value => onChange(name, value)} />
                     : <div className="flex h-10 items-center justify-between rounded-md border px-3 text-sm">
-                        <span className="text-muted-foreground">{removing ? "Will be removed" : "Configured"}</span>
-                        {removing ? <Button type="button" size="sm" variant="ghost" onClick={() => onChange(name, undefined)}>Keep existing credential</Button> : <div className="flex">
-                            {!schema.required?.includes(name) && <Button type="button" size="sm" variant="ghost" onClick={() => onChange(name, null)}>Remove</Button>}
-                            <Button type="button" size="sm" variant="ghost" onClick={() => setReplacing(previous => [...previous, name])}>Replace</Button>
+                        <span className="text-muted-foreground">{removing ? t("willBeRemoved") : t("configured")}</span>
+                        {removing ? <Button type="button" size="sm" variant="ghost" onClick={() => onChange(name, undefined)}>{t("keepExistingCredential")}</Button> : <div className="flex">
+                            {!schema.required?.includes(name) && <Button type="button" size="sm" variant="ghost" onClick={() => onChange(name, null)}>{t("remove")}</Button>}
+                            <Button type="button" size="sm" variant="ghost" onClick={() => setReplacing(previous => [...previous, name])}>{t("replace")}</Button>
                         </div>}
                     </div>}
                 {configured && editing && <button type="button" className="text-xs underline" onClick={() => {
                     setReplacing(previous => previous.filter(field => field !== name));
                     onChange(name, undefined);
-                }}>Keep existing credential</button>}
+                }}>{t("keepExistingCredential")}</button>}
                 {(field.description || field.docs_url) && <p className="text-xs text-muted-foreground">{field.description}{" "}
                     {field.docs_url && <a href={field.docs_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
-                        {field.docs_label || "Learn more"}<ExternalLink className="h-3 w-3" />
+                        {field.docs_label || t("learnMore")}<ExternalLink className="h-3 w-3" />
                     </a>}
                 </p>}
             </div>;

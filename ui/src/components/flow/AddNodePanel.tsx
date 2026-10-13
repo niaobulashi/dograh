@@ -1,5 +1,6 @@
 import * as LucideIcons from 'lucide-react';
 import { Circle, ExternalLink, type LucideIcon, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo } from 'react';
 
 import type { NodeSpec } from '@/client/types.gen';
@@ -17,14 +18,14 @@ type AddNodePanelProps = {
 
 // Section matching and rendering order. Webhook and QA remain integration
 // specs in the API, but are displayed in their own sections in this panel.
-const SECTIONS: Array<{ title: string; matches: (spec: NodeSpec) => boolean }> = [
-    { title: 'Triggers', matches: (spec) => spec.category === 'trigger' },
-    { title: 'Agent Nodes', matches: (spec) => spec.category === 'call_node' },
-    { title: 'Global Nodes', matches: (spec) => spec.category === 'global_node' },
-    { title: 'Webhook', matches: (spec) => spec.name === 'webhook' },
-    { title: 'QA', matches: (spec) => spec.name === 'qa' },
+const SECTIONS: Array<{ titleKey: string; matches: (spec: NodeSpec) => boolean }> = [
+    { titleKey: 'sectionTriggers', matches: (spec) => spec.category === 'trigger' },
+    { titleKey: 'sectionAgentNodes', matches: (spec) => spec.category === 'call_node' },
+    { titleKey: 'sectionGlobalNodes', matches: (spec) => spec.category === 'global_node' },
+    { titleKey: 'sectionWebhook', matches: (spec) => spec.name === 'webhook' },
+    { titleKey: 'sectionQa', matches: (spec) => spec.name === 'qa' },
     {
-        title: 'Integrations',
+        titleKey: 'sectionIntegrations',
         matches: (spec) =>
             spec.category === 'integration' && spec.name !== 'webhook' && spec.name !== 'qa',
     },
@@ -46,6 +47,7 @@ function NodeSection({
     onNodeSelect: (nodeType: NodeType) => void;
     nodeTypeCounts: Map<string, number>;
 }) {
+    const t = useTranslations("Workflow");
     if (specs.length === 0) return null;
     return (
         <div className="space-y-3">
@@ -69,7 +71,7 @@ function NodeSection({
                             disabled={disabled}
                             title={
                                 disabled
-                                    ? `${spec.display_name} limit reached for this workflow`
+                                    ? t("nodeLimitReachedForWorkflow", { name: spec.display_name })
                                     : undefined
                             }
                         >
@@ -95,15 +97,17 @@ function NodeSection({
 }
 
 export default function AddNodePanel({ isOpen, onNodeSelect, onClose, nodes }: AddNodePanelProps) {
+    const t = useTranslations("Workflow");
     const { specs } = useNodeSpecs();
 
     // Group registered specs into their display sections, preserving SECTIONS order.
     const sections = useMemo(() => {
-        return SECTIONS.map(({ title, matches }) => ({
-            title,
+        return SECTIONS.map(({ titleKey, matches }) => ({
+            titleKey,
+            title: t(titleKey),
             specs: specs.filter(matches),
         }));
-    }, [specs]);
+    }, [specs, t]);
 
     const nodeTypeCounts = useMemo(() => {
         const counts = new Map<string, number>();
@@ -132,7 +136,7 @@ export default function AddNodePanel({ isOpen, onNodeSelect, onClose, nodes }: A
             <div className="p-4 h-full overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div className="flex flex-col gap-1">
-                        <h2 className="text-lg font-semibold">Add New Node</h2>
+                        <h2 className="text-lg font-semibold">{t("addNewNode")}</h2>
                         <a
                             href="https://docs.dograh.com/voice-agent/introduction"
                             target="_blank"
@@ -140,7 +144,7 @@ export default function AddNodePanel({ isOpen, onNodeSelect, onClose, nodes }: A
                             className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
                         >
                             <ExternalLink className="w-3 h-3" />
-                            View Nodes Documentation
+                            {t("viewNodesDocumentation")}
                         </a>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose}>
@@ -149,9 +153,9 @@ export default function AddNodePanel({ isOpen, onNodeSelect, onClose, nodes }: A
                 </div>
 
                 <div className="space-y-6">
-                    {sections.map(({ title, specs }) => (
+                    {sections.map(({ titleKey, title, specs }) => (
                         <NodeSection
-                            key={title}
+                            key={titleKey}
                             title={title}
                             specs={specs}
                             onNodeSelect={onNodeSelect}

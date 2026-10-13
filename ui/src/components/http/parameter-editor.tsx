@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { ToolParameter as ApiToolParameter } from "@/client/types.gen";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,8 @@ export function ParameterEditor({
     onChange,
     disabled = false,
 }: ParameterEditorProps) {
+    const t = useTranslations("Telephony");
+
     const addParameter = () => {
         onChange([
             ...parameters,
@@ -67,7 +70,7 @@ export function ParameterEditor({
         <div className="space-y-4">
             {parameters.length === 0 && (
                 <div className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-md">
-                    No parameters defined. Add a parameter to specify what data this tool needs.
+                    {t("noParameters")}
                 </div>
             )}
 
@@ -78,7 +81,7 @@ export function ParameterEditor({
                 >
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-muted-foreground">
-                            Parameter {index + 1}
+                            {t("parameterNumbered", { index: index + 1 })}
                         </span>
                         <Button
                             variant="ghost"
@@ -93,12 +96,12 @@ export function ParameterEditor({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-xs">Name</Label>
+                            <Label className="text-xs">{t("name")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Name of the parameter, like &quot;order_id&quot; or &quot;customer_name&quot;
+                                {t("parameterNameHint")}
                             </Label>
                             <Input
-                                placeholder="e.g., customer_name"
+                                placeholder={t("parameterNamePlaceholder")}
                                 value={param.name}
                                 onChange={(e) =>
                                     updateParameter(index, "name", e.target.value)
@@ -107,9 +110,9 @@ export function ParameterEditor({
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-xs">Type</Label>
+                            <Label className="text-xs">{t("type")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Type of the parameter, like &quot;string&quot; or &quot;number&quot; or &quot;boolean&quot;
+                                {t("parameterTypeHint")}
                             </Label>
                             <Select
                                 value={param.type}
@@ -119,26 +122,36 @@ export function ParameterEditor({
                                 disabled={disabled}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
+                                    <SelectValue placeholder={t("selectType")} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="string">String</SelectItem>
-                                    <SelectItem value="number">Number</SelectItem>
-                                    <SelectItem value="boolean">Boolean</SelectItem>
-                                    <SelectItem value="object">Object</SelectItem>
-                                    <SelectItem value="array">Array</SelectItem>
+                                    <SelectItem value="string">
+                                        {t("typeString")}
+                                    </SelectItem>
+                                    <SelectItem value="number">
+                                        {t("typeNumber")}
+                                    </SelectItem>
+                                    <SelectItem value="boolean">
+                                        {t("typeBoolean")}
+                                    </SelectItem>
+                                    <SelectItem value="object">
+                                        {t("typeObject")}
+                                    </SelectItem>
+                                    <SelectItem value="array">
+                                        {t("typeArray")}
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs">Description</Label>
+                        <Label className="text-xs">{t("description")}</Label>
                         <Label className="text-xs text-muted-foreground">
-                            Description of the parameter, which makes it easy for LLM to understand, like &quot;The ID of the Customer to fetch Order Details&quot;
+                            {t("parameterDescriptionHint")}
                         </Label>
                         <Input
-                            placeholder="Describe what this parameter is for..."
+                            placeholder={t("parameterDescriptionPlaceholder")}
                             value={param.description}
                             onChange={(e) =>
                                 updateParameter(index, "description", e.target.value)
@@ -157,7 +170,7 @@ export function ParameterEditor({
                             disabled={disabled}
                         />
                         <Label htmlFor={`required-${index}`} className="text-sm">
-                            Required
+                            {t("required")}
                         </Label>
                     </div>
                 </div>
@@ -170,7 +183,7 @@ export function ParameterEditor({
                 className="w-fit"
                 disabled={disabled}
             >
-                <PlusIcon className="h-4 w-4 mr-1" /> Add Parameter
+                <PlusIcon className="h-4 w-4 mr-1" /> {t("addParameter")}
             </Button>
         </div>
     );
@@ -187,6 +200,8 @@ export function PresetParameterEditor({
     onChange,
     disabled = false,
 }: PresetParameterEditorProps) {
+    const t = useTranslations("Telephony");
+
     const addParameter = () => {
         onChange([
             ...parameters,
@@ -212,7 +227,7 @@ export function PresetParameterEditor({
         <div className="space-y-4">
             {parameters.length === 0 && (
                 <div className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-md">
-                    No preset parameters defined. Add one to inject a fixed value or workflow context into the request.
+                    {t("noPresetParameters")}
                 </div>
             )}
 
@@ -223,7 +238,7 @@ export function PresetParameterEditor({
                 >
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-muted-foreground">
-                            Preset Parameter {index + 1}
+                            {t("presetParameterNumbered", { index: index + 1 })}
                         </span>
                         <Button
                             variant="ghost"
@@ -238,12 +253,12 @@ export function PresetParameterEditor({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-xs">Name</Label>
+                            <Label className="text-xs">{t("name")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Key sent to the API, like &quot;phone_number&quot; or &quot;customer_id&quot;
+                                {t("presetNameHint")}
                             </Label>
                             <Input
-                                placeholder="e.g., phone_number"
+                                placeholder={t("presetNamePlaceholder")}
                                 value={param.name}
                                 onChange={(e) =>
                                     updateParameter(index, "name", e.target.value)
@@ -252,9 +267,9 @@ export function PresetParameterEditor({
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-xs">Type</Label>
+                            <Label className="text-xs">{t("type")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                JSON type to send to the API
+                                {t("presetTypeHint")}
                             </Label>
                             <Select
                                 value={param.type}
@@ -264,23 +279,36 @@ export function PresetParameterEditor({
                                 disabled={disabled}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
+                                    <SelectValue placeholder={t("selectType")} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="string">String</SelectItem>
-                                    <SelectItem value="number">Number</SelectItem>
-                                    <SelectItem value="boolean">Boolean</SelectItem>
-                                    <SelectItem value="object">Object</SelectItem>
-                                    <SelectItem value="array">Array</SelectItem>
+                                    <SelectItem value="string">
+                                        {t("typeString")}
+                                    </SelectItem>
+                                    <SelectItem value="number">
+                                        {t("typeNumber")}
+                                    </SelectItem>
+                                    <SelectItem value="boolean">
+                                        {t("typeBoolean")}
+                                    </SelectItem>
+                                    <SelectItem value="object">
+                                        {t("typeObject")}
+                                    </SelectItem>
+                                    <SelectItem value="array">
+                                        {t("typeArray")}
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label className="text-xs">Value or Template</Label>
+                        <Label className="text-xs">{t("valueOrTemplate")}</Label>
                         <Label className="text-xs text-muted-foreground">
-                            Use a fixed value or a template like {`{{initial_context.phone_number}}`} or {`{{gathered_context.customer_id}}`}
+                            {t("presetValueHint", {
+                                phone: "{{initial_context.phone_number}}",
+                                customer: "{{gathered_context.customer_id}}",
+                            })}
                         </Label>
                         <Input
                             placeholder="e.g., {{initial_context.phone_number}}"
@@ -302,7 +330,7 @@ export function PresetParameterEditor({
                             disabled={disabled}
                         />
                         <Label htmlFor={`preset-required-${index}`} className="text-sm">
-                            Required
+                            {t("required")}
                         </Label>
                     </div>
                 </div>
@@ -315,7 +343,7 @@ export function PresetParameterEditor({
                 className="w-fit"
                 disabled={disabled}
             >
-                <PlusIcon className="h-4 w-4 mr-1" /> Add Preset Parameter
+                <PlusIcon className="h-4 w-4 mr-1" /> {t("addPresetParameter")}
             </Button>
         </div>
     );

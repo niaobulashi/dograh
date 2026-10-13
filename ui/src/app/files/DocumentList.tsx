@@ -1,6 +1,7 @@
 'use client';
 
 import { FileText, Pencil, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -31,6 +32,7 @@ const canOpen = (doc: DocumentResponseSchema) =>
   isEditableDocument(doc.filename) && !isBusy(doc);
 
 export default function DocumentList({ refreshTrigger }: DocumentListProps) {
+  const t = useTranslations('Files');
   const organizationTimezone = useOrganizationTimezone();
   // `/files?document=<uuid>` deep-links to one document (e.g. from an agent
   // node's knowledge base section): scroll to it and open it when editable.
@@ -56,17 +58,17 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
       });
 
       if (response.error || !response.data) {
-        throw new Error('Failed to fetch documents');
+        throw new Error(t('fetchError'));
       }
 
       setDocuments(response.data.documents);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch documents');
+      setError(err instanceof Error ? err.message : t('fetchError'));
       logger.error('Error fetching documents:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Fetch documents on mount and when refreshTrigger changes
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
   }, [documents, focusedUuid, isLoading]);
 
   const handleDelete = async (documentUuid: string, filename: string) => {
-    if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
+    if (!confirm(t('deleteConfirm', { filename }))) return;
 
     try {
       const response = await deleteDocumentApiV1KnowledgeBaseDocumentsDocumentUuidDelete({
@@ -109,13 +111,13 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
       });
 
       if (response.error) {
-        throw new Error('Failed to delete document');
+        throw new Error(t('deleteError'));
       }
 
-      toast.success(`Deleted "${filename}"`);
+      toast.success(t('deleteSuccess', { filename }));
       fetchDocuments();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete document');
+      toast.error(err instanceof Error ? err.message : t('deleteError'));
       logger.error('Error deleting document:', err);
     }
   };
@@ -126,26 +128,26 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
     if (doc.has_live_content && isBusy(doc)) {
       return (
         <Badge variant="secondary" className="animate-pulse">
-          Updating
+          {t('statusUpdating')}
         </Badge>
       );
     }
     if (doc.has_live_content && doc.processing_status === 'failed') {
-      return <Badge variant="destructive">Update failed</Badge>;
+      return <Badge variant="destructive">{t('statusUpdateFailed')}</Badge>;
     }
     switch (doc.processing_status) {
       case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
+        return <Badge className="bg-green-500">{t('statusCompleted')}</Badge>;
       case 'processing':
         return (
           <Badge variant="secondary" className="animate-pulse">
-            Processing
+            {t('statusProcessing')}
           </Badge>
         );
       case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline">{t('statusPending')}</Badge>;
       case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
+        return <Badge variant="destructive">{t('statusFailed')}</Badge>;
       default:
         return <Badge variant="outline">{doc.processing_status}</Badge>;
     }
@@ -194,7 +196,7 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search documents..."
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -216,8 +218,8 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
           <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground">
             {searchQuery
-              ? 'No documents match your search'
-              : 'No documents uploaded yet'}
+              ? t('noMatch')
+              : t('empty')}
           </p>
         </div>
       ) : (
@@ -228,7 +230,7 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
               ref={doc.document_uuid === focusedUuid ? focusedRowRef : undefined}
               role={canOpen(doc) ? 'button' : undefined}
               tabIndex={canOpen(doc) ? 0 : undefined}
-              aria-label={canOpen(doc) ? `Edit ${doc.filename}` : undefined}
+              aria-label={canOpen(doc) ? t('editAria', { filename: doc.filename }) : undefined}
               aria-current={doc.document_uuid === focusedUuid ? 'true' : undefined}
               className={`flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors ${
                 canOpen(doc)
@@ -253,27 +255,27 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
                     <span className="font-medium truncate">{doc.filename}</span>
                     {getStatusBadge(doc)}
                     {doc.retrieval_mode === 'full_document' ? (
-                      <Badge variant="outline" className="text-xs">Full Document</Badge>
+                      <Badge variant="outline" className="text-xs">{t('fullDocument')}</Badge>
                     ) : (
-                      <Badge variant="outline" className="text-xs">Chunked</Badge>
+                      <Badge variant="outline" className="text-xs">{t('chunked')}</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>{formatFileSize(doc.file_size_bytes)}</span>
                     {doc.processing_status === 'completed' && doc.retrieval_mode !== 'full_document' && (
-                      <span>{doc.total_chunks} chunks</span>
+                      <span>{t('chunks', { count: doc.total_chunks })}</span>
                     )}
                     <span>{formatDateTime(doc.created_at, organizationTimezone)}</span>
                   </div>
                   {doc.has_live_content && isBusy(doc) && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Agents keep using the previous version until the update finishes.
+                      {t('agentsUsingPrevious')}
                     </p>
                   )}
                   {doc.processing_error && (
                     <p className="text-xs text-destructive mt-1">
-                      Error: {doc.processing_error}
-                      {doc.has_live_content && ' Agents are still using the previous version.'}
+                      {t('errorLabel')} {doc.processing_error}
+                      {doc.has_live_content && ` ${t('agentsStillUsingPrevious')}`}
                     </p>
                   )}
                   {doc.processing_status === 'failed' &&
@@ -281,7 +283,7 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
                    typeof doc.docling_metadata === 'object' &&
                    'duplicate_of' in doc.docling_metadata && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Duplicate of another document
+                      {t('duplicate')}
                     </p>
                   )}
                 </div>
@@ -296,7 +298,7 @@ export default function DocumentList({ refreshTrigger }: DocumentListProps) {
                     size="sm"
                     onClick={() => setEditingDoc(doc)}
                     disabled={isBusy(doc)}
-                    title={isBusy(doc) ? 'Available once processing finishes' : 'Edit'}
+                    title={isBusy(doc) ? t('availableOnceProcessed') : t('edit')}
                   >
                     <Pencil className="w-4 h-4" />
                   </Button>

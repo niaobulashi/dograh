@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, List, Loader2 } from 'lucide-react';
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -15,6 +16,7 @@ import { impersonateAsSuperadmin } from "@/lib/utils";
 type ImpersonationTarget = "provider" | "email";
 
 export default function SuperadminPage() {
+    const t = useTranslations("Superadmin");
     const [providerUserId, setProviderUserId] = useState("");
     const [email, setEmail] = useState("");
     const [error, setError] = useState<{ target: ImpersonationTarget; message: string } | null>(null);
@@ -28,7 +30,7 @@ export default function SuperadminPage() {
         if (!trimmedValue) {
             setError({
                 target,
-                message: target === "provider" ? "Enter a provider user ID." : "Enter an email address.",
+                message: target === "provider" ? t("enterProviderId") : t("enterEmail"),
             });
             return;
         }
@@ -39,14 +41,14 @@ export default function SuperadminPage() {
             if (!user) {
                 setError({
                     target,
-                    message: "User not authenticated. Please log in and try again.",
+                    message: t("notAuthenticated"),
                 });
                 return;
             }
 
             const accessToken = await getAccessToken();
             if (!accessToken) {
-                throw new Error('Missing admin access token');
+                throw new Error(t("missingAdminToken"));
             }
 
             await impersonateAsSuperadmin({
@@ -60,7 +62,7 @@ export default function SuperadminPage() {
         } catch (err) {
             setError({
                 target,
-                message: err instanceof Error ? err.message : "Failed to impersonate user. Please try again.",
+                message: err instanceof Error ? err.message : t("impersonateFailed"),
             });
             console.error("Impersonation error:", err);
         } finally {
@@ -79,25 +81,25 @@ export default function SuperadminPage() {
     };
 
     return (
-        <PageLayout title="Superadmin Dashboard" description="Manage users and view system-wide data">
+        <PageLayout title={t("dashboardTitle")} description={t("dashboardDescription")}>
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Provider User ID</CardTitle>
+                        <CardTitle>{t("providerUserId")}</CardTitle>
                         <CardDescription>
-                            Impersonate with the Stack provider user ID
+                            {t("providerCardDescription")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleProviderImpersonate} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="providerUserId">Provider User ID</Label>
+                                <Label htmlFor="providerUserId">{t("providerUserId")}</Label>
                                 <Input
                                     id="providerUserId"
                                     value={providerUserId}
                                     onChange={(e) => setProviderUserId(e.target.value)}
-                                    placeholder="Provider user ID"
+                                    placeholder={t("providerIdPlaceholder")}
                                     required
                                 />
                             </div>
@@ -116,10 +118,10 @@ export default function SuperadminPage() {
                                 {loadingTarget === "provider" ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processing...
+                                        {t("processing")}
                                     </>
                                 ) : (
-                                    'Impersonate by Provider ID'
+                                    t("impersonateByProviderId")
                                 )}
                             </Button>
                         </form>
@@ -128,15 +130,15 @@ export default function SuperadminPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Email</CardTitle>
+                        <CardTitle>{t("emailCardTitle")}</CardTitle>
                         <CardDescription>
-                            Impersonate with a primary email address
+                            {t("emailCardDescription")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleEmailImpersonate} className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email Address</Label>
+                                <Label htmlFor="email">{t("emailLabel")}</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -161,10 +163,10 @@ export default function SuperadminPage() {
                                 {loadingTarget === "email" ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processing...
+                                        {t("processing")}
                                     </>
                                 ) : (
-                                    'Impersonate by Email'
+                                    t("impersonateByEmail")
                                 )}
                             </Button>
                         </form>
@@ -173,16 +175,16 @@ export default function SuperadminPage() {
 
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Workflow Runs</CardTitle>
+                        <CardTitle>{t("workflowRunsTitle")}</CardTitle>
                         <CardDescription>
-                            View and manage all workflow runs across organizations
+                            {t("workflowRunsDescription")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Link href="/superadmin/runs">
                             <Button className="w-full md:w-auto">
                                 <List className="mr-2 h-4 w-4" />
-                                View All Runs
+                                {t("viewAllRuns")}
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </Link>

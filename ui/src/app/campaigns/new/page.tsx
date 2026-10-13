@@ -3,6 +3,7 @@
 import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import type { ITimezoneOption } from 'react-timezone-select';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ import CsvUploadSelector from '../CsvUploadSelector';
 import TrafficSplitEditor, { trafficSplitError } from '../TrafficSplitEditor';
 
 export default function NewCampaignPage() {
+    const t = useTranslations("Campaigns");
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const router = useRouter();
 
@@ -110,11 +112,11 @@ export default function NewCampaignPage() {
             }
         } catch (error) {
             console.error('Failed to fetch telephony configurations:', error);
-            toast.error('Failed to load telephony configurations');
+            toast.error(t('new.errorLoadTelephony'));
         } finally {
             setIsLoadingTelephonyConfigs(false);
         }
-    }, [user, getAccessToken]);
+    }, [user, getAccessToken, t]);
 
     // Fetch campaign limits
     const fetchCampaignDefaults = useCallback(async () => {
@@ -212,7 +214,7 @@ export default function NewCampaignPage() {
         setCreateError(null);
 
         if (!campaignName || !!trafficSplitError(variants) || !sourceId || !selectedTelephonyConfigId) {
-            toast.error('Please fill in all fields');
+            toast.error(t('new.errorFillAll'));
             return;
         }
 
@@ -220,12 +222,12 @@ export default function NewCampaignPage() {
         if (maxConcurrencyValue !== null && (
             !Number.isInteger(maxConcurrencyValue) || maxConcurrencyValue < 1 || maxConcurrencyValue > effectiveLimit
         )) {
-            toast.error(`Max concurrent calls must be between 1 and your organization limit (${effectiveLimit})`);
+            toast.error(t('new.errorMaxConcurrency', { limit: effectiveLimit }));
             return;
         }
         const dialRate = Number(rateLimitPerSecond);
         if (!Number.isInteger(dialRate) || dialRate < 1 || dialRate > orgConcurrentLimit) {
-            toast.error(`Calls started per second must be between 1 and ${orgConcurrentLimit}`);
+            toast.error(t('new.errorDialRate', { limit: orgConcurrentLimit }));
             return;
         }
 
@@ -282,19 +284,19 @@ export default function NewCampaignPage() {
 
             if (response.error) {
                 // Extract error message from API response
-                const errorMessage = detailFromError(response.error, 'Failed to create campaign');
+                const errorMessage = detailFromError(response.error, t('new.errorCreate'));
                 setCreateError(errorMessage);
                 toast.error(errorMessage);
                 return;
             }
 
             if (response.data) {
-                toast.success('Campaign created successfully');
+                toast.success(t('new.successCreate'));
                 router.push(`/campaigns/${response.data.id}`);
             }
         } catch (error: unknown) {
             console.error('Failed to create campaign:', error);
-            const errorMessage = 'Failed to create campaign';
+            const errorMessage = t('new.errorCreate');
             setCreateError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -323,50 +325,50 @@ export default function NewCampaignPage() {
                     className="mb-4"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Campaigns
+                    {t('new.backToCampaigns')}
                 </Button>
-                <h1 className="text-3xl font-bold mb-2">Create New Campaign</h1>
-                <p className="text-muted-foreground">Set up a new campaign to execute workflows at scale</p>
+                <h1 className="text-3xl font-bold mb-2">{t('new.title')}</h1>
+                <p className="text-muted-foreground">{t('new.subtitle')}</p>
             </div>
 
             <Card>
                     <CardHeader>
-                        <CardTitle>Campaign Details</CardTitle>
+                        <CardTitle>{t('new.detailsTitle')}</CardTitle>
                         <CardDescription>
-                            Configure your campaign settings
+                            {t('new.detailsDescription')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="campaign-name">Campaign Name</Label>
+                                <Label htmlFor="campaign-name">{t('new.campaignName')}</Label>
                                 <Input
                                     id="campaign-name"
-                                    placeholder="Enter campaign name"
+                                    placeholder={t('new.campaignNamePlaceholder')}
                                     value={campaignName}
                                     onChange={(e) => setCampaignName(e.target.value)}
                                     maxLength={255}
                                     required
                                 />
                                 <p className="text-sm text-muted-foreground">
-                                    Choose a descriptive name for your campaign
+                                    {t('new.campaignNameHint')}
                                 </p>
                             </div>
 
                             <TrafficSplitEditor value={variants} onChange={setVariants} disabled={isSubmitting} />
 
                             <div className="space-y-2">
-                                <Label htmlFor="telephony-config">Telephony Configuration</Label>
+                                <Label htmlFor="telephony-config">{t('new.telephonyConfig')}</Label>
                                 {!isLoadingTelephonyConfigs && telephonyConfigs.length === 0 ? (
                                     <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                                        No telephony configurations yet.{' '}
+                                        {t('new.noTelephonyBeforeLink')}{' '}
                                         <Link
                                             href="/telephony-configurations"
                                             className="underline text-foreground"
                                         >
-                                            Add one
+                                            {t('new.noTelephonyLink')}
                                         </Link>{' '}
-                                        to create a campaign.
+                                        {t('new.noTelephonyAfterLink')}
                                     </div>
                                 ) : (
                                     <Select
@@ -375,12 +377,12 @@ export default function NewCampaignPage() {
                                         required
                                     >
                                         <SelectTrigger id="telephony-config">
-                                            <SelectValue placeholder="Select a telephony configuration" />
+                                            <SelectValue placeholder={t('new.selectTelephony')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {isLoadingTelephonyConfigs ? (
                                                 <SelectItem value="loading" disabled>
-                                                    Loading configurations...
+                                                    {t('new.loadingConfigs')}
                                                 </SelectItem>
                                             ) : (
                                                 telephonyConfigs.map((config) => (
@@ -389,7 +391,7 @@ export default function NewCampaignPage() {
                                                         value={config.id.toString()}
                                                     >
                                                         {config.name} ({config.provider})
-                                                        {config.is_default_outbound ? ' - default' : ''}
+                                                        {config.is_default_outbound ? t('new.defaultSuffix') : ''}
                                                     </SelectItem>
                                                 ))
                                             )}
@@ -397,12 +399,12 @@ export default function NewCampaignPage() {
                                     </Select>
                                 )}
                                 <p className="text-sm text-muted-foreground">
-                                    Outbound calls for this campaign will use this configuration&apos;s caller IDs
+                                    {t('new.telephonyHint')}
                                 </p>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="source-type">Data Source Type</Label>
+                                <Label htmlFor="source-type">{t('new.dataSourceType')}</Label>
                                 <Select
                                     value={sourceType}
                                     onValueChange={(value) => {
@@ -413,14 +415,14 @@ export default function NewCampaignPage() {
                                     required
                                 >
                                     <SelectTrigger id="source-type">
-                                        <SelectValue placeholder="Select source type" />
+                                        <SelectValue placeholder={t('new.selectSourceType')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="csv">CSV File</SelectItem>
+                                        <SelectItem value="csv">{t('new.csvFile')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <p className="text-sm text-muted-foreground">
-                                    Choose where your contact data is stored
+                                    {t('new.dataSourceHint')}
                                 </p>
                             </div>
 
@@ -436,7 +438,7 @@ export default function NewCampaignPage() {
                                 className="border rounded-lg"
                             >
                                 <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
-                                    <span className="font-medium">Advanced Settings</span>
+                                    <span className="font-medium">{t('new.advancedSettings')}</span>
                                     {showAdvancedSettings ? (
                                         <ChevronDown className="h-4 w-4" />
                                     ) : (
@@ -494,7 +496,7 @@ export default function NewCampaignPage() {
                                     type="submit"
                                     disabled={isSubmitting || !campaignName || !!trafficSplitError(variants) || !sourceId || !selectedTelephonyConfigId}
                                 >
-                                    {isSubmitting ? 'Creating...' : 'Create Campaign'}
+                                    {isSubmitting ? t('new.creating') : t('list.create')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -502,7 +504,7 @@ export default function NewCampaignPage() {
                                     onClick={handleBack}
                                     disabled={isSubmitting}
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </Button>
                             </div>
                         </form>

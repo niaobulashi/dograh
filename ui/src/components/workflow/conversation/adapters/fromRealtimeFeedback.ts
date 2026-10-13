@@ -84,10 +84,10 @@ function liveFeedbackItem(message: RealtimeFeedbackMessage, reasoningDurationMs?
             id: message.id,
             timestamp: message.timestamp,
             tone: "warning",
-            title: "Interruption Disabled",
+            title: "noticeInterruptionDisabled",
             text: message.text,
             linkHref: "https://docs.dograh.com/configurations/interruption",
-            linkLabel: "Learn more",
+            linkLabel: "learnMore",
         };
     }
 
@@ -97,7 +97,7 @@ function liveFeedbackItem(message: RealtimeFeedbackMessage, reasoningDurationMs?
             id: message.id,
             timestamp: message.timestamp,
             tone: "error",
-            title: message.fatal ? "Fatal Pipeline Error" : "Pipeline Error",
+            title: message.fatal ? "noticeFatalPipelineError" : "noticePipelineError",
             text: message.text,
             fatal: message.fatal,
         };
@@ -272,10 +272,10 @@ export function conversationItemsFromRealtimeFeedbackEvents(
                 id: `warning-${event.turn}-${index}`,
                 timestamp: event.timestamp,
                 tone: "warning",
-                title: "Interruption Disabled",
+                title: "noticeInterruptionDisabled",
                 text: feedbackEventText(event),
                 linkHref: "https://docs.dograh.com/configurations/interruption",
-                linkLabel: "Learn more",
+                linkLabel: "learnMore",
             });
             return;
         }
@@ -286,7 +286,7 @@ export function conversationItemsFromRealtimeFeedbackEvents(
                 id: `error-${event.turn}-${index}`,
                 timestamp: event.timestamp,
                 tone: "error",
-                title: event.payload.fatal ? "Fatal Pipeline Error" : "Pipeline Error",
+                title: event.payload.fatal ? "noticeFatalPipelineError" : "noticePipelineError",
                 text: feedbackEventText(event),
                 fatal: event.payload.fatal,
             });

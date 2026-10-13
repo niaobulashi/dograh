@@ -1,4 +1,5 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type {
     DocumentResponseSchema,
@@ -51,6 +52,7 @@ export interface PropertyInputProps {
  * mounting them.
  */
 export function PropertyInput({ spec, value, onChange, context }: PropertyInputProps) {
+    const t = useTranslations("Workflow");
     switch (spec.type) {
         case "string":
             return <StringWidget spec={spec} value={value} onChange={onChange} />;
@@ -121,7 +123,7 @@ export function PropertyInput({ spec, value, onChange, context }: PropertyInputP
             const exhaustiveCheck: never = spec.type;
             return (
                 <div className="text-xs text-destructive">
-                    Unknown property type: {String(exhaustiveCheck)}
+                    {t("unknownPropertyType", { type: String(exhaustiveCheck) })}
                 </div>
             );
         }
@@ -284,6 +286,7 @@ function FixedCollectionWidget({
     onChange,
     context,
 }: WidgetProps & { context: RendererContext }) {
+    const t = useTranslations("Workflow");
     const rows = (value as Array<Record<string, unknown>> | undefined) ?? [];
     const subProps = spec.properties ?? [];
 
@@ -332,7 +335,7 @@ function FixedCollectionWidget({
                                 variant="outline"
                                 size="icon"
                                 onClick={() => handleRemove(idx)}
-                                aria-label={`Remove row ${idx + 1}`}
+                                aria-label={t("removeRow", { index: idx + 1 })}
                             >
                                 <Trash2Icon className="w-4 h-4" />
                             </Button>
@@ -340,7 +343,7 @@ function FixedCollectionWidget({
                     </div>
                 ))}
                 <Button variant="outline" size="sm" className="w-fit" onClick={handleAdd}>
-                    <PlusIcon className="w-4 h-4 mr-1" /> Add
+                    <PlusIcon className="w-4 h-4 mr-1" /> {t("add")}
                 </Button>
             </div>
         </div>

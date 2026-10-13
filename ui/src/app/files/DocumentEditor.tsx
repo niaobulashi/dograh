@@ -1,6 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -38,6 +39,7 @@ interface DocumentEditorProps {
 }
 
 export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditorProps) {
+  const t = useTranslations('Files');
   const [content, setContent] = useState('');
   const [savedContent, setSavedContent] = useState('');
   const [fileHash, setFileHash] = useState('');
@@ -62,7 +64,7 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
         });
         if (cancelled) return;
         if (response.error || !response.data) {
-          setLoadError(detailFromError(response.error, 'Failed to load document'));
+          setLoadError(detailFromError(response.error, t('loadError')));
           return;
         }
         setContent(response.data.content);
@@ -71,7 +73,7 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
       } catch (err) {
         if (cancelled) return;
         logger.error('Error loading document content:', err);
-        setLoadError('Failed to load document');
+        setLoadError(t('loadError'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -81,7 +83,7 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
     return () => {
       cancelled = true;
     };
-  }, [documentUuid]);
+  }, [documentUuid, t]);
 
   const isDirty = content !== savedContent;
   // Saving unchanged text re-runs processing, so it doubles as a retry.
@@ -92,7 +94,7 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
 
   const handleOpenChange = (open: boolean) => {
     if (open || isSaving) return;
-    if (isDirty && !confirm('Discard your unsaved changes?')) return;
+    if (isDirty && !confirm(t('discardConfirm'))) return;
     onClose();
   };
 
@@ -106,18 +108,18 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
         body: { content, expected_file_hash: fileHash },
       });
       if (response.error || !response.data) {
-        setSaveError(detailFromError(response.error, 'Failed to save document'));
+        setSaveError(detailFromError(response.error, t('saveError')));
         return;
       }
       toast.success(
         response.data.processing_status === 'pending'
-          ? `Saved "${doc.filename}". Processing started.`
-          : `No changes to save in "${doc.filename}".`
+          ? t('savedProcessing', { filename: doc.filename })
+          : t('noChanges', { filename: doc.filename })
       );
       onSaved();
     } catch (err) {
       logger.error('Error saving document content:', err);
-      setSaveError('Failed to save document');
+      setSaveError(t('saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -130,8 +132,8 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
           <DialogTitle className="truncate pr-6">{doc?.filename}</DialogTitle>
           <DialogDescription>
             {isChunked
-              ? 'Saving re-splits and re-embeds this document. Agents keep using the current version until that finishes.'
-              : 'Agents keep using the current version until the saved text finishes processing, usually a few seconds.'}
+              ? t('chunkedSaveHint')
+              : t('fullDocumentSaveHint')}
           </DialogDescription>
         </DialogHeader>
 
@@ -143,7 +145,7 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
             className="flex h-[60vh] w-full flex-col items-center justify-center gap-2 rounded-md border border-input text-sm text-muted-foreground"
           >
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Loading document...</span>
+            <span>{t('loadingDocument')}</span>
           </div>
         ) : loadError ? (
           <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
@@ -163,10 +165,10 @@ export default function DocumentEditor({ doc, onClose, onSaved }: DocumentEditor
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isSaving}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave}>
-            {isSaving ? 'Saving...' : isChunked ? 'Save & re-index' : 'Save'}
+            {isSaving ? t('saving') : isChunked ? t('saveAndReindex') : t('save')}
           </Button>
         </DialogFooter>
       </DialogContent>

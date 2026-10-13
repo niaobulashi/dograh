@@ -9,6 +9,7 @@ import {
     Pencil,
     RotateCcw,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -67,6 +68,7 @@ export function WorkflowTable({
     currentFolderId = null,
 }: WorkflowTableProps) {
     const router = useRouter();
+    const t = useTranslations("Workflow");
     const organizationTimezone = useOrganizationTimezone();
     const [isPending, startTransition] = useTransition();
     const [loadingWorkflowId, setLoadingWorkflowId] = useState<number | null>(null);
@@ -79,6 +81,7 @@ export function WorkflowTable({
     const handleArchiveToggle = async (id: number, currentStatus: string) => {
         const newStatus = currentStatus === 'active' ? 'archived' : 'active';
         const action = currentStatus === 'active' ? 'Archive' : 'Restore';
+        const isArchiving = currentStatus === 'active';
 
         setLoadingWorkflowId(id);
 
@@ -93,14 +96,14 @@ export function WorkflowTable({
             });
 
             if (response.data) {
-                toast.success(`Workflow ${action.toLowerCase()}d successfully`);
+                toast.success(isArchiving ? t('workflowArchivedSuccessfully') : t('workflowRestoredSuccessfully'));
                 startTransition(() => {
                     router.refresh();
                 });
             }
         } catch (error) {
             console.error(`Error ${action.toLowerCase()}ing workflow:`, error);
-            toast.error(`Failed to ${action.toLowerCase()} workflow`);
+            toast.error(isArchiving ? t('failedToArchiveWorkflow') : t('failedToRestoreWorkflow'));
         } finally {
             setLoadingWorkflowId(null);
         }
@@ -114,17 +117,17 @@ export function WorkflowTable({
                 body: { folder_id: folderId },
             });
             if (response.error) {
-                throw new Error('Failed to move agent');
+                throw new Error(t('failedToMoveAgent'));
             }
             toast.success(
-                folderId === null ? 'Moved to Uncategorized' : 'Agent moved',
+                folderId === null ? t('movedToUncategorized') : t('agentMoved'),
             );
             startTransition(() => {
                 router.refresh();
             });
         } catch (error) {
             console.error('Error moving workflow:', error);
-            toast.error('Failed to move agent');
+            toast.error(t('failedToMoveAgent'));
         } finally {
             setMovingWorkflowId(null);
         }
@@ -136,11 +139,11 @@ export function WorkflowTable({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="font-semibold">ID</TableHead>
-                            <TableHead className="font-semibold">Agent Name</TableHead>
-                            <TableHead className="font-semibold">Created At</TableHead>
-                            <TableHead className="font-semibold text-center">Total Runs</TableHead>
-                            <TableHead className="font-semibold text-right">Actions</TableHead>
+                            <TableHead className="font-semibold">{t('id')}</TableHead>
+                            <TableHead className="font-semibold">{t('agentName')}</TableHead>
+                            <TableHead className="font-semibold">{t('createdAt')}</TableHead>
+                            <TableHead className="font-semibold text-center">{t('totalRuns')}</TableHead>
+                            <TableHead className="font-semibold text-right">{t('actions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -149,7 +152,7 @@ export function WorkflowTable({
                                 key={workflow.id}
                                 role="link"
                                 tabIndex={0}
-                                aria-label={`Edit ${workflow.name}`}
+                                aria-label={t('editName', { name: workflow.name })}
                                 className={`cursor-pointer hover:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring transition-colors ${showArchived ? 'opacity-60' : ''}`}
                                 onClick={() => handleEdit(workflow.id)}
                                 onKeyDown={(event) => {
@@ -186,7 +189,7 @@ export function WorkflowTable({
                                             className="flex items-center gap-2"
                                         >
                                             <Pencil size={16} />
-                                            Edit
+                                            {t('edit')}
                                         </Button>
                                         {folders && (
                                             <DropdownMenu>
@@ -202,18 +205,18 @@ export function WorkflowTable({
                                                         ) : (
                                                             <FolderInput size={16} />
                                                         )}
-                                                        Move
+                                                        {t('move')}
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-52">
-                                                    <DropdownMenuLabel>Move to folder</DropdownMenuLabel>
+                                                    <DropdownMenuLabel>{t('moveToFolder')}</DropdownMenuLabel>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         disabled={currentFolderId === null}
                                                         onClick={() => handleMove(workflow.id, null)}
                                                     >
                                                         <Inbox size={14} className="mr-2" />
-                                                        Uncategorized
+                                                        {t('uncategorized')}
                                                         {currentFolderId === null && (
                                                             <Check size={14} className="ml-auto" />
                                                         )}
@@ -244,19 +247,19 @@ export function WorkflowTable({
                                             {loadingWorkflowId === workflow.id ? (
                                                 <>
                                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                    {showArchived ? 'Restoring...' : 'Archiving...'}
+                                                    {showArchived ? t('restoring') : t('archiving')}
                                                 </>
                                             ) : (
                                                 <>
                                                     {showArchived ? (
                                                         <>
                                                             <RotateCcw size={16} />
-                                                            Restore
+                                                            {t('restore')}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Archive size={16} />
-                                                            Archive
+                                                            {t('archive')}
                                                         </>
                                                     )}
                                                 </>

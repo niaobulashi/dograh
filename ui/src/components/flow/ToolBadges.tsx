@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
@@ -13,6 +14,7 @@ interface ToolBadgesProps {
 }
 
 export function ToolBadges({ toolUuids, onStaleUuidsDetected, mcpToolFilters }: ToolBadgesProps) {
+    const t = useTranslations("Workflow");
     const { tools } = useWorkflow();
     const [selectedTools, setSelectedTools] = useState<ToolResponse[]>([]);
 
@@ -43,7 +45,7 @@ export function ToolBadges({ toolUuids, onStaleUuidsDetected, mcpToolFilters }: 
         return (
             <div className="flex flex-wrap gap-1">
                 <Badge variant="outline" className="text-xs">
-                    Loading...
+                    {t("loading")}
                 </Badge>
             </div>
         );

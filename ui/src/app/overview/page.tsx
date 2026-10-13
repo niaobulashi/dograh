@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
 import { GitHubStarBadge } from '@/components/layout/GitHubStarBadge';
@@ -9,27 +10,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/lib/auth';
 
 export default function OverviewPage() {
+    const t = useTranslations('Overview');
     const { user, provider } = useAuth();
     const isOSSMode = provider !== 'stack';
 
     return (
         <PageLayout
-            title={isOSSMode ? "Welcome to Dograh" : `Welcome${user?.displayName ? `, ${user.displayName.split(' ')[0]}` : ''}!`}
-            description={isOSSMode ? "Open source alternative to Vapi. Help us support the project by giving us a star on GitHub." : "Get started with building voice AI workflows"}
-            actions={isOSSMode && <GitHubStarBadge label="Star us on GitHub" showCount source="overview_page" />}>
+            title={isOSSMode
+                ? t('welcomeOss')
+                : user?.displayName
+                    ? t('welcomeNamed', { name: user.displayName.split(' ')[0] })
+                    : t('welcome')}
+            description={isOSSMode ? t('descriptionOss') : t('descriptionCloud')}
+            actions={isOSSMode && <GitHubStarBadge label={t('starUsOnGitHub')} showCount source="overview_page" />}>
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create and Manage your Voice Agents</CardTitle>
+                        <CardTitle>{t('createManageTitle')}</CardTitle>
                         <CardDescription>
-                            Build powerful AI Voice Agents with our visual editor
+                            {t('createManageDescription')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button asChild>
                             <Link href="/workflow">
-                                Go to Agents
+                                {t('goToAgents')}
                             </Link>
                         </Button>
                     </CardContent>
@@ -37,15 +43,15 @@ export default function OverviewPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Configure Services</CardTitle>
+                        <CardTitle>{t('configureServicesTitle')}</CardTitle>
                         <CardDescription>
-                            Set up your AI services like LLM, TTS, and STT providers
+                            {t('configureServicesDescription')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button asChild variant="outline">
                             <Link href="/model-configurations">
-                                Configure Models
+                                {t('configureModels')}
                             </Link>
                         </Button>
                     </CardContent>
@@ -55,9 +61,9 @@ export default function OverviewPage() {
             {/* Resources Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Resources</CardTitle>
+                    <CardTitle>{t('resourcesTitle')}</CardTitle>
                     <CardDescription>
-                        Get help and learn more about Dograh
+                        {t('resourcesDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -68,7 +74,7 @@ export default function OverviewPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                Documentation
+                                {t('documentation')}
                             </a>
                         </Button>
                         <Button asChild variant="outline">
@@ -77,7 +83,7 @@ export default function OverviewPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                Report an Issue
+                                {t('reportIssue')}
                             </a>
                         </Button>
                     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {
@@ -42,6 +43,7 @@ const UnsavedChangesContext = createContext<UnsavedChangesContextValue | null>(n
  * Sections register via the `useUnsavedChanges` hook.
  */
 export function UnsavedChangesProvider({ children }: { children: React.ReactNode }) {
+    const t = useTranslations("Shared");
     const [dirtySections, setDirtySections] = useState<Set<string>>(new Set());
     const [showDialog, setShowDialog] = useState(false);
     const pendingNavigate = useRef<(() => void) | null>(null);
@@ -218,14 +220,14 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
             <AlertDialog open={showDialog} onOpenChange={(open) => { if (!open) handleCancel(); }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+                        <AlertDialogTitle>{t("unsavedChanges")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            You have unsaved changes that will be lost. Are you sure you want to leave?
+                            {t("unsavedChangesDescription")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleCancel}>Stay on page</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleConfirm}>Discard changes</AlertDialogAction>
+                        <AlertDialogCancel onClick={handleCancel}>{t("stayOnPage")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirm}>{t("discardChanges")}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

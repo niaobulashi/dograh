@@ -2,6 +2,7 @@
 
 import { ExternalLink, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -51,6 +52,7 @@ import {
 } from "./config";
 
 export default function ToolsPage() {
+    const t = useTranslations("Tools");
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const router = useRouter();
 
@@ -103,12 +105,12 @@ export default function ToolsPage() {
                 setTools(response.data);
             }
         } catch (err) {
-            setError("Failed to fetch tools");
+            setError(t("list.errorFetch"));
             console.error("Error fetching tools:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [loading, user, getAccessToken]);
+    }, [loading, user, getAccessToken, t]);
 
     const fetchAgentOptions = useCallback(async () => {
         if (loading || !user) return;
@@ -144,22 +146,22 @@ export default function ToolsPage() {
 
     const handleCreateTool = async () => {
         if (!newToolName.trim()) {
-            setCreateError("Please enter a name for the tool");
+            setCreateError(t("list.errorNameRequired"));
             return;
         }
 
         if (newToolCategory === "transfer_agent" && !newTransferAgentWorkflowId) {
-            setCreateError("Choose the agent to transfer to");
+            setCreateError(t("list.errorChooseAgent"));
             return;
         }
 
         if (newToolCategory === "mcp" && !mcpUrl.trim()) {
-            setCreateError("Please enter the MCP server URL");
+            setCreateError(t("list.errorMcpUrlRequired"));
             return;
         }
 
         if (newToolCategory === "mcp" && !MCP_URL_PATTERN.test(mcpUrl.trim())) {
-            setCreateError("MCP server URL must start with http:// or https://");
+            setCreateError(t("list.errorMcpUrlInvalid"));
             return;
         }
 
@@ -199,7 +201,7 @@ export default function ToolsPage() {
             });
 
             if (response.error) {
-                setCreateError(detailFromError(response.error, "Failed to create tool"));
+                setCreateError(detailFromError(response.error, t("list.errorCreate")));
                 return;
             }
 
@@ -216,7 +218,7 @@ export default function ToolsPage() {
                 router.push(`/tools/${response.data.tool_uuid}`);
             }
         } catch (err: unknown) {
-            let errorMessage = "Failed to create tool";
+            let errorMessage = t("list.errorCreate");
             if (err && typeof err === "object") {
                 const errObj = err as Record<string, unknown>;
                 // Handle API client error response
@@ -240,7 +242,7 @@ export default function ToolsPage() {
 
     const handleDeleteTool = async (toolUuid: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm("Are you sure you want to archive this tool?")) return;
+        if (!confirm(t("list.confirmArchive"))) return;
 
         try {
             setError(null);
@@ -257,7 +259,7 @@ export default function ToolsPage() {
 
             fetchTools();
         } catch (err) {
-            setError("Failed to archive tool");
+            setError(t("list.errorArchive"));
             console.error("Error archiving tool:", err);
         }
     };
@@ -280,7 +282,7 @@ export default function ToolsPage() {
 
             fetchTools();
         } catch (err) {
-            setError("Failed to unarchive tool");
+            setError(t("list.errorUnarchive"));
             console.error("Error unarchiving tool:", err);
         }
     };
@@ -294,20 +296,22 @@ export default function ToolsPage() {
     const activeTools = filteredTools.filter((tool) => tool.status === "active");
     const archivedTools = filteredTools.filter((tool) => tool.status === "archived");
 
+    const selectedCategoryConfig = getCategoryConfig(newToolCategory);
+
     const getCategoryBadge = (category: string) => {
         switch (category) {
             case "http_api":
-                return <Badge variant="default">HTTP API</Badge>;
+                return <Badge variant="default">{t("category.httpApi")}</Badge>;
             case "end_call":
-                return <Badge variant="destructive">End Call</Badge>;
+                return <Badge variant="destructive">{t("category.endCall")}</Badge>;
             case "calculator":
-                return <Badge variant="secondary">Calculator</Badge>;
+                return <Badge variant="secondary">{t("category.calculator")}</Badge>;
             case "native":
-                return <Badge variant="secondary">Native</Badge>;
+                return <Badge variant="secondary">{t("category.native")}</Badge>;
             case "integration":
-                return <Badge variant="outline">Integration</Badge>;
+                return <Badge variant="outline">{t("category.integration")}</Badge>;
             case "mcp":
-                return <Badge variant="outline">MCP</Badge>;
+                return <Badge variant="outline">{t("category.mcp")}</Badge>;
             default:
                 return <Badge variant="outline">{category}</Badge>;
         }
@@ -316,11 +320,11 @@ export default function ToolsPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case "active":
-                return <Badge className="bg-green-500">Active</Badge>;
+                return <Badge className="bg-green-500">{t("status.active")}</Badge>;
             case "draft":
-                return <Badge variant="secondary">Draft</Badge>;
+                return <Badge variant="secondary">{t("status.draft")}</Badge>;
             case "archived":
-                return <Badge variant="destructive">Archived</Badge>;
+                return <Badge variant="destructive">{t("status.archived")}</Badge>;
             default:
                 return <Badge variant="outline">{status}</Badge>;
         }
@@ -328,7 +332,7 @@ export default function ToolsPage() {
 
     if (loading || !user) {
         return (
-            <PageLayout title="Tools">
+            <PageLayout title={t("title")}>
                 <div className="space-y-4">
                     <Skeleton className="h-12 w-64" />
                     <Skeleton className="h-64 w-full" />
@@ -339,9 +343,9 @@ export default function ToolsPage() {
 
     return (
         <>
-            <PageLayout title="Tools" description={<>Manage reusable tools that can be used across your workflows.{" "}
+            <PageLayout title={t("title")} description={<>{t("description")}{" "}
                 <a href="https://docs.dograh.com/voice-agent/tools/introduction" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
-                    Learn more <ExternalLink className="h-3 w-3" />
+                    {t("learnMore")} <ExternalLink className="h-3 w-3" />
                 </a></>}>
 
                 {error && (
@@ -350,16 +354,16 @@ export default function ToolsPage() {
                     </div>
                 )}
 
-                <PageSection title="Your Tools"
-                    description="Create and manage tools for your organization"
+                <PageSection title={t("list.yourTools")}
+                    description={t("list.yourToolsDescription")}
                     actions={<Button onClick={() => setIsCreateDialogOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Tool
+                        {t("list.createTool")}
                     </Button>}
                     toolbar={<div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search tools..."
+                            placeholder={t("list.searchPlaceholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10"
@@ -385,12 +389,12 @@ export default function ToolsPage() {
                             {renderToolIcon("http_api", "w-12 h-12 text-muted-foreground mx-auto mb-4")}
                             <p className="text-muted-foreground mb-4">
                                 {searchQuery
-                                    ? "No tools match your search"
-                                    : "No tools found"}
+                                    ? t("list.noMatch")
+                                    : t("list.noTools")}
                             </p>
                             {!searchQuery && (
                                 <Button onClick={() => setIsCreateDialogOpen(true)}>
-                                    Create Your First Tool
+                                    {t("list.createFirstTool")}
                                 </Button>
                             )}
                         </div>
@@ -447,10 +451,10 @@ export default function ToolsPage() {
                             ) : !searchQuery ? (
                                 <div className="text-center py-8">
                                     <p className="text-muted-foreground mb-4">
-                                        No active tools
+                                        {t("list.noActiveTools")}
                                     </p>
                                     <Button onClick={() => setIsCreateDialogOpen(true)}>
-                                        Create Your First Tool
+                                        {t("list.createFirstTool")}
                                     </Button>
                                 </div>
                             ) : null}
@@ -459,7 +463,7 @@ export default function ToolsPage() {
                             {archivedTools.length > 0 && (
                                 <div className="mt-8">
                                     <h3 className="text-lg font-semibold text-muted-foreground mb-4">
-                                        Archived Tools
+                                        {t("list.archivedTools")}
                                     </h3>
                                     <div className="space-y-4">
                                         {archivedTools.map((tool) => (
@@ -502,7 +506,7 @@ export default function ToolsPage() {
                                                         handleUnarchiveTool(tool.tool_uuid, e)
                                                     }
                                                     className="text-primary hover:text-primary/90"
-                                                    title="Restore tool"
+                                                    title={t("list.restoreTool")}
                                                 >
                                                     <RotateCcw className="w-4 h-4" />
                                                 </Button>
@@ -530,14 +534,14 @@ export default function ToolsPage() {
             }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Create New Tool</DialogTitle>
+                        <DialogTitle>{t("list.createDialogTitle")}</DialogTitle>
                         <DialogDescription>
-                            Create a new tool that can be used in your workflows.
+                            {t("list.createDialogDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label>Tool Type</Label>
+                            <Label>{t("list.toolType")}</Label>
                             <Select
                                 value={newToolCategory}
                                 onValueChange={(v) => {
@@ -546,8 +550,8 @@ export default function ToolsPage() {
                                     setCreateError(null);
                                     const categoryConfig = getCategoryConfig(category);
                                     if (categoryConfig?.autoFill) {
-                                        setNewToolName(categoryConfig.autoFill.name);
-                                        setNewToolDescription(categoryConfig.autoFill.description);
+                                        setNewToolName(t(categoryConfig.autoFill.nameKey));
+                                        setNewToolDescription(t(categoryConfig.autoFill.descriptionKey));
                                     }
                                 }}
                             >
@@ -561,55 +565,54 @@ export default function ToolsPage() {
                                             value={category.value}
                                             disabled={category.disabled}
                                         >
-                                            {category.label}
+                                            {t(category.labelKey)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                                {getCategoryConfig(newToolCategory)?.description}
+                                {selectedCategoryConfig && t(selectedCategoryConfig.descriptionKey)}
                             </p>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="name">Tool Name</Label>
+                            <Label htmlFor="name">{t("list.toolName")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Use a descriptive name, like &quot;Get Weather using API&quot; for a tool that fetches weather
+                                {t("list.toolNameHint")}
                             </Label>
                             <Input
                                 id="name"
                                 value={newToolName}
                                 onChange={(e) => setNewToolName(e.target.value)}
-                                placeholder="e.g., Book Appointment, Check Inventory"
+                                placeholder={t("list.toolNamePlaceholder")}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="description">Description (Optional)</Label>
+                            <Label htmlFor="description">{t("list.descriptionOptional")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Provide a description which makes it easy for LLM to understand what this tool does
+                                {t("list.descriptionHint")}
                             </Label>
                             <Input
                                 id="description"
                                 value={newToolDescription}
                                 onChange={(e) => setNewToolDescription(e.target.value)}
-                                placeholder="What does this tool do?"
+                                placeholder={t("list.descriptionPlaceholder")}
                             />
                         </div>
 
                         {newToolCategory === "transfer_agent" && (
                             <div className="grid gap-2">
                                 <Label htmlFor="transfer-agent-workflow">
-                                    Transfer to agent
+                                    {t("list.transferToAgent")}
                                 </Label>
                                 <Label className="text-xs text-muted-foreground">
-                                    The agent this tool hands the caller to. For more
-                                    than one destination, create a tool per agent.
+                                    {t("list.transferToAgentHint")}
                                 </Label>
                                 <Select
                                     value={newTransferAgentWorkflowId}
                                     onValueChange={setNewTransferAgentWorkflowId}
                                 >
                                     <SelectTrigger id="transfer-agent-workflow">
-                                        <SelectValue placeholder="Select an agent" />
+                                        <SelectValue placeholder={t("list.selectAgent")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {agentOptions.map((agent) => (
@@ -628,7 +631,7 @@ export default function ToolsPage() {
                         {newToolCategory === "mcp" && (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="mcp-url">MCP Server URL</Label>
+                                    <Label htmlFor="mcp-url">{t("list.mcpServerUrl")}</Label>
                                     <Input
                                         id="mcp-url"
                                         value={mcpUrl}
@@ -637,9 +640,9 @@ export default function ToolsPage() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Transport</Label>
+                                    <Label>{t("list.transport")}</Label>
                                     <Input
-                                        value="Streamable HTTP"
+                                        value={t("list.streamableHttp")}
                                         disabled
                                         readOnly
                                     />
@@ -647,19 +650,19 @@ export default function ToolsPage() {
                                 <CredentialSelector
                                     value={mcpCredentialUuid}
                                     onChange={setMcpCredentialUuid}
-                                    label="Credential (Optional)"
-                                    description="Select a credential for authenticating with the MCP server, or leave empty for no auth."
+                                    label={t("list.credentialOptional")}
+                                    description={t("list.credentialDescription")}
                                 />
                                 <div className="grid gap-2">
-                                    <Label htmlFor="mcp-tools-filter">Tools Filter (Optional)</Label>
+                                    <Label htmlFor="mcp-tools-filter">{t("list.toolsFilterOptional")}</Label>
                                     <Input
                                         id="mcp-tools-filter"
                                         value={mcpToolsFilter}
                                         onChange={(e) => setMcpToolsFilter(e.target.value)}
-                                        placeholder="e.g., tool_one, tool_two"
+                                        placeholder={t("list.toolsFilterPlaceholder")}
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Comma-separated list of tool names to allow. Leave empty to expose all tools from the server.
+                                        {t("list.toolsFilterHint")}
                                     </p>
                                 </div>
                             </>
@@ -675,10 +678,10 @@ export default function ToolsPage() {
                             variant="outline"
                             onClick={() => setIsCreateDialogOpen(false)}
                         >
-                            Cancel
+                            {t("cancel")}
                         </Button>
                         <Button onClick={handleCreateTool} disabled={isCreating}>
-                            {isCreating ? "Creating..." : "Create Tool"}
+                            {isCreating ? t("list.creating") : t("list.createTool")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Info } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { RecordingResponseSchema } from "@/client/types.gen";
 import { StaticTextWarning, TextOrAudioInput } from "@/components/flow/TextOrAudioInput";
@@ -104,61 +105,62 @@ export function HttpApiToolConfig({
     onCustomMessageRecordingIdChange,
     recordings = [],
 }: HttpApiToolConfigProps) {
+    const t = useTranslations("Tools");
     const urlHostnameParameters = extractUrlHostnameParameters(url);
     const urlPathParameters = extractUrlPathParameters(url);
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Tool Configuration</CardTitle>
+                <CardTitle>{t("httpApi.configTitle")}</CardTitle>
                 <CardDescription>
-                    Configure the HTTP API endpoint and request settings
+                    {t("httpApi.configDescription")}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="settings" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
-                        <TabsTrigger value="auth">Authentication</TabsTrigger>
-                        <TabsTrigger value="parameters">Parameters</TabsTrigger>
+                        <TabsTrigger value="settings">{t("httpApi.tabSettings")}</TabsTrigger>
+                        <TabsTrigger value="auth">{t("httpApi.tabAuth")}</TabsTrigger>
+                        <TabsTrigger value="parameters">{t("httpApi.tabParameters")}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="settings" className="space-y-4 mt-4">
                         <div className="grid gap-2">
-                            <Label>Tool Name</Label>
+                            <Label>{t("httpApi.toolName")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Use a descriptive name, like &quot;Get Weather using API&quot; for a tool that fetches weather
+                                {t("list.toolNameHint")}
                             </Label>
                             <Input
                                 value={name}
                                 onChange={(e) => onNameChange(e.target.value)}
-                                placeholder="e.g., Book Appointment"
+                                placeholder={t("httpApi.namePlaceholder")}
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Description</Label>
+                            <Label>{t("httpApi.description")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Provide a description which makes it easy for LLM to understand what this tool does
+                                {t("builtin.descriptionHint")}
                             </Label>
                             <Textarea
                                 value={description}
                                 onChange={(e) => onDescriptionChange(e.target.value)}
-                                placeholder="What does this tool do?"
+                                placeholder={t("list.descriptionPlaceholder")}
                                 rows={3}
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label>HTTP Method</Label>
+                                <Label>{t("httpApi.httpMethod")}</Label>
                                 <HttpMethodSelector
                                     value={httpMethod}
                                     onChange={onHttpMethodChange}
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Timeout (ms)</Label>
+                                <Label>{t("httpApi.timeout")}</Label>
                                 <Input
                                     type="number"
                                     value={timeoutMs}
@@ -172,7 +174,7 @@ export function HttpApiToolConfig({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Endpoint URL</Label>
+                            <Label>{t("httpApi.endpointUrl")}</Label>
                             <UrlInput
                                 value={url}
                                 onChange={onUrlChange}
@@ -183,7 +185,9 @@ export function HttpApiToolConfig({
                                 <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-600 flex gap-2 items-start mt-2">
                                     <Info className="h-4 w-4 mt-0.5 shrink-0" />
                                     <span>
-                                        Hostname parameters detected: {urlHostnameParameters.join(", ")}. Values resolve from tool call arguments or workflow context at runtime.
+                                        {t("httpApi.hostnameParamsDetected", {
+                                            params: urlHostnameParameters.join(", "),
+                                        })}
                                     </span>
                                 </div>
                             )}
@@ -191,16 +195,18 @@ export function HttpApiToolConfig({
                                 <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-600 flex gap-2 items-start mt-2">
                                     <Info className="h-4 w-4 mt-0.5 shrink-0" />
                                     <span>
-                                        Path parameters detected: {urlPathParameters.join(", ")}. Values resolve from tool call arguments or workflow context at runtime.
+                                        {t("httpApi.pathParamsDetected", {
+                                            params: urlPathParameters.join(", "),
+                                        })}
                                     </span>
                                 </div>
                             )}
                         </div>
 
                         <div className="grid gap-2 pt-4 border-t">
-                            <Label>Custom Message</Label>
+                            <Label>{t("httpApi.customMessage")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Optional message the AI will speak or play before executing this tool.
+                                {t("httpApi.customMessageHint")}
                             </Label>
                             <TextOrAudioInput
                                 type={customMessageType}
@@ -214,7 +220,7 @@ export function HttpApiToolConfig({
                                     <Textarea
                                         value={customMessage}
                                         onChange={(e) => onCustomMessageChange(e.target.value)}
-                                        placeholder="e.g., Let me check that for you, one moment please."
+                                        placeholder={t("httpApi.customMessagePlaceholder")}
                                         rows={2}
                                     />
                                 </>
@@ -231,10 +237,9 @@ export function HttpApiToolConfig({
 
                     <TabsContent value="parameters" className="space-y-4 mt-4">
                         <div className="grid gap-2">
-                            <Label>LLM Parameters</Label>
+                            <Label>{t("httpApi.llmParameters")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Define the parameters that the LLM will provide when calling this tool.
-                                These will be sent in the request body for POST/PUT/PATCH or as URL query params for GET/DELETE.
+                                {t("httpApi.llmParametersHint")}
                             </Label>
                             <ParameterEditor
                                 parameters={parameters}
@@ -243,10 +248,11 @@ export function HttpApiToolConfig({
                         </div>
 
                         <div className="grid gap-2 pt-4 border-t">
-                            <Label>Preset Parameters</Label>
+                            <Label>{t("httpApi.presetParameters")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Add values that Dograh should inject at runtime. These are not exposed to the LLM and can use
-                                workflow templates like {`{{initial_context.phone_number}}`} or fixed literals.
+                                {t("httpApi.presetParametersHintBeforeCode")}{" "}
+                                {`{{initial_context.phone_number}}`}{" "}
+                                {t("httpApi.presetParametersHintAfterCode")}
                             </Label>
                             <PresetParameterEditor
                                 parameters={presetParameters}
@@ -257,10 +263,9 @@ export function HttpApiToolConfig({
                         {["POST", "PUT", "PATCH"].includes(httpMethod) && (
                             <div className="grid gap-4 pt-4 border-t">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="body-format">Body Format</Label>
+                                    <Label htmlFor="body-format">{t("httpApi.bodyFormat")}</Label>
                                     <p className="text-xs text-muted-foreground">
-                                        How the request body is encoded. Use form-encoded only for APIs that
-                                        reject JSON; lists repeat the field name and objects are sent as JSON strings.
+                                        {t("httpApi.bodyFormatHint")}
                                     </p>
                                     <Select
                                         value={bodyFormat}
@@ -270,9 +275,9 @@ export function HttpApiToolConfig({
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="json">JSON (application/json)</SelectItem>
+                                            <SelectItem value="json">{t("httpApi.bodyFormatJson")}</SelectItem>
                                             <SelectItem value="form">
-                                                Form-encoded (application/x-www-form-urlencoded)
+                                                {t("httpApi.bodyFormatForm")}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -280,10 +285,10 @@ export function HttpApiToolConfig({
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="grid gap-1">
                                         <Label htmlFor="body-template-enabled">
-                                            Tool Body Template
+                                            {t("httpApi.bodyTemplate")}
                                         </Label>
                                         <p className="text-xs text-muted-foreground">
-                                            Shape the request body with a JSON template.
+                                            {t("httpApi.bodyTemplateHint")}
                                         </p>
                                     </div>
                                     <Switch
@@ -303,16 +308,16 @@ export function HttpApiToolConfig({
                         )}
 
                         <div className="grid gap-2 pt-4 border-t">
-                            <Label>Custom Headers</Label>
+                            <Label>{t("httpApi.customHeaders")}</Label>
                             <Label className="text-xs text-muted-foreground">
-                                Add custom headers to include in the request (optional)
+                                {t("httpApi.customHeadersHint")}
                             </Label>
                             <KeyValueEditor
                                 items={headers}
                                 onChange={onHeadersChange}
-                                keyPlaceholder="Header name"
-                                valuePlaceholder="Header value"
-                                addButtonText="Add Header"
+                                keyPlaceholder={t("headers.name")}
+                                valuePlaceholder={t("headers.value")}
+                                addButtonText={t("headers.add")}
                             />
                         </div>
                     </TabsContent>
