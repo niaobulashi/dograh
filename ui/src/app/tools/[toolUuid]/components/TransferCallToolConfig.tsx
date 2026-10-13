@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { RecordingResponseSchema } from "@/client/types.gen";
 import { RecordingSelect, StaticTextWarning } from "@/components/flow/TextOrAudioInput";
@@ -119,6 +120,7 @@ export function TransferCallToolConfig({
     fallbackDestination,
     onFallbackDestinationChange,
 }: TransferCallToolConfigProps) {
+    const t = useTranslations("Tools");
     const updateRule = (
         ruleId: string,
         update: (rule: ContextDestinationRuleRow) => ContextDestinationRuleRow,
@@ -139,41 +141,41 @@ export function TransferCallToolConfig({
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Transfer Call Configuration</CardTitle>
+                <CardTitle>{t("transferCall.configTitle")}</CardTitle>
                 <CardDescription>
-                    Configure call transfer settings. Supports phone numbers (Twilio, Plivo) and SIP endpoints (Asterisk ARI).
+                    {t("transferCall.configDescription")}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid gap-2">
-                    <Label>Tool Name</Label>
+                    <Label>{t("transferCall.toolName")}</Label>
                     <Label className="text-xs text-muted-foreground">
-                        A descriptive name for this tool
+                        {t("transferCall.toolNameHint")}
                     </Label>
                     <Input
                         value={name}
                         onChange={(e) => onNameChange(e.target.value)}
-                        placeholder="e.g., Transfer Call"
+                        placeholder={t("transferCall.namePlaceholder")}
                     />
                 </div>
 
                 <div className="grid gap-2">
-                    <Label>Description</Label>
+                    <Label>{t("transferCall.description")}</Label>
                     <Label className="text-xs text-muted-foreground">
-                        Helps the LLM understand when to use this tool
+                        {t("transferCall.descriptionHint")}
                     </Label>
                     <Textarea
                         value={description}
                         onChange={(e) => onDescriptionChange(e.target.value)}
-                        placeholder="When should the AI transfer the call?"
+                        placeholder={t("transferCall.descriptionPlaceholder")}
                         rows={3}
                     />
                 </div>
 
                 <div className="grid gap-4 pt-4 border-t">
-                    <Label>Pre-Transfer Message</Label>
+                    <Label>{t("transferCall.preTransferMessage")}</Label>
                     <Label className="text-xs text-muted-foreground">
-                        Choose whether to play a configured message before transferring. In dynamic mode, resolver custom_message overrides this when returned.
+                        {t("transferCall.preTransferMessageHint")}
                     </Label>
                     <RadioGroup
                         value={messageType}
@@ -186,18 +188,18 @@ export function TransferCallToolConfig({
                         >
                             <RadioGroupItem value="none" id="none" />
                             <div className="flex-1">
-                                <span className="font-medium">No Message</span>
+                                <span className="font-medium">{t("transferCall.noMessage")}</span>
                                 <p className="text-xs text-muted-foreground">
-                                    Transfer the call immediately without any message
+                                    {t("transferCall.noMessageHint")}
                                 </p>
                             </div>
                         </label>
                         <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
                             <RadioGroupItem value="custom" id="custom" className="mt-1" />
                             <label htmlFor="custom" className="flex-1 space-y-2 cursor-pointer">
-                                <span className="font-medium">Custom Message</span>
+                                <span className="font-medium">{t("transferCall.customMessage")}</span>
                                 <p className="text-xs text-muted-foreground">
-                                    Play a custom message before transferring
+                                    {t("transferCall.customMessageHint")}
                                 </p>
                             </label>
                         </div>
@@ -207,7 +209,7 @@ export function TransferCallToolConfig({
                                 <Textarea
                                     value={customMessage}
                                     onChange={(e) => onCustomMessageChange(e.target.value)}
-                                    placeholder="e.g., Please hold while I transfer your call."
+                                    placeholder={t("transferCall.customMessagePlaceholder")}
                                     rows={2}
                                 />
                             </div>
@@ -215,9 +217,9 @@ export function TransferCallToolConfig({
                         <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
                             <RadioGroupItem value="audio" id="audio" className="mt-1" />
                             <label htmlFor="audio" className="flex-1 space-y-2 cursor-pointer">
-                                <span className="font-medium">Pre-recorded Audio</span>
+                                <span className="font-medium">{t("transferCall.prerecordedAudio")}</span>
                                 <p className="text-xs text-muted-foreground">
-                                    Play a pre-recorded audio file before transferring
+                                    {t("transferCall.prerecordedAudioHint")}
                                 </p>
                             </label>
                         </div>
@@ -236,7 +238,7 @@ export function TransferCallToolConfig({
                 <div className="grid gap-3 pt-4 border-t">
                     <div className="flex items-center justify-between gap-4">
                         <Label htmlFor="transfer-introduction-enabled">
-                            Play a transfer introduction to both parties
+                            {t("transferCall.introductionEnabled")}
                         </Label>
                         <Switch
                             id="transfer-introduction-enabled"
@@ -245,15 +247,13 @@ export function TransferCallToolConfig({
                         />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Briefly summarise the call in your agent&apos;s voice before connecting
-                        both parties. Whoever answers the destination hears the summary.
-                        Available on Twilio using your configured TTS provider.
-                        Realtime speech-to-speech agents skip the introduction.
-                        If it cannot be prepared, the transfer continues.
+                        {t("transferCall.introductionHint")}
                     </p>
                     {introductionEnabled && (
                         <div className="grid gap-2">
-                            <Label htmlFor="transfer-introduction-prompt">Introduction instructions</Label>
+                            <Label htmlFor="transfer-introduction-prompt">
+                                {t("transferCall.introductionPrompt")}
+                            </Label>
                             <Textarea
                                 id="transfer-introduction-prompt"
                                 value={introductionPrompt}
@@ -262,18 +262,16 @@ export function TransferCallToolConfig({
                                 rows={4}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Specify details to include and the language, such as Brazilian Portuguese.
-                                Your TTS voice must support that language. Introductions are limited to
-                                25 words and 15 seconds and cannot be interrupted by speech.
+                                {t("transferCall.introductionPromptHint")}
                             </p>
                         </div>
                     )}
                 </div>
 
                 <div className="grid gap-2 pt-4 border-t">
-                    <Label>Transfer Timeout</Label>
+                    <Label>{t("transferCall.timeout")}</Label>
                     <Label className="text-xs text-muted-foreground">
-                        Maximum time to wait for destination to answer after the transfer starts (5-120 seconds)
+                        {t("transferCall.timeoutHint")}
                     </Label>
                     <Input
                         type="number"
@@ -288,31 +286,31 @@ export function TransferCallToolConfig({
                         className="w-32"
                     />
                     <Label className="text-xs text-muted-foreground">
-                        Default: 30 seconds
+                        {t("transferCall.timeoutDefault")}
                     </Label>
                 </div>
 
                 <div className="grid gap-2 pt-4 border-t">
                     <Label htmlFor="transfer-call-disposition">
-                        Call Disposition After Successful Transfer
+                        {t("transferCall.callDisposition")}
                     </Label>
                     <Label className="text-xs text-muted-foreground">
-                        Optional. This value is recorded only when the transfer succeeds. Leave blank to use the default transfer disposition.
+                        {t("transferCall.callDispositionHint")}
                     </Label>
                     <Input
                         id="transfer-call-disposition"
                         value={callDisposition}
                         onChange={(e) => onCallDispositionChange(e.target.value)}
-                        placeholder="e.g., transferred_to_sales"
+                        placeholder={t("transferCall.callDispositionPlaceholder")}
                         maxLength={64}
                     />
                 </div>
 
                 <div className="grid gap-4 pt-4 border-t">
                     <div>
-                        <Label>Destination Source</Label>
+                        <Label>{t("transferCall.destinationSource")}</Label>
                         <p className="text-xs text-muted-foreground">
-                            Choose a configured destination, ordered context rules, or an HTTP resolver.
+                            {t("transferCall.destinationSourceHint")}
                         </p>
                     </div>
                     <Tabs
@@ -321,28 +319,29 @@ export function TransferCallToolConfig({
                         className="w-full"
                     >
                         <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="static">Static / Template</TabsTrigger>
-                            <TabsTrigger value="dynamic">Dynamic HTTP Resolver</TabsTrigger>
-                            <TabsTrigger value="context_mapping">Context Mapping</TabsTrigger>
+                            <TabsTrigger value="static">{t("transferCall.tabStatic")}</TabsTrigger>
+                            <TabsTrigger value="dynamic">{t("transferCall.tabDynamic")}</TabsTrigger>
+                            <TabsTrigger value="context_mapping">{t("transferCall.tabContextMapping")}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="static" className="space-y-4 mt-4">
                             <div className="grid gap-2">
-                                <Label>Transfer Destination</Label>
+                                <Label>{t("transferCall.transferDestination")}</Label>
                                 <div className="text-xs text-muted-foreground space-y-1">
-                                    <p>Use a fixed number, SIP endpoint, or context template.</p>
+                                    <p>{t("transferCall.transferDestinationHint")}</p>
                                     <ul className="list-disc pl-4 space-y-1">
-                                        <li>SIP endpoint, e.g. PJSIP/1234</li>
-                                        <li>E.164 phone number, e.g. +1234567890</li>
+                                        <li>{t("transferCall.sipEndpointExample")}</li>
+                                        <li>{t("transferCall.e164Example")}</li>
                                         <li>
-                                            Template variable, e.g. {"{{initial_context.transfer_destination}}"}
+                                            {t("transferCall.templateVariableBeforeCode")}{" "}
+                                            {"{{initial_context.transfer_destination}}"}
                                         </li>
                                     </ul>
                                 </div>
                                 <Input
                                     value={destination}
                                     onChange={(e) => onDestinationChange(e.target.value)}
-                                    placeholder="+1234567890, PJSIP/1234, or {{initial_context.transfer_destination}}"
+                                    placeholder={t("transferCall.destinationPlaceholder")}
                                 />
                             </div>
                         </TabsContent>
@@ -350,23 +349,23 @@ export function TransferCallToolConfig({
                         <TabsContent value="dynamic" className="space-y-5 mt-4">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <Label>Dynamic Transfer Resolver</Label>
+                                    <Label>{t("transferCall.dynamicResolver")}</Label>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Dograh sends the resolved argument dictionary to this endpoint. The endpoint must return transfer_context.destination and may return transfer_context.custom_message.{" "}
+                                    {t("transferCall.dynamicResolverHint")}{" "}
                                     <a
                                         href={`${DOCS_BASE}/voice-agent/tools/call-transfer#dynamic-resolver-response`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                                     >
-                                        Docs <ExternalLink className="h-3 w-3" />
+                                        {t("docs")} <ExternalLink className="h-3 w-3" />
                                     </a>
                                 </p>
                             </div>
 
                             <div className="grid gap-2">
-                                <Label>Resolver URL</Label>
+                                <Label>{t("transferCall.resolverUrl")}</Label>
                                 <UrlInput
                                     value={resolverUrl}
                                     onChange={onResolverUrlChange}
@@ -374,12 +373,12 @@ export function TransferCallToolConfig({
                                     showValidation
                                 />
                                 <Label className="text-xs text-muted-foreground">
-                                    Dograh sends a POST request with the resolved argument dictionary.
+                                    {t("transferCall.resolverUrlHint")}
                                 </Label>
                             </div>
 
                             <div className="grid gap-2">
-                                <Label>Resolver Timeout</Label>
+                                <Label>{t("transferCall.resolverTimeout")}</Label>
                                 <Input
                                     type="number"
                                     value={resolverTimeoutMs}
@@ -392,41 +391,41 @@ export function TransferCallToolConfig({
                                     className="w-36"
                                 />
                                 <Label className="text-xs text-muted-foreground">
-                                    Default: 3000 ms. Maximum: 5000 ms.
+                                    {t("transferCall.resolverTimeoutHint")}
                                 </Label>
                             </div>
 
                             <CredentialSelector
                                 value={resolverCredentialUuid}
                                 onChange={onResolverCredentialUuidChange}
-                                label="Resolver Credential (Optional)"
-                                description="Select a credential for the resolver endpoint, or leave empty for no auth."
+                                label={t("transferCall.resolverCredential")}
+                                description={t("transferCall.resolverCredentialHint")}
                             />
 
                             <div className="grid gap-2">
-                                <Label>Resolver Wait Message</Label>
+                                <Label>{t("transferCall.resolverWaitMessage")}</Label>
                                 <Textarea
                                     value={resolverWaitMessage}
                                     onChange={(e) => onResolverWaitMessageChange(e.target.value)}
-                                    placeholder="One moment while I find the right team."
+                                    placeholder={t("transferCall.resolverWaitMessagePlaceholder")}
                                     rows={2}
                                 />
                                 <Label className="text-xs text-muted-foreground">
-                                    Spoken while Dograh waits for the resolver response.
+                                    {t("transferCall.resolverWaitMessageHint")}
                                 </Label>
                             </div>
 
                             <div className="grid gap-2 pt-4 border-t">
-                                <Label>LLM Parameters</Label>
+                                <Label>{t("transferCall.llmParameters")}</Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Define values the agent should provide when calling this transfer tool, such as state, department, or reason.{" "}
+                                    {t("transferCall.llmParametersHint")}{" "}
                                     <a
                                         href={`${DOCS_BASE}/voice-agent/tools/call-transfer#dynamic-resolver-request`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                                     >
-                                        Docs <ExternalLink className="h-3 w-3" />
+                                        {t("docs")} <ExternalLink className="h-3 w-3" />
                                     </a>
                                 </p>
                                 <ParameterEditor
@@ -436,16 +435,19 @@ export function TransferCallToolConfig({
                             </div>
 
                             <div className="grid gap-2 pt-4 border-t">
-                                <Label>Preset Parameters</Label>
+                                <Label>{t("transferCall.presetParameters")}</Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Add values Dograh injects at runtime. These are not exposed to the LLM and can use templates like {`{{initial_context.state}}`} or {`{{gathered_context.state}}`}.{" "}
+                                    {t("transferCall.presetParametersHintBeforeCode")}{" "}
+                                    {`{{initial_context.state}}`}{" "}
+                                    {t("transferCall.presetParametersHintBetweenCode")}{" "}
+                                    {`{{gathered_context.state}}`}.{" "}
                                     <a
                                         href={`${DOCS_BASE}/voice-agent/tools/call-transfer#dynamic-resolver-request`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                                     >
-                                        Docs <ExternalLink className="h-3 w-3" />
+                                        {t("docs")} <ExternalLink className="h-3 w-3" />
                                     </a>
                                 </p>
                                 <PresetParameterEditor
@@ -455,35 +457,35 @@ export function TransferCallToolConfig({
                             </div>
 
                             <div className="grid gap-2 pt-4 border-t">
-                                <Label>Custom Headers</Label>
+                                <Label>{t("transferCall.customHeaders")}</Label>
                                 <Label className="text-xs text-muted-foreground">
-                                    Add custom headers for authentication or routing metadata.
+                                    {t("transferCall.customHeadersHint")}
                                 </Label>
                                 <KeyValueEditor
                                     items={resolverHeaders}
                                     onChange={onResolverHeadersChange}
-                                    keyPlaceholder="Header name"
-                                    valuePlaceholder="Header value"
-                                    addButtonText="Add Header"
+                                    keyPlaceholder={t("headers.name")}
+                                    valuePlaceholder={t("headers.value")}
+                                    addButtonText={t("headers.add")}
                                 />
                             </div>
                         </TabsContent>
                         <TabsContent value="context_mapping" className="space-y-5 mt-4">
                             <div className="space-y-2">
-                                <Label>Ordered Context Routing</Label>
+                                <Label>{t("transferCall.orderedContextRouting")}</Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Rules are evaluated top to bottom. The first matching value selects its
-                                    destination; matching ignores case and surrounding whitespace.
+                                    {t("transferCall.contextRulesHint")}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    An unprefixed field such as <code>department</code> checks{" "}
-                                    <code>gathered_context.department</code> first, then{" "}
-                                    <code>initial_context.department</code>. Use an explicit prefix to read only
-                                    one context.
+                                    {t("transferCall.contextFieldHint1")} <code>department</code>{" "}
+                                    {t("transferCall.contextFieldHint2")}{" "}
+                                    <code>gathered_context.department</code>{" "}
+                                    {t("transferCall.contextFieldHint3")}{" "}
+                                    <code>initial_context.department</code>
+                                    {t("transferCall.contextFieldHint4")}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    Destinations can be a SIP endpoint, E.164 PSTN number, another
-                                    provider-supported destination, or a template such as{" "}
+                                    {t("transferCall.destinationsHintBeforeCode")}{" "}
                                     <code>{"{{initial_context.transfer_destination}}"}</code>.{" "}
                                     <a
                                         href={`${DOCS_BASE}/voice-agent/tools/call-transfer#context-mapping`}
@@ -491,20 +493,20 @@ export function TransferCallToolConfig({
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                                     >
-                                        Docs <ExternalLink className="h-3 w-3" />
+                                        {t("docs")} <ExternalLink className="h-3 w-3" />
                                     </a>
                                 </p>
                             </div>
                                 {contextDestinationRules.map((rule, ruleIndex) => (
                                     <div key={rule.id} className="space-y-4 rounded-lg border p-4">
                                         <div className="flex items-center justify-between">
-                                            <Label>Rule {ruleIndex + 1}</Label>
+                                            <Label>{t("transferCall.rule", { index: ruleIndex + 1 })}</Label>
                                             <div className="flex items-center gap-1">
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    aria-label={`Move rule ${ruleIndex + 1} up`}
+                                                    aria-label={t("transferCall.moveRuleUp", { index: ruleIndex + 1 })}
                                                     disabled={ruleIndex === 0}
                                                     onClick={() => moveRule(ruleIndex, -1)}
                                                 >
@@ -514,7 +516,7 @@ export function TransferCallToolConfig({
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    aria-label={`Move rule ${ruleIndex + 1} down`}
+                                                    aria-label={t("transferCall.moveRuleDown", { index: ruleIndex + 1 })}
                                                     disabled={ruleIndex === contextDestinationRules.length - 1}
                                                     onClick={() => moveRule(ruleIndex, 1)}
                                                 >
@@ -524,7 +526,7 @@ export function TransferCallToolConfig({
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    aria-label={`Remove rule ${ruleIndex + 1}`}
+                                                    aria-label={t("transferCall.removeRule", { index: ruleIndex + 1 })}
                                                     onClick={() => onContextDestinationRulesChange(
                                                         contextDestinationRules.filter((item) => item.id !== rule.id)
                                                     )}
@@ -535,27 +537,27 @@ export function TransferCallToolConfig({
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor={`context-path-${rule.id}`}>
-                                                Context Field
+                                                {t("transferCall.contextField")}
                                             </Label>
                                             <Input
                                                 id={`context-path-${rule.id}`}
-                                                aria-label={`Context field ${ruleIndex + 1}`}
+                                                aria-label={t("transferCall.contextFieldAria", { index: ruleIndex + 1 })}
                                                 value={rule.context_path}
                                                 onChange={(event) => updateRule(rule.id, (item) => ({
                                                     ...item,
                                                     context_path: event.target.value,
                                                 }))}
-                                                placeholder="department or initial_context.department"
+                                                placeholder={t("transferCall.contextFieldPlaceholder")}
                                             />
                                         </div>
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <Label>Value to Destination Mappings</Label>
+                                                <Label>{t("transferCall.valueToDestinationMappings")}</Label>
                                                 <Button
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
-                                                    aria-label={`Add mapping to rule ${ruleIndex + 1}`}
+                                                    aria-label={t("transferCall.addMappingAria", { index: ruleIndex + 1 })}
                                                     onClick={() => updateRule(rule.id, (item) => ({
                                                         ...item,
                                                         routes: [
@@ -564,13 +566,16 @@ export function TransferCallToolConfig({
                                                         ],
                                                     }))}
                                                 >
-                                                    <Plus className="mr-1 h-4 w-4" /> Add mapping
+                                                    <Plus className="mr-1 h-4 w-4" /> {t("transferCall.addMapping")}
                                                 </Button>
                                             </div>
                                             {rule.routes.map((route, index) => (
                                                 <div key={route.id} className="grid grid-cols-[1fr_1fr_auto] gap-2">
                                                     <Input
-                                                        aria-label={`Rule ${ruleIndex + 1} context value ${index + 1}`}
+                                                        aria-label={t("transferCall.contextValueAria", {
+                                                            rule: ruleIndex + 1,
+                                                            route: index + 1,
+                                                        })}
                                                         value={route.context_value}
                                                         onChange={(event) => updateRule(rule.id, (item) => ({
                                                             ...item,
@@ -580,10 +585,13 @@ export function TransferCallToolConfig({
                                                                     : existing
                                                             ),
                                                         }))}
-                                                        placeholder="Context value"
+                                                        placeholder={t("transferCall.contextValuePlaceholder")}
                                                     />
                                                     <Input
-                                                        aria-label={`Rule ${ruleIndex + 1} transfer destination ${index + 1}`}
+                                                        aria-label={t("transferCall.transferDestinationAria", {
+                                                            rule: ruleIndex + 1,
+                                                            route: index + 1,
+                                                        })}
                                                         value={route.destination}
                                                         onChange={(event) => updateRule(rule.id, (item) => ({
                                                             ...item,
@@ -593,13 +601,16 @@ export function TransferCallToolConfig({
                                                                     : existing
                                                             ),
                                                         }))}
-                                                        placeholder="PJSIP/1001, +1234567890, or {{initial_context.destination}}"
+                                                        placeholder={t("transferCall.routeDestinationPlaceholder")}
                                                     />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        aria-label={`Remove rule ${ruleIndex + 1} mapping ${index + 1}`}
+                                                        aria-label={t("transferCall.removeMappingAria", {
+                                                            rule: ruleIndex + 1,
+                                                            route: index + 1,
+                                                        })}
                                                         onClick={() => updateRule(rule.id, (item) => ({
                                                             ...item,
                                                             routes: item.routes.filter(
@@ -613,7 +624,7 @@ export function TransferCallToolConfig({
                                             ))}
                                             {rule.routes.length === 0 && (
                                                 <p className="text-xs text-muted-foreground">
-                                                    Add at least one mapping.
+                                                    {t("transferCall.addAtLeastOneMapping")}
                                                 </p>
                                             )}
                                         </div>
@@ -629,23 +640,25 @@ export function TransferCallToolConfig({
                                         createContextDestinationRuleRow(),
                                     ])}
                                 >
-                                    <Plus className="mr-1 h-4 w-4" /> Add routing rule
+                                    <Plus className="mr-1 h-4 w-4" /> {t("transferCall.addRoutingRule")}
                                 </Button>
                                 {contextDestinationRules.length === 0 && (
                                     <p className="text-xs text-muted-foreground">
-                                        Add at least one routing rule.
+                                        {t("transferCall.addAtLeastOneRoutingRule")}
                                     </p>
                                 )}
                                 <div className="grid gap-2">
-                                    <Label htmlFor="context-fallback-destination">Fallback Destination (Optional)</Label>
+                                    <Label htmlFor="context-fallback-destination">
+                                        {t("transferCall.fallbackDestination")}
+                                    </Label>
                                     <Input
                                         id="context-fallback-destination"
                                         value={fallbackDestination}
                                         onChange={(event) => onFallbackDestinationChange(event.target.value)}
-                                        placeholder="Provider destination or {{initial_context.destination}}"
+                                        placeholder={t("transferCall.fallbackDestinationPlaceholder")}
                                     />
                                     <Label className="text-xs text-muted-foreground">
-                                        Used only when no rule above matched.
+                                        {t("transferCall.fallbackDestinationHint")}
                                     </Label>
                                 </div>
                         </TabsContent>

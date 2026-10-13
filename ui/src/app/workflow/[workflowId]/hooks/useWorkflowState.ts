@@ -7,6 +7,7 @@ import {
     ReactFlowInstance,
 } from "@xyflow/react";
 import { EdgeChange, NodeChange } from "@xyflow/system";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -135,6 +136,7 @@ export const useWorkflowState = ({
         onVersionSaved({ versionNumber: data.version_number ?? undefined, versionStatus: data.version_status ?? undefined });
     }, [onVersionSaved]);
     const router = useRouter();
+    const t = useTranslations("Workflow");
     const rfInstance = useRef<ReactFlowInstance<FlowNode, FlowEdge> | null>(null);
     const [workflowConfigurationDefaults, setWorkflowConfigurationDefaults] =
         useState<WorkflowConfigurationDefaults | null>(null);
@@ -414,7 +416,7 @@ export const useWorkflowState = ({
         });
         if (maxInstanceViolation) {
             toast.error(
-                `${maxInstanceViolation.display_name} limit reached. Remove the extra node before saving.`,
+                t("nodeLimitReached", { name: maxInstanceViolation.display_name }),
             );
             return;
         }
@@ -485,6 +487,7 @@ export const useWorkflowState = ({
         validateWorkflow,
         applyWorkflowErrors,
         specs,
+        t,
     ]);
 
     // Set up keyboard shortcut for save (Cmd/Ctrl + S)
@@ -573,7 +576,7 @@ export const useWorkflowState = ({
             });
             if (response.error) {
                 throw new Error(
-                    detailFromError(response.error, "Failed to save template variables"),
+                    detailFromError(response.error, t("failedToSaveTemplateVariables")),
                 );
             }
             setTemplateContextVariables(variables);
@@ -583,7 +586,7 @@ export const useWorkflowState = ({
             logger.error(`Error saving template context variables: ${error}`);
             throw error;
         }
-    }, [workflowId, workflowName, user, setTemplateContextVariables, reportVersion]);
+    }, [workflowId, workflowName, user, setTemplateContextVariables, reportVersion, t]);
 
     // Save workflow configurations
     const saveWorkflowConfigurations = useCallback(async (configurations: WorkflowConfigurations, newWorkflowName: string) => {
@@ -605,7 +608,7 @@ export const useWorkflowState = ({
 
             if (response.error) {
                 const detail = (response.error as { detail?: unknown }).detail;
-                let msg = 'Failed to save workflow configurations';
+                let msg = t('failedToSaveWorkflowConfigurations');
                 if (typeof detail === 'string') {
                     msg = detail;
                 } else if (Array.isArray(detail)) {
@@ -633,7 +636,7 @@ export const useWorkflowState = ({
             logger.error(`Error saving workflow configurations: ${error}`);
             throw error;
         }
-    }, [workflowId, user, setWorkflowConfigurations, workflowConfigurationDefaults, reportVersion]);
+    }, [workflowId, user, setWorkflowConfigurations, workflowConfigurationDefaults, reportVersion, t]);
 
     // Save dictionary
     const saveDictionary = useCallback(async (newDictionary: string) => {
@@ -654,7 +657,7 @@ export const useWorkflowState = ({
                 },
             });
             if (response.error) {
-                throw new Error(detailFromError(response.error, "Failed to save dictionary"));
+                throw new Error(detailFromError(response.error, t("failedToSaveDictionary")));
             }
             setDictionary(newDictionary);
             setWorkflowConfigurations(updatedConfigurations);
@@ -663,7 +666,7 @@ export const useWorkflowState = ({
             logger.error(`Error saving dictionary: ${error}`);
             throw error;
         }
-    }, [workflowId, workflowName, user, setDictionary, setWorkflowConfigurations, workflowConfigurationDefaults, reportVersion]);
+    }, [workflowId, workflowName, user, setDictionary, setWorkflowConfigurations, workflowConfigurationDefaults, reportVersion, t]);
 
     // Update rfInstance when it changes
     useEffect(() => {

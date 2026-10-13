@@ -2,6 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import type { ITimezoneOption } from 'react-timezone-select';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ import CampaignAdvancedSettings, { getTimezoneValue, type TimeSlot } from '../..
 import TrafficSplitEditor, { trafficSplitError } from '../../TrafficSplitEditor';
 
 export default function EditCampaignPage() {
+    const t = useTranslations("Campaigns");
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const router = useRouter();
     const params = useParams();
@@ -94,13 +96,13 @@ export default function EditCampaignPage() {
             ]);
 
             if (response.error || !response.data) {
-                throw new Error(detailFromError(response.error, 'Failed to load campaign'));
+                throw new Error(detailFromError(response.error, t('edit.errorLoadCampaign')));
             }
             if (defaultsResponse.error || !defaultsResponse.data) {
-                throw new Error(detailFromError(defaultsResponse.error, 'Failed to load campaign limits'));
+                throw new Error(detailFromError(defaultsResponse.error, t('edit.errorLoadLimits')));
             }
             if (configsResponse.error || !configsResponse.data) {
-                throw new Error(detailFromError(configsResponse.error, 'Failed to load telephony configurations'));
+                throw new Error(detailFromError(configsResponse.error, t('edit.errorLoadTelephony')));
             }
 
             if (response.data) {
@@ -118,7 +120,7 @@ export default function EditCampaignPage() {
                     (config) => config.id === c.telephony_configuration_id,
                 );
                 if (c.telephony_configuration_id != null && !selectedConfig) {
-                    throw new Error('The campaign\'s telephony configuration could not be found');
+                    throw new Error(t('edit.errorTelephonyNotFound'));
                 }
                 setOrgConcurrentLimit(defaultsResponse.data.concurrent_call_limit);
                 setOutboundBlockedReason(selectedConfig?.outbound_blocked_reason ?? null);
@@ -162,12 +164,12 @@ export default function EditCampaignPage() {
             }
         } catch (error) {
             console.error('Failed to fetch campaign:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to load campaign');
+            toast.error(error instanceof Error ? error.message : t('edit.errorLoadCampaign'));
             router.replace(`/campaigns/${campaignId}`);
         } finally {
             setIsLoading(false);
         }
-    }, [user, getAccessToken, campaignId, router]);
+    }, [user, getAccessToken, campaignId, router, t]);
 
     // Initial load
     useEffect(() => {
@@ -184,13 +186,13 @@ export default function EditCampaignPage() {
         setSubmitError(null);
 
         if (!campaignName.trim()) {
-            toast.error('Campaign name is required');
+            toast.error(t('edit.errorNameRequired'));
             return;
         }
 
         const splitError = trafficSplitError(variants);
         if (splitChanged && splitError) {
-            toast.error(splitError);
+            toast.error(t(splitError));
             return;
         }
 
@@ -198,24 +200,24 @@ export default function EditCampaignPage() {
         if (maxConcurrencyValue !== null && (
             !Number.isInteger(maxConcurrencyValue) || maxConcurrencyValue < 1 || maxConcurrencyValue > effectiveLimit
         )) {
-            toast.error(`Max concurrent calls must be between 1 and your organization limit (${effectiveLimit})`);
+            toast.error(t('edit.errorMaxConcurrency', { limit: effectiveLimit }));
             return;
         }
         const dialRate = Number(rateLimitPerSecond);
         if (!Number.isInteger(dialRate) || dialRate < 1 || dialRate > orgConcurrentLimit) {
-            toast.error(`Calls started per second must be between 1 and ${orgConcurrentLimit}`);
+            toast.error(t('edit.errorDialRate', { limit: orgConcurrentLimit }));
             return;
         }
 
         // Validate schedule slots if enabled
         if (scheduleEnabled) {
             if (timeSlots.length === 0) {
-                toast.error('Add at least one time slot');
+                toast.error(t('edit.errorAddTimeSlot'));
                 return;
             }
             for (const slot of timeSlots) {
                 if (slot.start_time >= slot.end_time) {
-                    toast.error('Start time must be before end time for each slot');
+                    toast.error(t('edit.errorStartBeforeEnd'));
                     return;
                 }
             }
@@ -271,19 +273,19 @@ export default function EditCampaignPage() {
             });
 
             if (response.error) {
-                const errorMessage = detailFromError(response.error, 'Failed to update campaign');
+                const errorMessage = detailFromError(response.error, t('edit.errorUpdate'));
                 setSubmitError(errorMessage);
                 toast.error(errorMessage);
                 return;
             }
 
             if (response.data) {
-                toast.success('Campaign updated successfully');
+                toast.success(t('edit.successUpdate'));
                 router.push(`/campaigns/${campaignId}`);
             }
         } catch (error) {
             console.error('Failed to update campaign:', error);
-            const errorMessage = 'Failed to update campaign';
+            const errorMessage = t('edit.errorUpdate');
             setSubmitError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -309,7 +311,7 @@ export default function EditCampaignPage() {
     if (!campaign) {
         return (
             <PageShell width="narrow" className="space-y-6">
-                <p className="text-center text-muted-foreground">Campaign not found</p>
+                <p className="text-center text-muted-foreground">{t('edit.notFound')}</p>
             </PageShell>
         );
     }
@@ -323,27 +325,27 @@ export default function EditCampaignPage() {
                     className="mb-4"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Campaign
+                    {t('edit.backToCampaign')}
                 </Button>
-                <h1 className="text-3xl font-bold mb-2">Edit Campaign</h1>
-                <p className="text-muted-foreground">Modify campaign settings</p>
+                <h1 className="text-3xl font-bold mb-2">{t('edit.title')}</h1>
+                <p className="text-muted-foreground">{t('edit.subtitle')}</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Campaign Settings</CardTitle>
+                    <CardTitle>{t('edit.settingsTitle')}</CardTitle>
                     <CardDescription>
-                        Update name, concurrency, retry, and schedule configuration
+                        {t('edit.settingsDescription')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Campaign Name */}
                         <div className="space-y-2">
-                            <Label htmlFor="campaign-name">Campaign Name</Label>
+                            <Label htmlFor="campaign-name">{t('edit.campaignName')}</Label>
                             <Input
                                 id="campaign-name"
-                                placeholder="Enter campaign name"
+                                placeholder={t('edit.campaignNamePlaceholder')}
                                 value={campaignName}
                                 onChange={(e) => setCampaignName(e.target.value)}
                                 maxLength={255}
@@ -403,7 +405,7 @@ export default function EditCampaignPage() {
                                 type="submit"
                                 disabled={isSubmitting || !campaignName.trim()}
                             >
-                                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                {isSubmitting ? t('edit.saving') : t('edit.save')}
                             </Button>
                             <Button
                                 type="button"
@@ -411,7 +413,7 @@ export default function EditCampaignPage() {
                                 onClick={handleBack}
                                 disabled={isSubmitting}
                             >
-                                Cancel
+                                {t('cancel')}
                             </Button>
                         </div>
                     </form>

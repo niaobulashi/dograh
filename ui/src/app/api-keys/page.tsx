@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Eye, EyeOff, Key, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ import { formatDateTime } from '@/lib/dateTime';
 import logger from '@/lib/logger';
 
 export default function APIKeysPage() {
+    const t = useTranslations('ApiKeys');
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const { config } = useAppConfig();
     const organizationTimezone = useOrganizationTimezone();
@@ -99,12 +101,12 @@ export default function APIKeysPage() {
                 setApiKeys(response.data);
             }
         } catch (err) {
-            setError('Failed to fetch API keys');
+            setError(t('fetchApiKeysError'));
             console.error('Error fetching API keys:', err);
         } finally {
             setIsLoading(false);
         }
-    }, [loading, user, getAccessToken, showArchived]);
+    }, [loading, user, getAccessToken, showArchived, t]);
 
     const fetchServiceKeys = useCallback(async () => {
         logger.debug('[APIKeysPage] fetchServiceKeys called', {
@@ -139,12 +141,12 @@ export default function APIKeysPage() {
                 setServiceKeys(response.data);
             }
         } catch (err) {
-            setError('Failed to fetch service keys');
+            setError(t('fetchServiceKeysError'));
             console.error('Error fetching service keys:', err);
         } finally {
             setIsServiceKeysLoading(false);
         }
-    }, [loading, user, getAccessToken, showServiceArchived]);
+    }, [loading, user, getAccessToken, showServiceArchived, t]);
 
     useEffect(() => {
         logger.debug('[APIKeysPage] useEffect for fetchApiKeys triggered');
@@ -158,7 +160,7 @@ export default function APIKeysPage() {
 
     const handleCreateKey = async () => {
         if (!newKeyName.trim()) {
-            setError('Please enter a name for the API key');
+            setError(t('nameRequired'));
             return;
         }
 
@@ -183,14 +185,14 @@ export default function APIKeysPage() {
                 fetchApiKeys();
             }
         } catch (err) {
-            setError('Failed to create API key');
+            setError(t('createApiKeyError'));
             console.error('Error creating API key:', err);
         }
     };
 
     const handleCreateServiceKey = async () => {
         if (!newServiceKeyName.trim()) {
-            setError('Please enter a name for the service key');
+            setError(t('serviceNameRequired'));
             return;
         }
 
@@ -216,7 +218,7 @@ export default function APIKeysPage() {
                 fetchServiceKeys();
             }
         } catch (err) {
-            setError('Failed to create service key');
+            setError(t('createServiceKeyError'));
             console.error('Error creating service key:', err);
         }
     };
@@ -237,7 +239,7 @@ export default function APIKeysPage() {
 
             fetchApiKeys();
         } catch (err) {
-            setError('Failed to archive API key');
+            setError(t('archiveApiKeyError'));
             console.error('Error archiving API key:', err);
         }
     };
@@ -258,7 +260,7 @@ export default function APIKeysPage() {
 
             fetchServiceKeys();
         } catch (err) {
-            setError('Failed to archive service key');
+            setError(t('archiveServiceKeyError'));
             console.error('Error archiving service key:', err);
         }
     };
@@ -281,7 +283,7 @@ export default function APIKeysPage() {
 
             fetchApiKeys();
         } catch (err) {
-            setError('Failed to reactivate API key');
+            setError(t('reactivateApiKeyError'));
             console.error('Error reactivating API key:', err);
         }
     };
@@ -290,22 +292,22 @@ export default function APIKeysPage() {
     const copyToClipboard = async (text: string) => {
         try {
             await copyTextToClipboard(text);
-            toast.success('Key copied to clipboard');
+            toast.success(t('keyCopied'));
         } catch (err) {
             console.error('Failed to copy to clipboard:', err);
-            toast.error('Failed to copy key');
+            toast.error(t('copyFailed'));
         }
     };
 
     const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'Never';
+        if (!dateString) return t('never');
         return formatDateTime(dateString, organizationTimezone);
     };
 
     // Don't render content until auth is loaded
     if (loading || !user) {
         return (
-            <PageLayout title="Developer Portal">
+            <PageLayout title={t('title')}>
                 <div className="space-y-4">
                     <Skeleton className="h-12 w-64" />
                     <Skeleton className="h-64 w-full" />
@@ -321,7 +323,7 @@ export default function APIKeysPage() {
 
     return (
         <>
-            <PageLayout title="Developer Portal" description="Manage your API keys to access Dograh services programmatically">
+            <PageLayout title={t('title')} description={t('description')}>
 
                 {error && (
                     <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
@@ -329,22 +331,22 @@ export default function APIKeysPage() {
                     </div>
                 )}
 
-                <PageSection title="API Keys"
-                    description="Create and manage API keys for your organization"
+                <PageSection title={t('apiKeysTitle')}
+                    description={t('apiKeysDescription')}
                     actions={<><Button
                         variant="outline"
                         size="sm"
                         onClick={() => setShowArchived(!showArchived)}
                     >
                         {showArchived ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-                        {showArchived ? 'Hide' : 'Show'} Archived
+                        {t(showArchived ? 'hideArchived' : 'showArchived')}
                     </Button>
                         <Button
                             onClick={() => setIsCreateDialogOpen(true)}
                             size="sm"
                         >
                             <Plus className="w-4 h-4 mr-2" />
-                            Create New Key
+                            {t('createNewKey')}
                         </Button></>}>
                     {isLoading ? (
                         <div className="space-y-4">
@@ -361,9 +363,9 @@ export default function APIKeysPage() {
                     ) : apiKeys.length === 0 ? (
                         <div className="text-center py-12">
                             <Key className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <p className="text-muted-foreground mb-4">No API keys found</p>
+                            <p className="text-muted-foreground mb-4">{t('noApiKeys')}</p>
                             <Button onClick={() => setIsCreateDialogOpen(true)}>
-                                Create Your First API Key
+                                {t('createFirstApiKey')}
                             </Button>
                         </div>
                     ) : (
@@ -378,22 +380,21 @@ export default function APIKeysPage() {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-medium">{key.name}</span>
                                             {key.archived_at ? (
-                                                <Badge variant="secondary">Archived</Badge>
+                                                <Badge variant="secondary">{t('statusArchived')}</Badge>
                                             ) : key.is_active ? (
-                                                <Badge variant="default">Active</Badge>
+                                                <Badge variant="default">{t('statusActive')}</Badge>
                                             ) : (
-                                                <Badge variant="destructive">Inactive</Badge>
+                                                <Badge variant="destructive">{t('statusInactive')}</Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <span className="font-mono bg-muted px-2 py-1 rounded">{key.key_prefix}...</span>
                                             <span className="text-xs text-muted-foreground/70">
-                                                (Full key hidden for security)
+                                                {t('keyHidden')}
                                             </span>
                                         </div>
                                         <div className="mt-2 text-xs text-muted-foreground">
-                                            Created: {formatDate(key.created_at)} •
-                                            Last used: {formatDate(key.last_used_at ?? null)}
+                                            {t('createdLastUsed', { created: formatDate(key.created_at), lastUsed: formatDate(key.last_used_at ?? null) })}
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
@@ -404,7 +405,7 @@ export default function APIKeysPage() {
                                                 onClick={() => handleReactivateKey(key.id)}
                                             >
                                                 <RefreshCw className="w-4 h-4 mr-1" />
-                                                Reactivate
+                                                {t('reactivate')}
                                             </Button>
                                         ) : (
                                             <Button
@@ -424,8 +425,8 @@ export default function APIKeysPage() {
                 </PageSection>
 
                 {/* Dograh Service Keys Section */}
-                <PageSection title="Dograh Service Keys"
-                    description="Manage service keys for accessing Dograh AI services (LLM, TTS, STT)"
+                <PageSection title={t('serviceKeysTitle')}
+                    description={t('serviceKeysDescription')}
                     actions={<>{showServiceKeyArchiveControls && (
                         <Button
                             variant="outline"
@@ -433,7 +434,7 @@ export default function APIKeysPage() {
                             onClick={() => setShowServiceArchived(!showServiceArchived)}
                         >
                             {showServiceArchived ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-                            {showServiceArchived ? 'Hide' : 'Show'} Archived
+                            {t(showServiceArchived ? 'hideArchived' : 'showArchived')}
                         </Button>
                     )}
                         {canCreateServiceKey ? (
@@ -442,11 +443,11 @@ export default function APIKeysPage() {
                                 size="sm"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
-                                Create Service Key
+                                {t('createServiceKey')}
                             </Button>
                         ) : (
                             <span className="text">
-                                To generate additional service keys, <a href="https://app.dograh.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Sign up on app.dograh.com</a>
+                                {t('serviceKeyLimitPrefix')} <a href="https://app.dograh.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{t('signUpLink')}</a>
                             </span>
                         )}</>}>
                     {isServiceKeysLoading ? (
@@ -464,10 +465,10 @@ export default function APIKeysPage() {
                     ) : serviceKeys.length === 0 ? (
                         <div className="text-center py-12">
                             <Key className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <p className="text-muted-foreground mb-4">No service keys found</p>
+                            <p className="text-muted-foreground mb-4">{t('noServiceKeys')}</p>
                             {canCreateServiceKey && (
                                 <Button onClick={() => setIsCreateServiceDialogOpen(true)}>
-                                    Create Your First Service Key
+                                    {t('createFirstServiceKey')}
                                 </Button>
                             )}
                         </div>
@@ -483,27 +484,26 @@ export default function APIKeysPage() {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-medium">{key.name}</span>
                                             {key.archived_at ? (
-                                                <Badge variant="secondary">Archived</Badge>
+                                                <Badge variant="secondary">{t('statusArchived')}</Badge>
                                             ) : key.is_active ? (
-                                                <Badge variant="default">Active</Badge>
+                                                <Badge variant="default">{t('statusActive')}</Badge>
                                             ) : (
-                                                <Badge variant="destructive">Inactive</Badge>
+                                                <Badge variant="destructive">{t('statusInactive')}</Badge>
                                             )}
                                             {key.expires_at && new Date(key.expires_at) > new Date() && (
                                                 <Badge variant="outline">
-                                                    Expires: {formatDate(key.expires_at)}
+                                                    {t('expires', { date: formatDate(key.expires_at) })}
                                                 </Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <span className="font-mono bg-muted px-2 py-1 rounded">{key.key_prefix}...</span>
                                             <span className="text-xs text-muted-foreground/70">
-                                                (Full key hidden for security)
+                                                {t('keyHidden')}
                                             </span>
                                         </div>
                                         <div className="mt-2 text-xs text-muted-foreground">
-                                            Created: {formatDate(key.created_at)} •
-                                            Last used: {formatDate(key.last_used_at ?? null)}
+                                            {t('createdLastUsed', { created: formatDate(key.created_at), lastUsed: formatDate(key.last_used_at ?? null) })}
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
@@ -526,8 +526,7 @@ export default function APIKeysPage() {
 
                 <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                     <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                        <strong>Important:</strong> Keep your API keys secure. Never share them publicly or commit them to version control.
-                        API keys provide full access to your organization&apos;s resources.
+                        <strong>{t('importantLabel')}</strong> {t('importantBody')}
                     </p>
                 </div>
             </PageLayout>
@@ -536,28 +535,28 @@ export default function APIKeysPage() {
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Create New API Key</DialogTitle>
+                        <DialogTitle>{t('createApiKeyDialogTitle')}</DialogTitle>
                         <DialogDescription>
-                            Enter a descriptive name for your API key to help you identify it later.
+                            {t('createApiKeyDialogDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name">Key Name</Label>
+                            <Label htmlFor="name">{t('keyName')}</Label>
                             <Input
                                 id="name"
                                 value={newKeyName}
                                 onChange={(e) => setNewKeyName(e.target.value)}
-                                placeholder="e.g., Production Server, Development Environment"
+                                placeholder={t('keyNamePlaceholder')}
                             />
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                            Cancel
+                            {t('cancel')}
                         </Button>
                         <Button onClick={handleCreateKey}>
-                            Create Key
+                            {t('createKey')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -567,15 +566,15 @@ export default function APIKeysPage() {
             <Dialog open={showCreatedKeyDialog} onOpenChange={setShowCreatedKeyDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>API Key Created Successfully</DialogTitle>
+                        <DialogTitle>{t('apiKeyCreatedTitle')}</DialogTitle>
                         <DialogDescription>
-                            Make sure to copy your API key now. You won&apos;t be able to see it again!
+                            {t('apiKeyCreatedDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     {createdKey && (
                         <div className="space-y-4">
                             <div className="p-4 bg-muted rounded-lg">
-                                <p className="text-sm text-muted-foreground mb-2">Your API Key:</p>
+                                <p className="text-sm text-muted-foreground mb-2">{t('yourApiKey')}</p>
                                 <div className="flex items-center gap-2">
                                     <code className="flex-1 p-2 bg-background rounded text-sm font-mono break-all">
                                         {createdKey.api_key}
@@ -591,7 +590,7 @@ export default function APIKeysPage() {
                             </div>
                             <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                                 <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                                    Store this key securely. It will only be shown once and cannot be retrieved later.
+                                    {t('storeKeySecurely')}
                                 </p>
                             </div>
                         </div>
@@ -601,7 +600,7 @@ export default function APIKeysPage() {
                             setShowCreatedKeyDialog(false);
                             setCreatedKey(null);
                         }}>
-                            Done
+                            {t('done')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -611,28 +610,28 @@ export default function APIKeysPage() {
             <Dialog open={isCreateServiceDialogOpen} onOpenChange={setIsCreateServiceDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Create New Service Key</DialogTitle>
+                        <DialogTitle>{t('createServiceKeyDialogTitle')}</DialogTitle>
                         <DialogDescription>
-                            Create a service key to access Dograh AI services (LLM, TTS, STT)
+                            {t('createServiceKeyDialogDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="service-name">Service Key Name</Label>
+                            <Label htmlFor="service-name">{t('serviceKeyName')}</Label>
                             <Input
                                 id="service-name"
                                 value={newServiceKeyName}
                                 onChange={(e) => setNewServiceKeyName(e.target.value)}
-                                placeholder="e.g., Production AI Services, Development LLM Access"
+                                placeholder={t('serviceKeyNamePlaceholder')}
                             />
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCreateServiceDialogOpen(false)}>
-                            Cancel
+                            {t('cancel')}
                         </Button>
                         <Button onClick={handleCreateServiceKey}>
-                            Create Service Key
+                            {t('createServiceKey')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -642,15 +641,15 @@ export default function APIKeysPage() {
             <Dialog open={showCreatedServiceKeyDialog} onOpenChange={setShowCreatedServiceKeyDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Service Key Created Successfully</DialogTitle>
+                        <DialogTitle>{t('serviceKeyCreatedTitle')}</DialogTitle>
                         <DialogDescription>
-                            Make sure to copy your service key now. You won&apos;t be able to see it again!
+                            {t('serviceKeyCreatedDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     {createdServiceKey && (
                         <div className="space-y-4">
                             <div className="p-4 bg-muted rounded-lg">
-                                <p className="text-sm text-muted-foreground mb-2">Your Service Key:</p>
+                                <p className="text-sm text-muted-foreground mb-2">{t('yourServiceKey')}</p>
                                 <div className="flex items-center gap-2">
                                     <code className="flex-1 p-2 bg-background rounded text-sm font-mono break-all">
                                         {createdServiceKey.service_key}
@@ -666,17 +665,17 @@ export default function APIKeysPage() {
                             </div>
                             <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                                 <p className="text-sm text-blue-600 dark:text-blue-500">
-                                    This key provides access to Dograh AI services including LLM, Text-to-Speech, and Speech-to-Text.
+                                    {t('serviceKeyAccess')}
                                     {createdServiceKey.expires_at && (
                                         <span className="block mt-1">
-                                            Expires on: {formatDate(createdServiceKey.expires_at)}
+                                            {t('expiresOn', { date: formatDate(createdServiceKey.expires_at) })}
                                         </span>
                                     )}
                                 </p>
                             </div>
                             <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                                 <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                                    Store this key securely. It will only be shown once and cannot be retrieved later.
+                                    {t('storeKeySecurely')}
                                 </p>
                             </div>
                         </div>
@@ -686,7 +685,7 @@ export default function APIKeysPage() {
                             setShowCreatedServiceKeyDialog(false);
                             setCreatedServiceKey(null);
                         }}>
-                            Done
+                            {t('done')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

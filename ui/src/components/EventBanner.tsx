@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import posthog from "posthog-js";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
@@ -76,6 +77,7 @@ function readActiveEventId() {
 }
 
 export function EventBanner() {
+  const t = useTranslations("Shared");
   const activeId = useSyncExternalStore(subscribe, readActiveEventId, serverSnapshot);
   const event = events.find((e) => e.id === activeId);
   const ref = useRef<HTMLDivElement>(null);
@@ -122,7 +124,7 @@ export function EventBanner() {
         onClick={() =>
           posthog.capture("event_banner_clicked", { event: event.analyticsId })
         }
-        aria-label={`${event.cta}: ${event.title}${event.subtitle ? ` ${event.subtitle}` : ""} (opens in a new tab)`}
+        aria-label={t("opensInNewTab", { cta: event.cta, title: event.title, subtitle: event.subtitle ? ` ${event.subtitle}` : ""})}
         className="group mx-auto flex h-12 max-w-7xl items-center gap-2.5 pr-9 pl-4 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cta sm:h-[41px] sm:gap-4 sm:pr-12 sm:pl-6 md:justify-center md:gap-5 lg:pr-14 lg:pl-8"
       >
         <Lockup partner={event.partner} />
@@ -147,8 +149,8 @@ export function EventBanner() {
                       that the full label costs the title characters. Below 640
                       the bar is two lines and has the room. A custom eyebrow
                       has no short form, so it renders as given everywhere. */}
-                  <span className="hidden sm:inline md:hidden">Live</span>
-                  <span className="sm:hidden md:inline">Live virtual session</span>
+                  <span className="hidden sm:inline md:hidden">{t("live")}</span>
+                  <span className="sm:hidden md:inline">{t("liveVirtualSession")}</span>
                 </>
               )}
             </span>
@@ -201,7 +203,7 @@ export function EventBanner() {
           }
           listeners.forEach((l) => l());
         }}
-        aria-label="Dismiss event announcement"
+        aria-label={t("dismissAnnouncement")}
         className="absolute top-1/2 right-1.5 -translate-y-1/2 cursor-pointer rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cta sm:right-3"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useEffect, useMemo, useState } from 'react';
@@ -17,6 +18,7 @@ import { WorkflowConfigurations } from '@/types/workflow-configurations';
 
 
 export default function WorkflowDetailPage() {
+    const t = useTranslations("Workflow");
     const params = useParams();
     const searchParams = useSearchParams();
     const workflowId = Number(params.workflowId);
@@ -48,7 +50,7 @@ export default function WorkflowDetailPage() {
                 if (version !== null && version !== 'latest' && (
                     !/^[1-9]\d*$/.test(version) || !Number.isSafeInteger(Number(version))
                 )) {
-                    setError('Invalid workflow version. Use a version number or “latest”.');
+                    setError(t('invalidWorkflowVersion'));
                     return;
                 }
                 const [response, versionResponse] = await Promise.all([
@@ -66,24 +68,24 @@ export default function WorkflowDetailPage() {
 
                 if (response.error) {
                     const fallback = response.response?.status === 503
-                        ? 'Dograh is temporarily unavailable. Please try again later.'
-                        : 'Failed to fetch workflow';
+                        ? t('dograhUnavailable')
+                        : t('failedToFetchWorkflow');
                     setError(detailFromError(response.error, fallback));
                     return;
                 }
 
                 const workflow = response.data;
                 if (!workflow) {
-                    setError('Workflow not found');
+                    setError(t('workflowNotFound'));
                     return;
                 }
                 if (versionResponse?.error) {
-                    setError(detailFromError(versionResponse.error, 'Failed to fetch workflow version'));
+                    setError(detailFromError(versionResponse.error, t('failedToFetchWorkflowVersion')));
                     return;
                 }
                 const selectedVersion = versionResponse?.data?.[0];
                 if (version !== null && !selectedVersion) {
-                    setError('Workflow version not found');
+                    setError(t('workflowVersionNotFound'));
                     return;
                 }
                 setLoaded({ key: requestKey, workflow, version: selectedVersion });
@@ -92,7 +94,7 @@ export default function WorkflowDetailPage() {
                     workflow_name: workflow.name,
                 });
             } catch (err) {
-                if (!cancelled) setError('Failed to fetch workflow');
+                if (!cancelled) setError(t('failedToFetchWorkflow'));
                 logger.error(`Error fetching workflow: ${err}`);
             } finally {
                 if (!cancelled) setLoading(false);
@@ -101,7 +103,7 @@ export default function WorkflowDetailPage() {
 
         void fetchWorkflow();
         return () => { cancelled = true; };
-    }, [workflowId, version, requestKey, user, authLoading]);
+    }, [workflowId, version, requestKey, user, authLoading, t]);
 
     const stableUser = useMemo(() => user, [user]);
     const openTesterOnLoad = searchParams.get('onboarding') === 'web_call';
@@ -119,7 +121,7 @@ export default function WorkflowDetailPage() {
     else if (error || !workflow) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="text-lg text-destructive">{error || 'Workflow not found'}</div>
+                <div className="text-lg text-destructive">{error || t('workflowNotFound')}</div>
             </div>
         );
     }

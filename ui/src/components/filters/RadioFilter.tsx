@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { RadioValue } from "@/types/filters";
@@ -17,15 +19,16 @@ export const RadioFilter: React.FC<RadioFilterProps> = ({
   onChange,
   error,
   options,
-  label = "Select Status",
+  label,
 }) => {
+  const t = useTranslations("Shared");
   const handleChange = (newValue: string) => {
     onChange({ status: newValue });
   };
 
   return (
     <div className="space-y-3">
-      <Label>{label}</Label>
+      <Label>{label ?? t("selectStatus")}</Label>
       <RadioGroup value={value.status} onValueChange={handleChange}>
         {options.map((option) => (
           <div key={option.value} className="flex items-center space-x-2">

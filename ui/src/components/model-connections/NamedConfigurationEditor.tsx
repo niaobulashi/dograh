@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { createNamedModelConfiguration, updateNamedModelConfiguration } from "@/client/sdk.gen";
@@ -20,7 +21,8 @@ export function NamedConfigurationEditor({ catalog, connections, saved, duplicat
     onSaved: (uuid: string, editFallbacks?: boolean) => Promise<void>;
     onConnectionAdded?: (connection: ProviderConnection) => void;
 }) {
-    const [name, setName] = useState(saved ? `${saved.name}${duplicate ? " (copy)" : ""}` : "");
+    const t = useTranslations("Models");
+    const [name, setName] = useState(saved ? `${saved.name}${duplicate ? t("copySuffix") : ""}` : "");
     const [configuration, setConfiguration] = useState(saved?.configuration || emptyConfiguration(catalog, connections));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,10 +34,10 @@ export function NamedConfigurationEditor({ catalog, connections, saved, duplicat
             const result = saved && !duplicate
                 ? await updateNamedModelConfiguration({ path: { configuration_uuid: saved.uuid }, body: { ...body, revision: saved.revision } })
                 : await createNamedModelConfiguration({ body });
-            if (result.error) throw new Error(detailFromError(result.error, "Failed to save model configuration"));
-            if (!result.data) throw new Error("Failed to save model configuration");
+            if (result.error) throw new Error(detailFromError(result.error, t("failedToSaveModelConfiguration")));
+            if (!result.data) throw new Error(t("failedToSaveModelConfiguration"));
             await onSaved(result.data.uuid, editFallbacks);
-        } catch (cause) { setError(cause instanceof Error ? cause.message : "Failed to save model configuration"); }
+        } catch (cause) { setError(cause instanceof Error ? cause.message : t("failedToSaveModelConfiguration")); }
         finally { setSaving(false); }
     };
     return <form className="space-y-5" onSubmit={event => {
@@ -43,18 +45,18 @@ export function NamedConfigurationEditor({ catalog, connections, saved, duplicat
         void save();
     }}>
         <div className="space-y-2">
-            <h1 className="text-2xl font-bold">{saved && !duplicate ? "Edit Model Configuration" : "Add Model Configuration"}</h1>
+            <h1 className="text-2xl font-bold">{saved && !duplicate ? t("editModelConfiguration") : t("addModelConfiguration")}</h1>
             <p className="text-sm text-muted-foreground">{saved && !duplicate
-                ? "Edits apply to future runs of every workflow using this configuration. Existing runs keep their settings."
-                : "Save a reusable model setup for workflows and API triggers."}</p>
+                ? t("editModelConfigurationDescription")
+                : t("addModelConfigurationDescription")}</p>
         </div>
         {error && <p role="alert" className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">{error}</p>}
-        <div className="space-y-1.5"><Label htmlFor="configuration-name">Configuration name</Label>
-            <Input id="configuration-name" required maxLength={128} placeholder="Sales assistant" value={name} onChange={event => setName(event.target.value)} /></div>
+        <div className="space-y-1.5"><Label htmlFor="configuration-name">{t("configurationName")}</Label>
+            <Input id="configuration-name" required maxLength={128} placeholder={t("configurationNamePlaceholder")} value={name} onChange={event => setName(event.target.value)} /></div>
         <ConfigurationFields catalog={catalog} connections={connections} configuration={configuration} onChange={setConfiguration} onConnectionAdded={onConnectionAdded}
             llmActions={<Button type="button" name="intent" value="fallbacks" variant="outline" size="sm" disabled={saving || !name.trim()} onClick={event => {
                 if (event.currentTarget.form?.reportValidity()) void save(true);
-            }}>Configure fallbacks</Button>} />
-        <div className="flex justify-end"><Button type="submit" disabled={saving || !name.trim()}>{saving ? "Saving…" : "Save Configuration"}</Button></div>
+            }}>{t("configureFallbacks")}</Button>} />
+        <div className="flex justify-end"><Button type="submit" disabled={saving || !name.trim()}>{saving ? t("saving") : t("saveConfiguration")}</Button></div>
     </form>;
 }

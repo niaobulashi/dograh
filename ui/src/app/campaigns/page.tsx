@@ -2,6 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 import { getCampaignsApiV1CampaignGet } from '@/client/sdk.gen';
@@ -22,6 +23,7 @@ import { useAuth } from '@/lib/auth';
 import { formatDate } from '@/lib/dateTime';
 
 export default function CampaignsPage() {
+    const t = useTranslations("Campaigns");
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const organizationTimezone = useOrganizationTimezone();
     const router = useRouter();
@@ -93,9 +95,9 @@ export default function CampaignsPage() {
     };
 
     return (
-        <PageLayout title="Campaigns" description="Manage your bulk workflow execution campaigns">
-            <PageSection title="All Campaigns" description="View and manage your campaigns"
-                actions={<Button onClick={handleCreateCampaign}><Plus className="h-4 w-4" />Create Campaign</Button>}>
+        <PageLayout title={t("title")} description={t("description")}>
+            <PageSection title={t("list.allCampaigns")} description={t("list.description")}
+                actions={<Button onClick={handleCreateCampaign}><Plus className="h-4 w-4" />{t("list.create")}</Button>}>
 
                 {isLoading ? (
                     <div className="animate-pulse space-y-3">
@@ -109,12 +111,12 @@ export default function CampaignsPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Workflow</TableHead>
-                                    <TableHead>State</TableHead>
-                                    <TableHead>Progress</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead>{t("list.columnName")}</TableHead>
+                                    <TableHead>{t("list.columnWorkflow")}</TableHead>
+                                    <TableHead>{t("list.columnState")}</TableHead>
+                                    <TableHead>{t("list.columnProgress")}</TableHead>
+                                    <TableHead>{t("list.columnCreated")}</TableHead>
+                                    <TableHead className="text-right">{t("list.columnAction")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -147,7 +149,7 @@ export default function CampaignsPage() {
                                                     handleRowClick(campaign.id);
                                                 }}
                                             >
-                                                View
+                                                {t("list.view")}
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -157,10 +159,10 @@ export default function CampaignsPage() {
                     </div>
                 ) : (
                     <div className="text-center py-8">
-                        <p className="mb-4">No campaigns found</p>
+                        <p className="mb-4">{t("list.empty")}</p>
                         <Button onClick={handleCreateCampaign} variant="outline">
                             <Plus className="h-4 w-4 mr-2" />
-                            Create your first campaign
+                            {t("list.createFirst")}
                         </Button>
                     </div>
                 )}

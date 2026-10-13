@@ -40,10 +40,12 @@ export function isPersonalEmail(email: string): boolean {
 }
 
 // Convenience validator for work-email fields.
-// Returns an error string, or null if valid.
+// Returns a next-intl message key under the `Campaigns` namespace for the first
+// problem found, or null if valid. Callers resolve it with
+// `useTranslations("Campaigns")`.
 export function validateWorkEmail(email: string): string | null {
-  if (!email.trim()) return "Work email is required";
-  if (!isValidEmail(email)) return "Please enter a valid email address";
-  if (isPersonalEmail(email)) return "Please use your work email";
+  if (!email.trim()) return "errors.workEmailRequired";
+  if (!isValidEmail(email)) return "errors.emailInvalid";
+  if (isPersonalEmail(email)) return "errors.emailWorkRequired";
   return null;
 }

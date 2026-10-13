@@ -44,6 +44,7 @@ function normalizeDiscoveredTools(
  */
 export async function refreshMcpTools(
     toolUuid: string,
+    fallbackError = "Refresh request failed. Check the MCP server and try again.",
 ): Promise<McpRefreshResult> {
     const { data, error } = await refreshMcpToolsApiV1ToolsToolUuidMcpRefreshPost({
         path: {
@@ -57,7 +58,7 @@ export async function refreshMcpTools(
             error:
                 typeof error === "string"
                     ? error
-                    : "Refresh request failed. Check the MCP server and try again.",
+                    : fallbackError,
         };
     }
     return {

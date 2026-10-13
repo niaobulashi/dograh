@@ -1,6 +1,7 @@
 "use client";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +24,12 @@ interface KeyValueEditorProps {
 export function KeyValueEditor({
     items,
     onChange,
-    keyPlaceholder = "Key",
-    valuePlaceholder = "Value",
-    addButtonText = "Add",
+    keyPlaceholder,
+    valuePlaceholder,
+    addButtonText,
     disabled = false,
 }: KeyValueEditorProps) {
+    const t = useTranslations("Telephony");
     const addItem = () => {
         onChange([...items, { key: "", value: "" }]);
     };
@@ -47,14 +49,14 @@ export function KeyValueEditor({
             {items.map((item, index) => (
                 <div key={index} className="flex items-center gap-2">
                     <Input
-                        placeholder={keyPlaceholder}
+                        placeholder={keyPlaceholder ?? t("keyLabel")}
                         value={item.key}
                         onChange={(e) => updateItem(index, "key", e.target.value)}
                         className="flex-1"
                         disabled={disabled}
                     />
                     <Input
-                        placeholder={valuePlaceholder}
+                        placeholder={valuePlaceholder ?? t("valueLabel")}
                         value={item.value}
                         onChange={(e) => updateItem(index, "value", e.target.value)}
                         className="flex-1"
@@ -78,7 +80,7 @@ export function KeyValueEditor({
                 className="w-fit"
                 disabled={disabled}
             >
-                <PlusIcon className="h-4 w-4 mr-1" /> {addButtonText}
+                <PlusIcon className="h-4 w-4 mr-1" /> {addButtonText ?? t("add")}
             </Button>
         </div>
     );

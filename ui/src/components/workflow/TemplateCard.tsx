@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -17,6 +18,7 @@ interface DuplicateWorkflowTemplateProps {
 }
 
 export function DuplicateWorkflowTemplate({ id, title, description, serverAccessToken }: DuplicateWorkflowTemplateProps) {
+    const t = useTranslations("Workflow");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const { user, getAccessToken } = useAuth();
@@ -74,7 +76,7 @@ export function DuplicateWorkflowTemplate({ id, title, description, serverAccess
                     disabled={isLoading}
                 >
                     <Copy className="w-4 h-4 mr-2" />
-                    {isLoading ? 'Creating...' : 'Duplicate Workflow Template'}
+                    {isLoading ? t('creating') : t('duplicateWorkflowTemplate')}
                 </Button>
             </div>
         </div>

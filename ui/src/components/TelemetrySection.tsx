@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth";
 
 export function TelemetrySection() {
+  const t = useTranslations("Shared");
   const { user, loading: authLoading } = useAuth();
   const [credentials, setCredentials] = useState<LangfuseCredentialsResponse>({
     host: "",
@@ -66,10 +68,10 @@ export function TelemetrySection() {
       if (error) {
         throw new Error("Failed to save");
       }
-      toast.success("Telemetry credentials saved");
+      toast.success(t("telemetryCredentialsSaved"));
       await fetchCredentials();
     } catch {
-      toast.error("Failed to save telemetry credentials");
+      toast.error(t("saveTelemetryFailed"));
     } finally {
       setSaving(false);
     }
@@ -87,25 +89,25 @@ export function TelemetrySection() {
         traces_public: false,
         configured: false,
       });
-      toast.success("Telemetry credentials removed");
+      toast.success(t("telemetryCredentialsRemoved"));
     } catch {
-      toast.error("Failed to remove telemetry credentials");
+      toast.error(t("removeTelemetryFailed"));
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
+    return <p className="text-sm text-muted-foreground">{t("loading")}</p>;
   }
 
   return (
     <form onSubmit={handleSave} className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Connect your Langfuse project to receive call tracing data.
+        {t("connectLangfuse")}
       </p>
       <div className="space-y-2">
-        <Label htmlFor="langfuse-host">Host</Label>
+        <Label htmlFor="langfuse-host">{t("host")}</Label>
         <Input
           id="langfuse-host"
           placeholder="https://cloud.langfuse.com"
@@ -115,7 +117,7 @@ export function TelemetrySection() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="langfuse-public-key">Public Key</Label>
+        <Label htmlFor="langfuse-public-key">{t("publicKey")}</Label>
         <Input
           id="langfuse-public-key"
           placeholder="pk-lf-..."
@@ -125,7 +127,7 @@ export function TelemetrySection() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="langfuse-secret-key">Secret Key</Label>
+        <Label htmlFor="langfuse-secret-key">{t("secretKey")}</Label>
         <Input
           id="langfuse-secret-key"
           type="password"
@@ -136,7 +138,7 @@ export function TelemetrySection() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="langfuse-project-id">Project ID</Label>
+        <Label htmlFor="langfuse-project-id">{t("projectId")}</Label>
         <Input
           id="langfuse-project-id"
           placeholder="cm..."
@@ -145,8 +147,7 @@ export function TelemetrySection() {
           required
         />
         <p className="text-xs text-muted-foreground">
-          Found in your Langfuse URL: /project/&lt;project-id&gt;/traces. Required to
-          build links to your traces.
+          {t("projectIdHint")}
         </p>
       </div>
       <div className="space-y-2 pt-2 border-t">
@@ -158,22 +159,19 @@ export function TelemetrySection() {
               setCredentials({ ...credentials, traces_public: checked })
             }
           />
-          <Label htmlFor="langfuse-traces-public">Make traces publicly viewable</Label>
+          <Label htmlFor="langfuse-traces-public">{t("makeTracesPublic")}</Label>
         </div>
         <p className="text-xs text-muted-foreground">
-          Off by default. When on, anyone holding a trace URL can open it without
-          logging in to Langfuse — including the full call transcript, prompts and
-          tool payloads. Turn it on only if you intend to share trace links outside
-          your Langfuse project.
+          {t("tracesPublicHint")}
         </p>
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
+          {saving ? t("saving") : t("save")}
         </Button>
         {credentials.configured && (
           <Button type="button" variant="destructive" disabled={saving} onClick={handleDelete}>
-            Remove
+            {t("remove")}
           </Button>
         )}
       </div>

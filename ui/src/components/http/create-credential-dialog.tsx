@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { createCredentialApiV1CredentialsPost, updateCredentialApiV1CredentialsCredentialUuidPut } from "@/client";
@@ -37,7 +38,8 @@ interface CreateCredentialDialogProps {
 
 interface CredentialField {
     key: string;
-    label: string;
+    /** next-intl message key under the `Telephony` namespace. */
+    labelKey: string;
     placeholder: string;
     isSecret?: boolean;
 }
@@ -46,22 +48,22 @@ const getCredentialDataFields = (type: WebhookCredentialType): CredentialField[]
     switch (type) {
         case "api_key":
             return [
-                { key: "header_name", label: "Header Name", placeholder: "X-API-Key" },
-                { key: "api_key", label: "API Key", placeholder: "your-api-key", isSecret: true },
+                { key: "header_name", labelKey: "headerName", placeholder: "X-API-Key" },
+                { key: "api_key", labelKey: "apiKeyField", placeholder: "your-api-key", isSecret: true },
             ];
         case "bearer_token":
             return [
-                { key: "token", label: "Token", placeholder: "your-bearer-token", isSecret: true },
+                { key: "token", labelKey: "token", placeholder: "your-bearer-token", isSecret: true },
             ];
         case "basic_auth":
             return [
-                { key: "username", label: "Username", placeholder: "username" },
-                { key: "password", label: "Password", placeholder: "password", isSecret: true },
+                { key: "username", labelKey: "username", placeholder: "username" },
+                { key: "password", labelKey: "password", placeholder: "password", isSecret: true },
             ];
         case "custom_header":
             return [
-                { key: "header_name", label: "Header Name", placeholder: "X-Custom-Header" },
-                { key: "header_value", label: "Header Value", placeholder: "header-value", isSecret: true },
+                { key: "header_name", labelKey: "headerName", placeholder: "X-Custom-Header" },
+                { key: "header_value", labelKey: "headerValue", placeholder: "header-value", isSecret: true },
             ];
         default:
             return [];
@@ -80,6 +82,7 @@ function CredentialDialogForm({
     credential,
     onUpdated,
 }: CreateCredentialDialogProps) {
+    const t = useTranslations("Telephony");
     const { getAccessToken } = useAuth();
 
     const [name, setName] = useState(credential?.name ?? "");
@@ -125,7 +128,7 @@ function CredentialDialogForm({
                 });
 
             if (response.error) {
-                setError(detailFromError(response.error, "Failed to save credential"));
+                setError(detailFromError(response.error, t("failedToSaveCredential")));
                 return;
             }
 
@@ -136,7 +139,7 @@ function CredentialDialogForm({
             }
         } catch (err) {
             setError(
-                err instanceof Error ? err.message : "Failed to save credential"
+                err instanceof Error ? err.message : t("failedToSaveCredential")
             );
         } finally {
             setIsCreating(false);
@@ -155,11 +158,11 @@ function CredentialDialogForm({
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{credential ? "Edit Credential" : "Add Credential"}</DialogTitle>
+                    <DialogTitle>{credential ? t("editCredential") : t("addCredential")}</DialogTitle>
                     <DialogDescription>
                         {credential
-                            ? "Update this credential. Changes apply everywhere it is used."
-                            : "Create a credential for authenticating tools and webhooks."}
+                            ? t("editCredentialDescription")
+                            : t("addCredentialDescription")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -172,27 +175,27 @@ function CredentialDialogForm({
 
                 <fieldset disabled={isCreating} className="min-w-0 space-y-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="cred-name">Name *</Label>
+                        <Label htmlFor="cred-name">{t("credentialNameLabel")}</Label>
                         <Input
                             id="cred-name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="My API Key"
+                            placeholder={t("credentialNamePlaceholder")}
                         />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="cred-description">Description</Label>
+                        <Label htmlFor="cred-description">{t("description")}</Label>
                         <Input
                             id="cred-description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Optional description"
+                            placeholder={t("optionalDescription")}
                         />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="cred-type">Credential Type</Label>
+                        <Label htmlFor="cred-type">{t("credentialType")}</Label>
                         <Select
                             disabled={!!credential || isCreating}
                             value={credentialType}
@@ -205,11 +208,11 @@ function CredentialDialogForm({
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">No Authentication</SelectItem>
-                                <SelectItem value="bearer_token">Bearer Token</SelectItem>
-                                <SelectItem value="api_key">API Key</SelectItem>
-                                <SelectItem value="basic_auth">Basic Auth</SelectItem>
-                                <SelectItem value="custom_header">Custom Header</SelectItem>
+                                <SelectItem value="none">{t("noAuthentication")}</SelectItem>
+                                <SelectItem value="bearer_token">{t("bearerToken")}</SelectItem>
+                                <SelectItem value="api_key">{t("apiKeyOption")}</SelectItem>
+                                <SelectItem value="basic_auth">{t("basicAuth")}</SelectItem>
+                                <SelectItem value="custom_header">{t("customHeader")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -225,17 +228,17 @@ function CredentialDialogForm({
                                         setCredentialData({});
                                     }}
                                 />
-                                <Label htmlFor="replace-authentication">Replace authentication details</Label>
+                                <Label htmlFor="replace-authentication">{t("replaceAuthentication")}</Label>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Saved values are hidden. Leave this unchecked to keep them.
+                                {t("replaceAuthenticationHint")}
                             </p>
                         </div>
                     )}
 
                     {needsAuthentication && fields.map((field) => (
                         <div key={field.key} className="grid gap-2">
-                            <Label htmlFor={`cred-${field.key}`}>{field.label}</Label>
+                            <Label htmlFor={`cred-${field.key}`}>{t(field.labelKey)}</Label>
                             <Input
                                 id={`cred-${field.key}`}
                                 type={field.isSecret ? "password" : "text"}
@@ -259,7 +262,7 @@ function CredentialDialogForm({
                         onClick={handleClose}
                         disabled={isCreating}
                     >
-                        Cancel
+                        {t("cancel")}
                     </Button>
                     <Button
                         onClick={handleCreate}
@@ -268,10 +271,10 @@ function CredentialDialogForm({
                         {isCreating ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Saving...
+                                {t("savingEllipsis")}
                             </>
                         ) : (
-                            credential ? "Save Changes" : "Create"
+                            credential ? t("saveChanges") : t("create")
                         )}
                     </Button>
                 </DialogFooter>

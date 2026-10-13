@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, Circle, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type {
   ProviderSetupChecklist,
@@ -32,6 +33,7 @@ export function SetupChecklistCard({
   checklist,
   connectivity,
 }: SetupChecklistCardProps) {
+  const t = useTranslations("Telephony");
   const remaining = checklist.steps.filter((step) => !step.complete).length;
 
   // Nothing left to do: a wall of green checks on every working configuration
@@ -42,7 +44,7 @@ export function SetupChecklistCard({
     <Card>
       <CardHeader className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle>Setup checklist</CardTitle>
+          <CardTitle>{t("setupChecklist")}</CardTitle>
           {checklist.docs_url && (
             <a
               href={checklist.docs_url}
@@ -50,14 +52,14 @@ export function SetupChecklistCard({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-sm underline"
             >
-              Setup guide <ExternalLink className="h-3 w-3" />
+              {t("setupGuide")} <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
         <CardDescription>
           {connectivity === "sip"
-            ? "Dograh provides the SIP connection; you connect your own carrier and numbers to it."
-            : "Finish these steps to place and receive calls on this configuration."}
+            ? t("setupDescriptionSip")
+            : t("setupDescriptionDefault")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,7 +67,7 @@ export function SetupChecklistCard({
           <div className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
             <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
             <div className="space-y-1 text-sm">
-              <p className="font-medium">Outbound calls will not work yet</p>
+              <p className="font-medium">{t("outboundBlockedTitle")}</p>
               <p>{checklist.outbound_blocked_reason}</p>
             </div>
           </div>

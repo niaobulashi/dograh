@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { useOrganizationTimezone } from '@/hooks/useOrganizationTimezone';
@@ -12,6 +13,7 @@ interface WorkflowCardProps {
 }
 
 export function WorkflowCard({ id, name, createdAt }: WorkflowCardProps) {
+    const t = useTranslations("Workflow");
     const router = useRouter();
     const organizationTimezone = useOrganizationTimezone();
 
@@ -27,7 +29,7 @@ export function WorkflowCard({ id, name, createdAt }: WorkflowCardProps) {
             <div>
                 <h3 className="text-lg font-semibold mb-2">{name}</h3>
                 <p className="text-gray-600 mb-2">
-                    Created: {formatDate(createdAt, organizationTimezone)}
+                    {t("createdLabel", { date: formatDate(createdAt, organizationTimezone) })}
                 </p>
             </div>
         </div>

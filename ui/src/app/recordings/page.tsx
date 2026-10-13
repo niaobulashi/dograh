@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { PageLayout, PageSection } from "@/components/layout/PageLayout";
@@ -14,6 +15,7 @@ import { RecordingsUploadDialog } from "./RecordingsUploadDialog";
 import TtsCacheList from "./TtsCacheList";
 
 export default function RecordingsPage() {
+    const t = useTranslations("Recordings");
     const { user, redirectToLogin, loading } = useAuth();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -26,7 +28,7 @@ export default function RecordingsPage() {
 
     if (loading || !user) {
         return (
-            <PageLayout title="Recordings">
+            <PageLayout title={t("title")}>
                 <div className="space-y-4">
                     <Skeleton className="h-12 w-64" />
                     <Skeleton className="h-64 w-full" />
@@ -36,31 +38,30 @@ export default function RecordingsPage() {
     }
 
     return (
-        <PageLayout title="Recordings" description={<>Manage audio recordings for your organization. Use{" "}
-            <code className="rounded bg-muted px-1 text-xs">@</code> in prompt fields to insert them,
-            or as transition messages in tool calls.{" "}
+        <PageLayout title={t("title")} description={<>{t("descriptionBeforeCode")}{" "}
+            <code className="rounded bg-muted px-1 text-xs">@</code>{" "}{t("descriptionAfterCode")}{" "}
             <a href="https://docs.dograh.com/voice-agent/pre-recorded-audio" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
-                Learn more <ExternalLink className="h-3 w-3" />
+                {t("learnMore")} <ExternalLink className="h-3 w-3" />
             </a></>}>
 
             <Tabs defaultValue="recordings" key={`${user.id}:${"selectedTeam" in user ? user.selectedTeam?.id : user.organizationId}`}>
                 <TabsList className="mb-4">
-                    <TabsTrigger value="recordings">Uploaded recordings</TabsTrigger>
-                    <TabsTrigger value="tts-cache">TTS cache</TabsTrigger>
+                    <TabsTrigger value="recordings">{t("tabUploaded")}</TabsTrigger>
+                    <TabsTrigger value="tts-cache">{t("tabTtsCache")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="recordings">
-                    <PageSection title="All Recordings"
-                        description="Audio recordings shared across all agents in your organization"
+                    <PageSection title={t("allTitle")}
+                        description={t("allDescription")}
                         actions={<Button onClick={() => setIsUploadOpen(true)}>
                             <Upload className="w-4 h-4 mr-2" />
-                            Upload Recording
+                            {t("uploadRecording")}
                         </Button>}>
                         <RecordingsList refreshKey={refreshKey} />
                     </PageSection>
                 </TabsContent>
                 <TabsContent value="tts-cache">
-                    <PageSection title="Cached speech"
-                        description="Speech reused across your organization’s workflows. Listen to a phrase and invalidate it to generate fresh audio on its next request.">
+                    <PageSection title={t("cachedSpeechTitle")}
+                        description={t("cachedSpeechDescription")}>
                         <TtsCacheList />
                     </PageSection>
                 </TabsContent>

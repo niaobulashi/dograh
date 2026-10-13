@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ interface BillingLedgerFiltersProps {
 export function BillingLedgerFilters({
     activity, period, startDate, endDate, timezone, onChange,
 }: BillingLedgerFiltersProps) {
+    const t = useTranslations("Billing");
     const [from, setFrom] = useState(startDate || "");
     const [to, setTo] = useState(endDate || "");
 
@@ -35,25 +37,25 @@ export function BillingLedgerFilters({
         <div className="mb-4 space-y-3">
             <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-2">
-                    <Label htmlFor="billing-activity">Activity</Label>
+                    <Label htmlFor="billing-activity">{t("activity")}</Label>
                     <Select value={activity} onValueChange={value => onChange({ activity: value })}>
                         <SelectTrigger id="billing-activity" className="w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All activity</SelectItem>
-                            <SelectItem value="credit">Credit</SelectItem>
-                            <SelectItem value="debit">Usage</SelectItem>
+                            <SelectItem value="all">{t("allActivity")}</SelectItem>
+                            <SelectItem value="credit">{t("credit")}</SelectItem>
+                            <SelectItem value="debit">{t("usage")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="billing-period">Date range</Label>
+                    <Label htmlFor="billing-period">{t("dateRange")}</Label>
                     <Select value={period} onValueChange={changePeriod}>
                         <SelectTrigger id="billing-period" className="w-40"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All time</SelectItem>
-                            <SelectItem value="this_month">This month</SelectItem>
-                            <SelectItem value="last_month">Last month</SelectItem>
-                            <SelectItem value="custom">Custom</SelectItem>
+                            <SelectItem value="all">{t("allTime")}</SelectItem>
+                            <SelectItem value="this_month">{t("thisMonth")}</SelectItem>
+                            <SelectItem value="last_month">{t("lastMonth")}</SelectItem>
+                            <SelectItem value="custom">{t("custom")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -66,19 +68,19 @@ export function BillingLedgerFilters({
                     }
                 }}>
                     <div className="space-y-2">
-                        <Label htmlFor="billing-from">From</Label>
+                        <Label htmlFor="billing-from">{t("from")}</Label>
                         <Input id="billing-from" type="date" required value={from}
                             max={to || undefined} onChange={event => setFrom(event.target.value)} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="billing-to">To</Label>
+                        <Label htmlFor="billing-to">{t("to")}</Label>
                         <Input id="billing-to" type="date" required value={to}
                             min={from || undefined} onChange={event => setTo(event.target.value)} />
                     </div>
-                    <Button type="submit" variant="outline">Apply dates</Button>
+                    <Button type="submit" variant="outline">{t("applyDates")}</Button>
                 </form>
             )}
-            <p className="text-xs text-muted-foreground">Dates and times shown in {timezone}.</p>
+            <p className="text-xs text-muted-foreground">{t("timezoneHint", { timezone })}</p>
         </div>
     );
 }

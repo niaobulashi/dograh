@@ -7,6 +7,7 @@ import {
     ReactFlow,
 } from "@xyflow/react";
 import { BrushCleaning, Maximize2, Minus, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -92,6 +93,7 @@ function WorkflowEditor({
     initialSelectedVersion,
     user,
 }: RenderWorkflowProps) {
+    const t = useTranslations("Workflow");
     const router = useRouter();
     const searchParams = useSearchParams();
     const { confirmNavigate } = useUnsavedChangesContext();
@@ -215,7 +217,7 @@ function WorkflowEditor({
                 query: { limit: VERSIONS_PAGE_SIZE + 1, offset: 0 },
             });
             if (response.error) {
-                toast.error(detailFromError(response.error, "Failed to load version history"));
+                toast.error(detailFromError(response.error, t("failedToLoadVersionHistory")));
                 return;
             }
             const data = response.data;
@@ -240,7 +242,7 @@ function WorkflowEditor({
         } finally {
             setVersionsLoading(false);
         }
-    }, [workflowId]);
+    }, [t, workflowId]);
 
     const handleLoadMoreVersions = useCallback(async () => {
         if (versionsLoadingMore || !versionsHasMore) return;
@@ -251,7 +253,7 @@ function WorkflowEditor({
                 query: { limit: VERSIONS_PAGE_SIZE + 1, offset: versions.length },
             });
             if (response.error) {
-                toast.error(detailFromError(response.error, "Failed to load more versions"));
+                toast.error(detailFromError(response.error, t("failedToLoadMoreVersions")));
                 return;
             }
             const data = response.data;
@@ -262,7 +264,7 @@ function WorkflowEditor({
         } finally {
             setVersionsLoadingMore(false);
         }
-    }, [workflowId, versions.length, versionsLoadingMore, versionsHasMore]);
+    }, [t, workflowId, versions.length, versionsLoadingMore, versionsHasMore]);
 
     const handleOpenVersionPanel = useCallback(() => {
         setIsVersionPanelOpen(true);
@@ -274,7 +276,7 @@ function WorkflowEditor({
 
         const selectedIndex = versions.findIndex((candidate) => candidate.id === version.id);
         if (selectedIndex < 0) {
-            toast.error("That workflow version is no longer in the history list");
+            toast.error(t("workflowVersionNoLongerInHistory"));
             return;
         }
 
@@ -287,7 +289,7 @@ function WorkflowEditor({
                 query: { limit: 2, offset: selectedIndex },
             });
             if (response.error) {
-                toast.error(detailFromError(response.error, "Failed to compare workflow versions"));
+                toast.error(detailFromError(response.error, t("failedToCompareWorkflowVersions")));
                 return;
             }
 
@@ -299,14 +301,14 @@ function WorkflowEditor({
             // every offset. Refresh instead of showing a mismatched comparison.
             if (!selectedVersion || selectedVersion.id !== version.id) {
                 await fetchVersions(true, true);
-                toast.error("Version history changed. Please try the comparison again.");
+                toast.error(t("versionHistoryChangedRetry"));
                 return;
             }
             if (
                 !previousVersion ||
                 previousVersion.version_number >= selectedVersion.version_number
             ) {
-                toast.error(`v${selectedVersion.version_number} has no previous version`);
+                toast.error(t("versionHasNoPreviousVersion", { version: selectedVersion.version_number }));
                 return;
             }
 
@@ -319,11 +321,11 @@ function WorkflowEditor({
             setVersionDiffPair({ previousVersion, selectedVersion });
             setIsVersionPanelOpen(false);
         } catch {
-            toast.error("Failed to compare workflow versions");
+            toast.error(t("failedToCompareWorkflowVersions"));
         } finally {
             setComparingVersionId(null);
         }
-    }, [comparingVersionId, fetchVersions, versions, workflowId]);
+    }, [comparingVersionId, fetchVersions, t, versions, workflowId]);
 
     const handleVersionDiffOpenChange = useCallback((open: boolean) => {
         if (open) return;
@@ -430,33 +432,45 @@ function WorkflowEditor({
             const v = versions.find((ver) => ver.id === activeVersionId)
                 ?? (initialSelectedVersion?.id === activeVersionId ? initialSelectedVersion : undefined);
             if (v) {
-                const statusSuffix = v.status === "draft" ? " (Draft)" : v.status === "published" ? " (Published)" : "";
-                return `v${v.version_number}${statusSuffix}`;
+                return t(
+                    v.status === "draft"
+                        ? "versionLabelDraft"
+                        : v.status === "published"
+                            ? "versionLabelPublished"
+                            : "versionLabelPlain",
+                    { version: v.version_number },
+                );
             }
         }
         // Otherwise use the immediately-available version info from save responses
         if (currentVersionNumber != null) {
-            const statusSuffix = currentVersionStatus === "draft" ? " (Draft)" : currentVersionStatus === "published" ? " (Published)" : "";
-            return `v${currentVersionNumber}${statusSuffix}`;
+            return t(
+                currentVersionStatus === "draft"
+                    ? "versionLabelDraft"
+                    : currentVersionStatus === "published"
+                        ? "versionLabelPublished"
+                        : "versionLabelPlain",
+                { version: currentVersionNumber },
+            );
         }
         return undefined;
-    }, [activeVersionId, versions, currentVersionNumber, currentVersionStatus, initialSelectedVersion]);
+    }, [activeVersionId, versions, currentVersionNumber, currentVersionStatus, initialSelectedVersion, t]);
 
     const testerDisabledReason = useMemo(() => {
         if (isViewingHistoricalVersion) {
-            return "Return to the draft before starting a new test session.";
+            return t("returnToDraftBeforeTest");
         }
         if (isDirty) {
-            return "Save the latest draft before testing so the session uses the workflow you are looking at.";
+            return t("saveDraftBeforeTesting");
         }
         if (settingsSaving) {
-            return "Wait for the model settings to finish saving so the session uses them.";
+            return t("waitForModelSettings");
         }
         if (workflowValidationErrors.length > 0) {
-            return "Resolve the current validation errors before starting another test.";
+            return t("resolveValidationErrorsBeforeTest");
         }
         return null;
-    }, [isDirty, isViewingHistoricalVersion, settingsSaving, workflowValidationErrors.length]);
+    }, [isDirty, isViewingHistoricalVersion, settingsSaving, t, workflowValidationErrors.length]);
 
     const handleOpenTester = useCallback(() => {
         if (window.innerWidth >= 1280) {
@@ -701,7 +715,7 @@ function WorkflowEditor({
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent side="left">
-                                                        <p>Add node</p>
+                                                        <p>{t("addNode")}</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </div>
@@ -725,7 +739,7 @@ function WorkflowEditor({
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top">
-                                            <p>Zoom in</p>
+                                            <p>{t("zoomIn")}</p>
                                         </TooltipContent>
                                     </Tooltip>
 
@@ -741,7 +755,7 @@ function WorkflowEditor({
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top">
-                                            <p>Zoom out</p>
+                                            <p>{t("zoomOut")}</p>
                                         </TooltipContent>
                                     </Tooltip>
 
@@ -757,7 +771,7 @@ function WorkflowEditor({
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top">
-                                            <p>Fit view</p>
+                                            <p>{t("fitView")}</p>
                                         </TooltipContent>
                                     </Tooltip>
 
@@ -777,7 +791,7 @@ function WorkflowEditor({
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent side="top">
-                                                <p>Tidy Up</p>
+                                                <p>{t("tidyUp")}</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderCircle, Rocket } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ interface PublishWorkflowPopoverProps {
 }
 
 export function PublishWorkflowPopover({ workflowId, canPublish, onPublished }: PublishWorkflowPopoverProps) {
+    const t = useTranslations("Workflow");
     const [open, setOpen] = useState(false);
     const [versionName, setVersionName] = useState("");
     const [description, setDescription] = useState("");
@@ -37,16 +39,16 @@ export function PublishWorkflowPopover({ workflowId, canPublish, onPublished }: 
                 body: { version_name: versionName.trim() || null, change_description: description.trim() || null },
             });
             if (response.error) {
-                setError(detailFromError(response.error, "Failed to publish workflow"));
+                setError(detailFromError(response.error, t("failedToPublishWorkflow")));
                 return;
             }
-            toast.success("Workflow published successfully");
+            toast.success(t("workflowPublishedSuccessfully"));
             setVersionName("");
             setDescription("");
             setOpen(false);
             onPublished();
         } catch {
-            setError("Could not publish the workflow. Please try again.");
+            setError(t("couldNotPublishWorkflow"));
         } finally {
             submitting.current = false;
             setPublishing(false);
@@ -68,7 +70,7 @@ export function PublishWorkflowPopover({ workflowId, canPublish, onPublished }: 
                     className="border-[#3a3a3a] bg-transparent hover:bg-[#2a2a2a] text-white px-4"
                 >
                     <Rocket className="w-4 h-4 mr-2" />
-                    Publish
+                    {t("publish")}
                 </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -80,8 +82,8 @@ export function PublishWorkflowPopover({ workflowId, canPublish, onPublished }: 
                 className="w-80 max-w-[calc(100vw-2rem)] space-y-3 border-[#3a3a3a] bg-[#1a1a1a] text-white"
             >
                 <div className="space-y-1">
-                    <h3 id="publish-version-title" className="text-sm font-medium">Publish version</h3>
-                    <p id="publish-version-hint" className="text-xs text-gray-400">Add optional notes for Version History.</p>
+                    <h3 id="publish-version-title" className="text-sm font-medium">{t("publishVersion")}</h3>
+                    <p id="publish-version-hint" className="text-xs text-gray-400">{t("addOptionalNotes")}</p>
                 </div>
                 <form onSubmit={handlePublish} className="space-y-3">
                     <VersionMetadataFields
@@ -92,12 +94,12 @@ export function PublishWorkflowPopover({ workflowId, canPublish, onPublished }: 
                         disabled={publishing}
                     />
                     {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-                    {!canPublish && <p className="text-sm text-yellow-400">Save your draft and resolve validation errors before publishing.</p>}
+                    {!canPublish && <p className="text-sm text-yellow-400">{t("saveDraftBeforePublishing")}</p>}
                     <div className="flex justify-end gap-2">
-                        <Button type="button" size="sm" variant="ghost" disabled={publishing} onClick={() => setOpen(false)}>Cancel</Button>
+                        <Button type="button" size="sm" variant="ghost" disabled={publishing} onClick={() => setOpen(false)}>{t("cancel")}</Button>
                         <Button type="submit" size="sm" disabled={publishing || !canPublish} className="bg-teal-600 text-white hover:bg-teal-700">
                             {publishing ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Rocket className="mr-2 h-4 w-4" />}
-                            {publishing ? "Publishing…" : "Publish version"}
+                            {publishing ? t("publishingEllipsis") : t("publishVersion")}
                         </Button>
                     </div>
                 </form>

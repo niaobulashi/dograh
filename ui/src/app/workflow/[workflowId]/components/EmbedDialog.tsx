@@ -1,5 +1,6 @@
 import { Check, ChevronDown, Copy, ExternalLink, Loader2, MessageCircle, Mic, Plus, Rocket, Send, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -54,18 +55,22 @@ interface EmbedDialogProps {
 
 type WidgetType = "voice" | "chat";
 
+type Translate = (key: string, values?: Record<string, unknown>) => string;
+
 // Per-type defaults, swapped on toggle only when the user hasn't customized
 // the text (i.e. it still equals the other type's default).
-const WIDGET_TYPE_DEFAULTS: Record<WidgetType, { buttonText: string; callToActionText: string }> = {
+const buildWidgetTypeDefaults = (
+    t: Translate,
+): Record<WidgetType, { buttonText: string; callToActionText: string }> => ({
     voice: {
-        buttonText: "Talk to Agent",
-        callToActionText: "Click to start voice conversation",
+        buttonText: t("widgetVoiceButtonText"),
+        callToActionText: t("widgetVoiceCallToActionText"),
     },
     chat: {
-        buttonText: "Chat with Agent",
-        callToActionText: "Click to start chatting",
+        buttonText: t("widgetChatButtonText"),
+        callToActionText: t("widgetChatCallToActionText"),
     },
-};
+});
 
 // Visitor-facing copy the agent owner can translate. The default strings live
 // only in api/schemas/widget_texts.py — they reach this dialog as placeholders
@@ -80,37 +85,37 @@ interface WidgetTextField {
 }
 
 const CHAT_TEXT_FIELDS: WidgetTextField[] = [
-    { key: "endChatText", label: "End Chat Button" },
-    { key: "endChatConfirmText", label: "End Chat Confirmation" },
-    { key: "endChatCancelText", label: "Cancel Button", hint: "shown next to the confirmation" },
-    { key: "endingChatText", label: "Ending Chat Status" },
-    { key: "conversationEndedText", label: "Conversation Ended Message" },
-    { key: "startNewChatText", label: "Start New Chat Button" },
-    { key: "chatRetryText", label: "Retry Button" },
-    { key: "chatInputPlaceholder", label: "Message Input Placeholder" },
-    { key: "sendMessageLabel", label: "Send Button Label", hint: "screen readers only" },
-    { key: "closeChatLabel", label: "Close Button Label", hint: "screen readers only" },
+    { key: "endChatText", label: "widgetTextEndChatTextLabel" },
+    { key: "endChatConfirmText", label: "widgetTextEndChatConfirmTextLabel" },
+    { key: "endChatCancelText", label: "widgetTextEndChatCancelTextLabel", hint: "widgetTextEndChatCancelTextHint" },
+    { key: "endingChatText", label: "widgetTextEndingChatTextLabel" },
+    { key: "conversationEndedText", label: "widgetTextConversationEndedTextLabel" },
+    { key: "startNewChatText", label: "widgetTextStartNewChatTextLabel" },
+    { key: "chatRetryText", label: "widgetTextChatRetryTextLabel" },
+    { key: "chatInputPlaceholder", label: "widgetTextChatInputPlaceholderLabel" },
+    { key: "sendMessageLabel", label: "widgetTextSendMessageLabelLabel", hint: "widgetTextScreenReadersOnlyHint" },
+    { key: "closeChatLabel", label: "widgetTextCloseChatLabelLabel", hint: "widgetTextScreenReadersOnlyHint" },
 ];
 
 // Floating voice widgets only ever show the CTA pill, so they get the button
 // labels alone; the status headings below are inline-only.
 const VOICE_BUTTON_TEXT_FIELDS: WidgetTextField[] = [
-    { key: "voiceConnectingText", label: "Connecting" },
-    { key: "voiceEndCallText", label: "End Call Button" },
-    { key: "voiceRetryText", label: "Retry Button" },
+    { key: "voiceConnectingText", label: "widgetTextVoiceConnectingTextLabel" },
+    { key: "voiceEndCallText", label: "widgetTextVoiceEndCallTextLabel" },
+    { key: "voiceRetryText", label: "widgetTextVoiceRetryTextLabel" },
 ];
 
 const VOICE_STATUS_TEXT_FIELDS: WidgetTextField[] = [
-    { key: "voiceReadyTitle", label: "Ready Heading", hint: "paired with Call to Action Text" },
-    { key: "voiceConnectingSubtext", label: "Connecting Subtext" },
-    { key: "voiceConnectedTitle", label: "Connected Heading" },
-    { key: "voiceConnectedSubtext", label: "Connected Subtext" },
-    { key: "voiceCallEndedTitle", label: "Call Ended Heading" },
-    { key: "voiceCallEndedSubtext", label: "Call Ended Subtext" },
-    { key: "voiceConnectionFailedTitle", label: "Connection Failed Heading" },
-    { key: "voiceConnectionFailedSubtext", label: "Connection Failed Subtext" },
-    { key: "voiceConnectionLostTitle", label: "Connection Lost Heading" },
-    { key: "voiceConnectionLostSubtext", label: "Connection Lost Subtext" },
+    { key: "voiceReadyTitle", label: "widgetTextVoiceReadyTitleLabel", hint: "widgetTextVoiceReadyTitleHint" },
+    { key: "voiceConnectingSubtext", label: "widgetTextVoiceConnectingSubtextLabel" },
+    { key: "voiceConnectedTitle", label: "widgetTextVoiceConnectedTitleLabel" },
+    { key: "voiceConnectedSubtext", label: "widgetTextVoiceConnectedSubtextLabel" },
+    { key: "voiceCallEndedTitle", label: "widgetTextVoiceCallEndedTitleLabel" },
+    { key: "voiceCallEndedSubtext", label: "widgetTextVoiceCallEndedSubtextLabel" },
+    { key: "voiceConnectionFailedTitle", label: "widgetTextVoiceConnectionFailedTitleLabel" },
+    { key: "voiceConnectionFailedSubtext", label: "widgetTextVoiceConnectionFailedSubtextLabel" },
+    { key: "voiceConnectionLostTitle", label: "widgetTextVoiceConnectionLostTitleLabel" },
+    { key: "voiceConnectionLostSubtext", label: "widgetTextVoiceConnectionLostSubtextLabel" },
 ];
 
 const WIDGET_TEXT_KEYS: WidgetTextKey[] = [
@@ -138,6 +143,7 @@ function WidgetTextSection({
     defaults: WidgetTexts | null;
     onChange: (key: WidgetTextKey, value: string) => void;
 }) {
+    const t = useTranslations("Workflow");
     const [open, setOpen] = useState(false);
 
     return (
@@ -163,10 +169,10 @@ function WidgetTextSection({
                             {group.fields.map(({ key, label, hint }) => (
                                 <div key={key} className="space-y-2">
                                     <Label htmlFor={`widget-text-${key}`} className="text-sm">
-                                        {label}
+                                        {t(label)}
                                         {hint && (
                                             <span className="ml-1 text-xs font-normal text-muted-foreground">
-                                                ({hint})
+                                                ({t(hint)})
                                             </span>
                                         )}
                                     </Label>
@@ -214,6 +220,8 @@ export function EmbedDialog({
     widgetTextDefaults,
     onSaveWorkflowConfigurations,
 }: EmbedDialogProps) {
+    const t = useTranslations("Workflow");
+    const widgetTypeDefaults = useMemo(() => buildWidgetTypeDefaults(t), [t]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [embedToken, setEmbedToken] = useState<EmbedToken | null>(null);
@@ -226,9 +234,9 @@ export function EmbedDialog({
     const [widgetType, setWidgetType] = useState<WidgetType>("voice");
     const [embedMode, setEmbedMode] = useState<"floating" | "inline" | "headless">("floating");
     const [position, setPosition] = useState("bottom-right");
-    const [buttonText, setButtonText] = useState("Talk to Agent");
+    const [buttonText, setButtonText] = useState(() => widgetTypeDefaults.voice.buttonText);
     const [buttonColor, setButtonColor] = useState("#10b981");
-    const [callToActionText, setCallToActionText] = useState("Click to start voice conversation");
+    const [callToActionText, setCallToActionText] = useState(() => widgetTypeDefaults.voice.callToActionText);
     // Sparse: only keys the owner has overridden. Anything absent renders (and
     // saves as) the backend default.
     const [widgetTexts, setWidgetTexts] = useState<Partial<Record<WidgetTextKey, string>>>({});
@@ -266,8 +274,11 @@ export function EmbedDialog({
                 parsedTextChatInactivitySeconds <=
                     maximumTextChatInactivitySeconds));
     const textChatInactivityValidationMessage = hasTextChatInactivityBounds
-        ? `Chat inactivity timeout must be a whole number between ${minimumTextChatInactivityMinutes} and ${maximumTextChatInactivityMinutes} minutes`
-        : "Chat inactivity timeout must be a whole number of minutes";
+        ? t("chatInactivityTimeoutRange", {
+            min: minimumTextChatInactivityMinutes,
+            max: maximumTextChatInactivityMinutes,
+        })
+        : t("chatInactivityTimeoutWholeNumber");
 
     const handleWidgetTextChange = useCallback((key: WidgetTextKey, value: string) => {
         setWidgetTexts((prev) => ({ ...prev, [key]: value }));
@@ -275,8 +286,8 @@ export function EmbedDialog({
 
     const handleWidgetTypeChange = (type: WidgetType) => {
         if (type === widgetType) return;
-        const from = WIDGET_TYPE_DEFAULTS[widgetType];
-        const to = WIDGET_TYPE_DEFAULTS[type];
+        const from = widgetTypeDefaults[widgetType];
+        const to = widgetTypeDefaults[type];
         if (buttonText === from.buttonText) setButtonText(to.buttonText);
         if (callToActionText === from.callToActionText) setCallToActionText(to.callToActionText);
         setWidgetType(type);
@@ -300,9 +311,9 @@ export function EmbedDialog({
                     setWidgetType(loadedType);
                     setEmbedMode((settings.embedMode as "floating" | "inline" | "headless") || "floating");
                     setPosition(settings.position || "bottom-right");
-                    setButtonText(settings.buttonText || WIDGET_TYPE_DEFAULTS[loadedType].buttonText);
+                    setButtonText(settings.buttonText || widgetTypeDefaults[loadedType].buttonText);
                     setButtonColor(settings.buttonColor || "#10b981");
-                    setCallToActionText(settings.callToActionText || WIDGET_TYPE_DEFAULTS[loadedType].callToActionText);
+                    setCallToActionText(settings.callToActionText || widgetTypeDefaults[loadedType].callToActionText);
                     setWidgetTexts(
                         Object.fromEntries(
                             WIDGET_TEXT_KEYS
@@ -322,7 +333,7 @@ export function EmbedDialog({
         } finally {
             setLoading(false);
         }
-    }, [workflowId]);
+    }, [widgetTypeDefaults, workflowId]);
 
     useEffect(() => {
         if (open) {
@@ -360,7 +371,7 @@ export function EmbedDialog({
                 });
                 if (response.error) {
                     throw new Error(
-                        detailFromError(response.error, "Failed to disable embedding"),
+                        detailFromError(response.error, t("failedToDisableEmbedding")),
                     );
                 }
                 setEmbedToken(null);
@@ -396,7 +407,7 @@ export function EmbedDialog({
 
                 if (response.error) {
                     throw new Error(
-                        detailFromError(response.error, "Failed to save widget configuration"),
+                        detailFromError(response.error, t("failedToSaveWidgetConfiguration")),
                     );
                 }
                 if (response.data) {
@@ -405,13 +416,13 @@ export function EmbedDialog({
             }
 
             toast.success(
-                "Widget configuration saved. Publish the agent to apply the changes.",
+                t("widgetConfigurationSaved"),
             );
             // Don't close modal after saving - let user copy the embed code
         } catch (error) {
             console.error("Failed to save embed token:", error);
             toast.error(
-                error instanceof Error ? error.message : "Failed to save widget configuration",
+                error instanceof Error ? error.message : t("failedToSaveWidgetConfiguration"),
             );
         } finally {
             setSaving(false);
@@ -424,7 +435,7 @@ export function EmbedDialog({
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            toast.error("Failed to copy embed code");
+            toast.error(t("failedToCopyEmbedCode"));
         }
     };
 
@@ -453,7 +464,7 @@ export function EmbedDialog({
                     <div className="flex items-center justify-between">
                         <DialogTitle className="flex items-center gap-2">
                             <Rocket className="h-5 w-5" />
-                            Configure Widget
+                            {t("configureWidget")}
                         </DialogTitle>
                         <a
                             href={WIDGET_MODE_DOCUMENTATION_URLS[embedMode]}
@@ -461,12 +472,12 @@ export function EmbedDialog({
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors pr-6"
                         >
-                            Docs
+                            {t("docs")}
                             <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                     </div>
                     <DialogDescription>
-                        Add &quot;{workflowName}&quot; to any website with a simple script tag.
+                        {t("addWidgetToWebsite", { name: workflowName })}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -479,9 +490,9 @@ export function EmbedDialog({
                         {/* Enable/Disable Toggle */}
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label htmlFor="embed-enabled">Enable Embedding</Label>
+                                <Label htmlFor="embed-enabled">{t("enableEmbedding")}</Label>
                                 <p className="text-sm text-muted-foreground">
-                                    Allow this workflow to be embedded on external websites
+                                    {t("enableEmbeddingHint")}
                                 </p>
                             </div>
                             <Switch
@@ -498,16 +509,16 @@ export function EmbedDialog({
                                 {/* Allowed Domains */}
                                 <div className="space-y-3">
                                     <Label>
-                                        Allowed Domains
+                                        {t("allowedDomains")}
                                         <span className="text-xs text-muted-foreground ml-2">
-                                            (leave empty to allow all domains)
+                                            {t("allowedDomainsHint")}
                                         </span>
                                     </Label>
 
                                     {/* Domain Input */}
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="example.com or *.example.com"
+                                            placeholder={t("domainPlaceholder")}
                                             value={newDomain}
                                             onChange={(e) => setNewDomain(e.target.value)}
                                             onKeyPress={handleKeyPress}
@@ -549,7 +560,7 @@ export function EmbedDialog({
 
                                 {/* Widget Type Selection */}
                                 <div className="space-y-4">
-                                    <Label>Widget Type</Label>
+                                    <Label>{t("widgetType")}</Label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
@@ -563,10 +574,10 @@ export function EmbedDialog({
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-center gap-2 font-medium">
                                                     <Mic className="h-4 w-4" />
-                                                    Voice Agent
+                                                    {t("widgetVoiceType")}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    Visitors talk to your agent by voice
+                                                    {t("widgetVoiceTypeHint")}
                                                 </div>
                                             </div>
                                         </button>
@@ -582,10 +593,10 @@ export function EmbedDialog({
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-center gap-2 font-medium">
                                                     <MessageCircle className="h-4 w-4" />
-                                                    Chat Agent
+                                                    {t("widgetChatType")}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    Visitors type messages to your agent
+                                                    {t("widgetChatTypeHint")}
                                                 </div>
                                             </div>
                                         </button>
@@ -595,7 +606,7 @@ export function EmbedDialog({
                                 {widgetType === "chat" && (
                                     <div className="space-y-2 rounded-lg border bg-muted/20 p-4">
                                         <Label htmlFor="text-chat-inactivity-timeout">
-                                            Chat Inactivity Timeout
+                                            {t("chatInactivityTimeout")}
                                         </Label>
                                         <div className="flex items-center gap-2">
                                             <Input
@@ -612,11 +623,11 @@ export function EmbedDialog({
                                                 className="w-32"
                                             />
                                             <span className="text-sm text-muted-foreground">
-                                                minutes
+                                                {t("minutes")}
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            End a text chat and trigger its completion webhook after this long without chat activity.
+                                            {t("chatInactivityTimeoutHint")}
                                         </p>
                                         {!textChatInactivityIsValid && (
                                             <p className="text-xs text-destructive">
@@ -628,7 +639,7 @@ export function EmbedDialog({
 
                                 {/* Embed Mode Selection */}
                                 <div className="space-y-4">
-                                    <Label>Embed Mode</Label>
+                                    <Label>{t("embedMode")}</Label>
                                     <div className="grid grid-cols-3 gap-4">
                                         <button
                                             type="button"
@@ -640,9 +651,9 @@ export function EmbedDialog({
                                             }`}
                                         >
                                             <div className="space-y-2">
-                                                <div className="font-medium">Floating Widget</div>
+                                                <div className="font-medium">{t("embedModeFloating")}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    Shows as a button in corner of the page
+                                                    {t("embedModeFloatingHint")}
                                                 </div>
                                             </div>
                                         </button>
@@ -656,9 +667,9 @@ export function EmbedDialog({
                                             }`}
                                         >
                                             <div className="space-y-2">
-                                                <div className="font-medium">Inline Component</div>
+                                                <div className="font-medium">{t("embedModeInline")}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    Embeds directly in your page content
+                                                    {t("embedModeInlineHint")}
                                                 </div>
                                             </div>
                                         </button>
@@ -672,9 +683,9 @@ export function EmbedDialog({
                                             }`}
                                         >
                                             <div className="space-y-2">
-                                                <div className="font-medium">Headless (Bring Your Own UI)</div>
+                                                <div className="font-medium">{t("embedModeHeadless")}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    No UI - drive calls from your own buttons via the JS API
+                                                    {t("embedModeHeadlessHint")}
                                                 </div>
                                             </div>
                                         </button>
@@ -683,7 +694,7 @@ export function EmbedDialog({
 
                                 {/* Configuration based on mode */}
                                 <div className="space-y-4">
-                                    <Label>Configuration</Label>
+                                    <Label>{t("configuration")}</Label>
 
                                     {/* Shared: Button Text + Button Color (skipped in headless — host renders its own UI) */}
                                     {embedMode !== "headless" && (

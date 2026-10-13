@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ export function BodyTemplateEditor({
     onChange,
     onValidityChange,
 }: BodyTemplateEditorProps) {
+    const t = useTranslations("Telephony");
     const [text, setText] = useState(value ? JSON.stringify(value, null, 2) : "");
     const [error, setError] = useState(false);
 
@@ -46,10 +48,12 @@ export function BodyTemplateEditor({
 
     return (
         <div className="grid gap-2">
-            <Label>JSON Body Template</Label>
+            <Label>{t("jsonBodyTemplate")}</Label>
             <Label className="text-xs text-muted-foreground">
-                Use LLM parameters defined above with {"{{defined_llm_parameter}}"}, or
-                initial context with {"{{initial_context.call_id}}"}.
+                {t("bodyTemplateHint", {
+                    param: "{{defined_llm_parameter}}",
+                    context: "{{initial_context.call_id}}",
+                })}
             </Label>
             <Textarea
                 className="min-h-48 font-mono text-xs"
@@ -60,7 +64,7 @@ export function BodyTemplateEditor({
                 }
                 spellCheck={false}
             />
-            {error && <p className="text-xs text-destructive">Enter a valid JSON object.</p>}
+            {error && <p className="text-xs text-destructive">{t("enterValidJsonObject")}</p>}
         </div>
     );
 }

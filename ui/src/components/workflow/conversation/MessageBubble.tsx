@@ -1,6 +1,7 @@
 "use client";
 
 import { Brain } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function MessageBubble({
     reasoningDurationMs,
     containerClassName,
 }: MessageBubbleProps) {
+    const t = useTranslations("Workflow");
     const isUser = role === "user";
     const isMuted = tone === "muted";
 
@@ -30,7 +32,7 @@ export function MessageBubble({
                 {!isUser && reasoningDurationMs !== undefined ? (
                     <div className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
                         <Brain className="h-3 w-3" />
-                        <span className="font-medium">Reasoning Delay:</span>
+                        <span className="font-medium">{t("reasoningDelay")}</span>
                         <span>{Math.round(reasoningDurationMs)}ms</span>
                     </div>
                 ) : null}
@@ -53,7 +55,7 @@ export function MessageBubble({
                                 isUser ? "text-primary-foreground/70" : "text-muted-foreground",
                             )}
                         >
-                            speaking...
+                            {t("speaking")}
                         </div>
                     ) : null}
                 </div>

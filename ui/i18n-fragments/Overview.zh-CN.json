@@ -1,0 +1,18 @@
+{
+  "welcomeOss": "欢迎使用 Dograh",
+  "welcome": "欢迎！",
+  "welcomeNamed": "欢迎，{name}！",
+  "descriptionOss": "Vapi 的开源替代方案。在 GitHub 上给我们一颗星，帮助我们支持这个项目。",
+  "descriptionCloud": "开始构建语音 AI 工作流",
+  "starUsOnGitHub": "在 GitHub 上给我们加星",
+  "createManageTitle": "创建和管理你的语音智能体",
+  "createManageDescription": "使用可视化编辑器构建强大的 AI 语音智能体",
+  "goToAgents": "前往智能体",
+  "configureServicesTitle": "配置服务",
+  "configureServicesDescription": "设置你的 AI 服务，如 LLM、TTS 和 STT 服务商",
+  "configureModels": "配置模型",
+  "resourcesTitle": "资源",
+  "resourcesDescription": "获取帮助并进一步了解 Dograh",
+  "documentation": "文档",
+  "reportIssue": "报告问题"
+}

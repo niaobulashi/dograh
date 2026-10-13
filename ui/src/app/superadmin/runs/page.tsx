@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ExternalLink, FileText, Info, Loader2, RefreshCw } from 'lucide-react';
+import { useTranslations } from "next-intl";
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -58,6 +59,7 @@ interface WorkflowRunsResponse {
 
 
 export default function RunsPage() {
+    const t = useTranslations("Superadmin");
     const router = useRouter();
     const searchParams = useSearchParams();
     const [runs, setRuns] = useState<WorkflowRun[]>([]);
@@ -151,7 +153,7 @@ export default function RunsPage() {
                 setTotalCount(data.total_count);
             }
         } catch (err) {
-            setError("Failed to fetch workflow runs. Please try again.");
+            setError(t("fetchError"));
             console.error("Fetch runs error:", err);
         } finally {
             if (!isAutoRefresh) {
@@ -160,7 +162,7 @@ export default function RunsPage() {
                 setIsAutoRefreshing(false);
             }
         }
-    }, [limit, auth.isAuthenticated]);
+    }, [limit, auth.isAuthenticated, t]);
 
     const updatePageInUrl = useCallback((page: number, filters?: ActiveFilter[], sortByParam?: string | null, sortOrderParam?: 'asc' | 'desc') => {
         const params = new URLSearchParams();
@@ -281,10 +283,10 @@ export default function RunsPage() {
                 });
             } catch (err) {
                 console.error('Failed to impersonate user', err);
-                alert('Failed to impersonate the user. Please try again.');
+                alert(t('impersonateFailed'));
             }
         },
-        [auth],
+        [auth, t],
     );
 
     if (isLoading && runs.length === 0) {
@@ -292,7 +294,7 @@ export default function RunsPage() {
             <PageShell width="full" className="flex min-h-[400px] items-center justify-center">
                 <div className="flex items-center space-x-2">
                     <Loader2 className="h-6 w-6 animate-spin" />
-                    <span>Loading workflow runs...</span>
+                    <span>{t("loading")}</span>
                 </div>
             </PageShell>
         );
@@ -301,8 +303,8 @@ export default function RunsPage() {
     return (
         <PageShell width="full" className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold mb-2">Workflow Runs</h1>
-                <p className="text-muted-foreground">View and manage all workflow runs across organizations</p>
+                <h1 className="text-3xl font-bold mb-2">{t("runsTitle")}</h1>
+                <p className="text-muted-foreground">{t("runsDescription")}</p>
             </div>
 
             {error && (
@@ -327,15 +329,15 @@ export default function RunsPage() {
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle>All Workflow Runs</CardTitle>
+                                <CardTitle>{t("allRunsTitle")}</CardTitle>
                                 <CardDescription>
-                                    Showing {runs.length} of {totalCount} total runs
+                                    {t("showing", { shown: runs.length, total: totalCount })}
                                 </CardDescription>
                             </div>
                             {isAutoRefreshing && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <RefreshCw className="h-4 w-4 animate-spin" />
-                                    <span>Refreshing...</span>
+                                    <span>{t("refreshing")}</span>
                                 </div>
                             )}
                         </div>
@@ -343,7 +345,7 @@ export default function RunsPage() {
                     <CardContent>
                         {runs.length === 0 ? (
                             <div className="text-center py-8 text-muted-foreground">
-                                No workflow runs found.
+                                {t("noRuns")}
                             </div>
                         ) : (
                             <>
@@ -351,17 +353,17 @@ export default function RunsPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted">
-                                                <TableHead className="font-semibold">ID</TableHead>
-                                                <TableHead className="font-semibold">Workflow</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="font-semibold">Disposition</TableHead>
-                                                <TableHead className="font-semibold">Tags</TableHead>
+                                                <TableHead className="font-semibold">{t("colId")}</TableHead>
+                                                <TableHead className="font-semibold">{t("colWorkflow")}</TableHead>
+                                                <TableHead className="font-semibold">{t("colStatus")}</TableHead>
+                                                <TableHead className="font-semibold">{t("colDisposition")}</TableHead>
+                                                <TableHead className="font-semibold">{t("colTags")}</TableHead>
                                                 <TableHead
                                                     className="font-semibold cursor-pointer hover:bg-muted/50 select-none"
                                                     onClick={() => handleSort('duration')}
                                                 >
                                                     <div className="flex items-center gap-1">
-                                                        Duration
+                                                        {t("colDuration")}
                                                         {sortBy === 'duration' ? (
                                                             sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                                                         ) : (
@@ -369,13 +371,13 @@ export default function RunsPage() {
                                                         )}
                                                     </div>
                                                 </TableHead>
-                                                <TableHead className="font-semibold">Details</TableHead>
+                                                <TableHead className="font-semibold">{t("colDetails")}</TableHead>
                                                 <TableHead
                                                     className="font-semibold cursor-pointer hover:bg-muted/50 select-none"
                                                     onClick={() => handleSort('created_at')}
                                                 >
                                                     <div className="flex items-center gap-1">
-                                                        Created At
+                                                        {t("colCreatedAt")}
                                                         {sortBy === 'created_at' ? (
                                                             sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                                                         ) : (
@@ -383,7 +385,7 @@ export default function RunsPage() {
                                                         )}
                                                     </div>
                                                 </TableHead>
-                                                <TableHead className="font-semibold">Actions</TableHead>
+                                                <TableHead className="font-semibold">{t("colActions")}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -401,10 +403,10 @@ export default function RunsPage() {
                                                                     run.workflow_name.length > 15
                                                                         ? `${run.workflow_name.substring(0, 15)}...`
                                                                         : run.workflow_name
-                                                                ) : 'Unknown Workflow'}
+                                                                ) : t("unknownWorkflow")}
                                                             </span>
                                                             <span className="text-xs text-muted-foreground font-mono">
-                                                                ID: {String(run.workflow_id).length > 12
+                                                                {t("idLabel")} {String(run.workflow_id).length > 12
                                                                     ? `${String(run.workflow_id).substring(0, 12)}...`
                                                                     : run.workflow_id}
                                                             </span>
@@ -452,7 +454,7 @@ export default function RunsPage() {
                                                                         <Info className="h-4 w-4 text-green-600 cursor-pointer" />
                                                                     </TooltipTrigger>
                                                                     <TooltipContent sideOffset={4} className="max-w-sm whitespace-pre-wrap break-words">
-                                                                        <p className="font-semibold text-xs mb-1">Initial Context</p>
+                                                                        <p className="font-semibold text-xs mb-1">{t("initialContext")}</p>
                                                                         <pre className="max-w-sm whitespace-pre-wrap break-words text-xs">
                                                                             {JSON.stringify(run.initial_context, null, 2)}
                                                                         </pre>
@@ -465,7 +467,7 @@ export default function RunsPage() {
                                                                         <Info className="h-4 w-4 text-blue-500 cursor-pointer" />
                                                                     </TooltipTrigger>
                                                                     <TooltipContent sideOffset={4} className="max-w-sm whitespace-pre-wrap break-words">
-                                                                        <p className="font-semibold text-xs mb-1">Gathered Context</p>
+                                                                        <p className="font-semibold text-xs mb-1">{t("gatheredContext")}</p>
                                                                         <pre className="max-w-sm whitespace-pre-wrap break-words text-xs">
                                                                             {JSON.stringify(run.gathered_context, null, 2)}
                                                                         </pre>
@@ -478,7 +480,7 @@ export default function RunsPage() {
                                                                         <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                                                                     </TooltipTrigger>
                                                                     <TooltipContent sideOffset={4} className="max-w-sm whitespace-pre-wrap break-words">
-                                                                        <p className="font-semibold text-xs mb-1">Usage Info</p>
+                                                                        <p className="font-semibold text-xs mb-1">{t("usageInfo")}</p>
                                                                         <pre className="max-w-sm whitespace-pre-wrap break-words text-xs">
                                                                             {JSON.stringify(run.usage_info, null, 2)}
                                                                         </pre>
@@ -527,7 +529,7 @@ export default function RunsPage() {
                                                             >
                                                                 <Image
                                                                     src="/axiom_icon.svg"
-                                                                    alt="Traces"
+                                                                    alt={t("traces")}
                                                                     width={16}
                                                                     height={16}
                                                                     className="h-4 w-4"
@@ -553,7 +555,7 @@ export default function RunsPage() {
                                                             >
                                                                 <Image
                                                                     src="/langfuse_icon.svg"
-                                                                    alt="Langfuse Traces"
+                                                                    alt={t("langfuseTraces")}
                                                                     width={16}
                                                                     height={16}
                                                                     className="h-4 w-4"
@@ -565,7 +567,7 @@ export default function RunsPage() {
                                                             <Button
                                                                 variant="outline"
                                                                 size="icon"
-                                                                title="Open workflow as user"
+                                                                title={t("openWorkflowAsUser")}
                                                                 disabled={!run.user_id}
                                                                 onClick={() => {
                                                                     impersonateAndMaybeRedirect(
@@ -580,7 +582,7 @@ export default function RunsPage() {
                                                             <Button
                                                                 variant="outline"
                                                                 size="icon"
-                                                                title="Open run details as user"
+                                                                title={t("openRunDetailsAsUser")}
                                                                 disabled={!run.user_id}
                                                                 onClick={() => {
                                                                     impersonateAndMaybeRedirect(
@@ -604,7 +606,7 @@ export default function RunsPage() {
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-6">
                                         <div className="text-sm text-muted-foreground">
-                                            Page {currentPage} of {totalPages} ({totalCount} total runs)
+                                            {t("pageOf", { page: currentPage, totalPages, total: totalCount })}
                                         </div>
                                         <div className="flex space-x-2">
                                             <Button
@@ -614,7 +616,7 @@ export default function RunsPage() {
                                                 disabled={currentPage === 1 || isLoading}
                                             >
                                                 <ChevronLeft className="h-4 w-4 mr-1" />
-                                                Previous
+                                                {t("previous")}
                                             </Button>
 
                                             {/* Page numbers */}
@@ -649,7 +651,7 @@ export default function RunsPage() {
                                                 onClick={() => handlePageChange(currentPage + 1)}
                                                 disabled={currentPage === totalPages || isLoading}
                                             >
-                                                Next
+                                                {t("next")}
                                                 <ChevronRight className="h-4 w-4 ml-1" />
                                             </Button>
                                         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Braces, Brain, Settings, Workflow } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 
@@ -34,13 +35,12 @@ export function referencedVariables(nodes: FlowNode[]): string[] {
     return [...names].sort();
 }
 
-export function describeVariables(variables: Record<string, string>, nodes: FlowNode[]): { text: string; missing: string[] } {
+export function describeVariables(variables: Record<string, string>, nodes: FlowNode[]): { setCount: number; missing: string[] } {
     // Values written through the API may not be strings.
     const hasValue = (value: unknown) => String(value ?? "").trim() !== "";
-    const set = Object.values(variables).filter(hasValue).length;
+    const setCount = Object.values(variables).filter(hasValue).length;
     const missing = referencedVariables(nodes).filter(name => !Object.hasOwn(variables, name) || !hasValue(variables[name]));
-    if (set === 0 && missing.length === 0) return { text: "No variables", missing };
-    return { text: missing.length ? `${set} set, ${missing.length} missing` : `${set} set`, missing };
+    return { setCount, missing };
 }
 
 const TAB = "h-7 gap-1.5 px-2.5 text-sm";
@@ -71,6 +71,7 @@ type EditorSetupProps = WorkflowSettingsState & {
 };
 
 export function EditorSetup({ view, onViewChange, onSavingChange, workflowId, workflowName, workflowUuid, nodes, ...state }: EditorSetupProps) {
+    const t = useTranslations("Workflow");
     const { confirmNavigate, dirtySections } = useUnsavedChangesContext();
     const { workflowConfigurations, templateContextVariables, saveWorkflowConfigurations, saveTemplateContextVariables } = state;
     // The configurations and variables arrive together; until then the
@@ -88,6 +89,11 @@ export function EditorSetup({ view, onViewChange, onSavingChange, workflowId, wo
         return () => onSavingChange?.(false);
     }, [pendingSave, onSavingChange]);
     const variables = useMemo(() => describeVariables(templateContextVariables, nodes), [templateContextVariables, nodes]);
+    const variablesSummary = variables.missing.length > 0
+        ? t("variablesSummaryMissing", { set: variables.setCount, missing: variables.missing.length })
+        : variables.setCount === 0
+            ? t("noVariables")
+            : t("variablesSummarySet", { set: variables.setCount });
 
     const switchView = (next: EditorView) => {
         // The model editor stays mounted across views, so only the other
@@ -99,42 +105,44 @@ export function EditorSetup({ view, onViewChange, onSavingChange, workflowId, wo
 
     return <>
         <div className="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center">
-            <div role="toolbar" aria-label="Editor" className="nodrag nopan pointer-events-auto rounded-xl border bg-card p-1 shadow-md">
+            <div role="toolbar" aria-label={t("editor")} className="nodrag nopan pointer-events-auto rounded-xl border bg-card p-1 shadow-md">
                 <Tabs value={view} onValueChange={next => switchView(next as EditorView)}>
-                    <TabsList className="h-8" aria-label="Editor view">
-                        <TabsTrigger value="canvas" className={TAB}><Workflow className="h-4 w-4" aria-hidden />Canvas</TabsTrigger>
-                        <TabsTrigger value="model" className={TAB} disabled={!ready} title={ready ? model.summary : "Loading…"}>
-                            <Brain className="h-4 w-4" aria-hidden />Model
+                    <TabsList className="h-8" aria-label={t("editorView")}>
+                        <TabsTrigger value="canvas" className={TAB}><Workflow className="h-4 w-4" aria-hidden />{t("canvas")}</TabsTrigger>
+                        <TabsTrigger value="model" className={TAB} disabled={!ready} title={ready ? model.summary : t("loadingEllipsis")}>
+                            <Brain className="h-4 w-4" aria-hidden />{t("model")}
                         </TabsTrigger>
-                        <TabsTrigger value="variables" className={TAB} disabled={!ready} title={ready ? variables.text : "Loading…"}>
-                            <Braces className="h-4 w-4" aria-hidden />Variables
+                        <TabsTrigger value="variables" className={TAB} disabled={!ready} title={ready ? variablesSummary : t("loadingEllipsis")}>
+                            <Braces className="h-4 w-4" aria-hidden />{t("variablesTab")}
                         </TabsTrigger>
-                        <TabsTrigger value="settings" className={TAB} disabled={!ready}><Settings className="h-4 w-4" aria-hidden />Settings</TabsTrigger>
+                        <TabsTrigger value="settings" className={TAB} disabled={!ready}><Settings className="h-4 w-4" aria-hidden />{t("settingsTab")}</TabsTrigger>
                     </TabsList>
                 </Tabs>
             </div>
         </div>
 
-        {view === "model" && ready && <section aria-label="Model configuration" className="absolute inset-0 z-20 overflow-y-auto bg-background">
+        {view === "model" && ready && <section aria-label={t("modelConfiguration")} className="absolute inset-0 z-20 overflow-y-auto bg-background">
             <div className="mx-auto w-full max-w-3xl px-6 pb-16 pt-20">
-                <h2 className="text-lg font-semibold">Model configuration</h2>
+                <h2 className="text-lg font-semibold">{t("modelConfiguration")}</h2>
                 <p className="mb-6 text-sm text-muted-foreground">
-                    Choose from a preset <Link href="/model-configurations" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">model configuration</Link> or create a custom one from scratch. Changes save to the draft and apply to test calls at once; publish to apply them to live calls.
+                    {t.rich("modelConfigurationDescription", {
+                        link: chunks => <Link href="/model-configurations" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{chunks}</Link>,
+                    })}
                 </p>
                 <WorkflowModelPicker model={model} density="compact" />
             </div>
         </section>}
 
-        {view === "variables" && ready && <section aria-label="Template variables" className="absolute inset-0 z-20 overflow-y-auto bg-background">
+        {view === "variables" && ready && <section aria-label={t("templateVariables")} className="absolute inset-0 z-20 overflow-y-auto bg-background">
             <div className="mx-auto w-full max-w-3xl px-6 pb-16 pt-20">
                 {variables.missing.length > 0 && <p className="mb-4 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300" role="status">
-                    Prompts reference {variables.missing.map(name => `{{${name}}}`).join(", ")} but no value is set. Set them here to use during test calls.
+                    {t("templateVariablesMissingWarning", { names: variables.missing.map(name => `{{${name}}}`).join(", ") })}
                 </p>}
                 <TemplateVariablesSection templateContextVariables={templateContextVariables} onSave={saveTemplateContextVariables} />
             </div>
         </section>}
 
-        {view === "settings" && ready && <section aria-label="Settings" className="absolute inset-0 z-20 overflow-y-auto bg-background">
+        {view === "settings" && ready && <section aria-label={t("settingsTab")} className="absolute inset-0 z-20 overflow-y-auto bg-background">
             <div className="mx-auto w-full max-w-5xl px-6 pb-16 pt-20">
                 <WorkflowSettingsSections workflowId={workflowId} workflowName={workflowName} workflowUuid={workflowUuid} hide={["models", "variables"]} {...state} />
             </div>

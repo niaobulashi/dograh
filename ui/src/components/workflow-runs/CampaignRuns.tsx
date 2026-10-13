@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -19,6 +20,7 @@ interface CampaignRunsProps {
 }
 
 export function CampaignRuns({ campaignId, workflowId, searchParams }: CampaignRunsProps) {
+    const t = useTranslations("Workflow");
     const router = useRouter();
     const { isAuthenticated } = useAuth();
     const { codes: dispositionCodes } = useDispositionCodes();
@@ -93,7 +95,7 @@ export function CampaignRuns({ campaignId, workflowId, searchParams }: CampaignR
             });
 
             if (response.error) {
-                throw new Error("Failed to fetch campaign runs");
+                throw new Error(t("failedToFetchCampaignRuns"));
             }
 
             if (response.data) {
@@ -106,11 +108,11 @@ export function CampaignRuns({ campaignId, workflowId, searchParams }: CampaignR
             setError(null);
         } catch (err) {
             console.error("Error fetching campaign runs:", err);
-            setError("Failed to load campaign runs");
+            setError(t("failedToLoadCampaignRuns"));
         } finally {
             setLoading(false);
         }
-    }, [campaignId, isAuthenticated]);
+    }, [campaignId, isAuthenticated, t]);
 
     const updatePageInUrl = useCallback((page: number, filters?: ActiveFilter[], sortByParam?: string | null, sortOrderParam?: 'asc' | 'desc') => {
         const params = new URLSearchParams();
@@ -209,8 +211,8 @@ export function CampaignRuns({ campaignId, workflowId, searchParams }: CampaignR
             workflowId={workflowId}
             showAgentVersion
             onReload={handleReload}
-            title="Campaign Workflow Runs"
-            emptyMessage="No workflow runs found for this campaign"
+            title={t("campaignWorkflowRuns")}
+            emptyMessage={t("noCampaignRuns")}
         />
     );
 }

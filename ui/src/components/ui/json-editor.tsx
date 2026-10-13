@@ -1,4 +1,5 @@
 import { AlertCircle, Check, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -112,6 +113,7 @@ export function JsonEditor({
     showCopyButton = true,
     className = "",
 }: JsonEditorProps) {
+    const t = useTranslations("Shared");
     const [copied, setCopied] = useState(false);
 
     const handleCopy = useCallback(async () => {
@@ -120,9 +122,9 @@ export function JsonEditor({
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            toast.error("Failed to copy JSON");
+            toast.error(t("copyJsonFailed"));
         }
-    }, [value]);
+    }, [value, t]);
 
     return (
         <div className={`grid gap-2 ${className}`}>
@@ -141,7 +143,7 @@ export function JsonEditor({
                             ) : (
                                 <Copy className="h-4 w-4 mr-1" />
                             )}
-                            Copy
+                            {t("copy")}
                         </Button>
                     )}
                 </div>

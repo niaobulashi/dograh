@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import {
     type ChangeEvent,
     type KeyboardEvent,
@@ -33,6 +34,7 @@ export function MentionTextarea({
     className,
     recordings = [],
 }: MentionTextareaProps) {
+    const t = useTranslations("Workflow");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -207,7 +209,7 @@ export function MentionTextarea({
             )}
             {showDropdown && filtered.length === 0 && items.length === 0 && (
                 <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md p-3 text-sm text-muted-foreground">
-                    No recordings found. Upload recordings via the Recordings panel.
+                    {t("noRecordingsFoundUploadHint")}
                 </div>
             )}
         </div>

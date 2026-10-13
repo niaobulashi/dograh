@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ExternalLink, MicOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ export function NoticeCard({
     linkHref,
     linkLabel,
 }: NoticeCardProps) {
+    const t = useTranslations("Workflow");
     const isWarning = tone === "warning";
     const Icon = isWarning ? MicOff : AlertTriangle;
 
@@ -44,7 +46,7 @@ export function NoticeCard({
                         isWarning ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400",
                     )}
                 >
-                    {title}
+                    {t(title)}
                 </div>
                 <div
                     className={cn(
@@ -64,7 +66,7 @@ export function NoticeCard({
                             isWarning ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400",
                         )}
                     >
-                        {linkLabel} <ExternalLink className="h-3 w-3" />
+                        {t(linkLabel)} <ExternalLink className="h-3 w-3" />
                     </a>
                 ) : null}
             </div>

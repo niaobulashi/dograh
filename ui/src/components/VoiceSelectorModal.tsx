@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, Loader2, Play, Square } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getVoicesApiV1UserConfigurationsVoicesProviderGet } from "@/client/sdk.gen";
@@ -96,6 +97,7 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
     model,
     className,
 }) => {
+    const t = useTranslations("Telephony");
     const { user, loading: authLoading } = useAuth();
     const userId = user?.id;
     const voiceCacheKey = (!authLoading && userId && provider && value)
@@ -197,7 +199,7 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                 if (id !== requestId.current) return; // a newer request superseded this one
 
                 if (response.error) {
-                    setError(detailFromError(response.error, "Failed to load voices"));
+                    setError(detailFromError(response.error, t("failedToLoadVoices")));
                     setVoices([]);
                 } else {
                     setVoices(response.data?.voices ?? []);

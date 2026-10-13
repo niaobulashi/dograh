@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -43,6 +44,7 @@ export function SipConnectivityCard({
   details,
   defaultOpen = false,
 }: SipConnectivityCardProps) {
+  const t = useTranslations("Telephony");
   const [open, setOpen] = useState(defaultOpen);
   const [selectedRegion, setSelectedRegion] = useState<string>();
   const defaultRegion =
@@ -70,8 +72,8 @@ export function SipConnectivityCard({
 
   const copyValue = (value: string, label: string) => {
     copyTextToClipboard(value)
-      .then(() => toast.success(`${label} copied`))
-      .catch(() => toast.error(`Failed to copy ${label.toLowerCase()}`));
+      .then(() => toast.success(t("copiedLabel", { label })))
+      .catch(() => toast.error(t("failedToCopyLabel", { label: label.toLowerCase() })));
   };
 
   return (
@@ -79,15 +81,14 @@ export function SipConnectivityCard({
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle>SIP connectivity</CardTitle>
+            <CardTitle>{t("sipConnectivity")}</CardTitle>
             <CardDescription>
-              The endpoints to give your SIP carrier or PBX. Pick a region to see
-              the addresses that region uses.
+              {t("sipConnectivityDescription")}
             </CardDescription>
           </div>
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="shrink-0">
-              {open ? "Hide details" : "View details"}
+              {open ? t("hideDetails") : t("viewDetails")}
               <ChevronDown
                 className={`ml-2 h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
               />
@@ -99,7 +100,7 @@ export function SipConnectivityCard({
           <CardContent className="space-y-6 border-t pt-6">
             <div className="max-w-xs space-y-2">
               <p className="flex items-center gap-2 text-sm font-medium">
-                Select Region
+                {t("selectRegion")}
                 {/* Every endpoint below is region-specific, so the picker is
                     easy to walk past and read the wrong hostnames from. */}
                 <span aria-hidden className="relative flex h-3 w-3 shrink-0">
@@ -108,7 +109,7 @@ export function SipConnectivityCard({
                 </span>
               </p>
               <Select value={region.region} onValueChange={setSelectedRegion}>
-                <SelectTrigger aria-label="SIP region">
+                <SelectTrigger aria-label={t("sipRegionAria")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,21 +124,20 @@ export function SipConnectivityCard({
 
             <section className="overflow-hidden rounded-md border">
               <div className="border-b bg-muted/20 p-4">
-                <h3 className="font-semibold">Inbound</h3>
+                <h3 className="font-semibold">{t("inbound")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Route calls to {details.provider_display_name}/Dograh using this
-                  SIP endpoint.
+                  {t("inboundDescription", { provider: details.provider_display_name })}
                 </p>
               </div>
               <div className="space-y-3 p-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/30 px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Hostname</span>
+                  <span className="text-muted-foreground">{t("hostname")}</span>
                   {inboundHostname ? (
                     <button
                       type="button"
-                      onClick={() => copyValue(inboundHostname, "Hostname")}
-                      title="Copy inbound hostname"
-                      aria-label="Copy inbound hostname"
+                      onClick={() => copyValue(inboundHostname, t("hostname"))}
+                      title={t("copyInboundHostname")}
+                      aria-label={t("copyInboundHostname")}
                       className="inline-flex items-center gap-2 rounded font-mono hover:text-foreground"
                     >
                       {inboundHostname}
@@ -146,7 +146,7 @@ export function SipConnectivityCard({
                   ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Ports</span>
+                  <span className="text-muted-foreground">{t("ports")}</span>
                   {portGroups.map((group) => (
                     <Badge
                       key={group.port}
@@ -162,22 +162,21 @@ export function SipConnectivityCard({
 
             <section className="overflow-hidden rounded-md border">
               <div className="border-b bg-muted/20 p-4">
-                <h3 className="font-semibold">Outbound</h3>
+                <h3 className="font-semibold">{t("outbound")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Send calls from {details.provider_display_name}/Dograh to your SIP
-                  carrier or PBX.
+                  {t("outboundDescription", { provider: details.provider_display_name })}
                 </p>
               </div>
               <div className="space-y-3 p-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/30 px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Origin IP address</span>
+                  <span className="text-muted-foreground">{t("originIpAddress")}</span>
                   <button
                     type="button"
                     onClick={() =>
-                      copyValue(region.outbound_origin_ip, "Origin IP address")
+                      copyValue(region.outbound_origin_ip, t("originIpAddress"))
                     }
-                    title="Copy outbound origin IP address"
-                    aria-label="Copy outbound origin IP address"
+                    title={t("copyOriginIp")}
+                    aria-label={t("copyOriginIp")}
                     className="inline-flex items-center gap-2 rounded font-mono hover:text-foreground"
                   >
                     {region.outbound_origin_ip}

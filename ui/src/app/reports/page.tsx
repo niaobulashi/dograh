@@ -2,6 +2,7 @@
 
 import { addDays, format, subDays } from 'date-fns';
 import { Calendar, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import {
@@ -52,6 +53,7 @@ interface DailyReport {
 }
 
 export default function ReportsPage() {
+  const t = useTranslations('Reports');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('all');
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([]);
@@ -120,7 +122,7 @@ export default function ReportsPage() {
         }
       } catch (err) {
         console.error('Failed to fetch report:', err);
-        setError('Failed to load report data');
+        setError(t('loadReportFailed'));
       } finally {
         setLoading(false);
       }
@@ -155,7 +157,7 @@ export default function ReportsPage() {
 
       if (response.data && response.data.length > 0) {
         // Prepare CSV content
-        const headers = ['Phone Number', 'Disposition', 'Duration (seconds)', 'Workflow Run URL'];
+        const headers = [t('csvPhoneNumber'), t('csvDisposition'), t('csvDurationSeconds'), t('csvWorkflowRunUrl')];
         const rows = response.data.map((run: WorkflowRunDetail) => {
           const url = `${window.location.origin}/workflow/${run.workflow_id}/run/${run.run_id}`;
           return [
@@ -188,26 +190,26 @@ export default function ReportsPage() {
         link.click();
         document.body.removeChild(link);
       } else {
-        alert('No data available for download');
+        alert(t('noDataForDownload'));
       }
     } catch (err) {
       console.error('Failed to download CSV:', err);
-      alert('Failed to download CSV data');
+      alert(t('downloadCsvFailed'));
     }
   };
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <PageLayout title="Daily Reports" description="Review daily call outcomes and activity across your voice agents."
+    <PageLayout title={t('title')} description={t('description')}
       actions={<div className="flex flex-wrap items-center gap-4">
         {/* Workflow Selector */}
         <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select workflow" />
+            <SelectValue placeholder={t('selectWorkflow')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Workflows</SelectItem>
+            <SelectItem value="all">{t('allWorkflows')}</SelectItem>
             {workflows.map((workflow) => (
               <SelectItem key={workflow.id} value={workflow.id.toString()}>
                 {workflow.name}
@@ -256,9 +258,9 @@ export default function ReportsPage() {
       {/* Timezone Display and Download Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div className="text-sm text-muted-foreground">
-          Showing data for {timezone} timezone
+          {t('showingDataFor', { timezone })}
           {selectedWorkflow !== 'all' && (
-            <span> • Filtered by: {workflows.find(w => w.id.toString() === selectedWorkflow)?.name}</span>
+            <span>{t('filteredBy', { name: workflows.find(w => w.id.toString() === selectedWorkflow)?.name ?? '' })}</span>
           )}
         </div>
 
@@ -271,7 +273,7 @@ export default function ReportsPage() {
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
-            Download CSV
+            {t('downloadCsv')}
           </Button>
         )}
       </div>
@@ -313,8 +315,9 @@ export default function ReportsPage() {
           {report.metrics.total_runs === 0 && (
             <Card className="p-6">
               <p className="text-center text-muted-foreground">
-                No workflow runs found for {format(selectedDate, 'MMMM dd, yyyy')}
-                {selectedWorkflow !== 'all' && ' for the selected workflow'}
+                {selectedWorkflow !== 'all'
+                  ? t('noRunsForDateFiltered', { date: format(selectedDate, 'MMMM dd, yyyy') })
+                  : t('noRunsForDate', { date: format(selectedDate, 'MMMM dd, yyyy') })}
               </p>
             </Card>
           )}

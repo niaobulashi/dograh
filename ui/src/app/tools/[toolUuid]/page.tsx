@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Code, ExternalLink, FlaskConical, Loader2, Save } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -60,7 +61,7 @@ import {
     DEFAULT_TRANSFER_INTRODUCTION_PROMPT,
     type EndCallMessageType,
     getCategoryConfig,
-    getToolTypeLabel,
+    getToolTypeKey,
     MCP_URL_PATTERN,
     renderToolIcon,
     ruleRowsToContextMappingRules,
@@ -98,6 +99,7 @@ function headersToRows(headers: Record<string, string> | undefined | null): KeyV
 }
 
 export default function ToolDetailPage() {
+    const t = useTranslations("Tools");
     const { toolUuid } = useParams<{ toolUuid: string }>();
     const { user, getAccessToken, redirectToLogin, loading } = useAuth();
     const router = useRouter();
@@ -224,12 +226,12 @@ export default function ToolDetailPage() {
                 populateFormFromTool(response.data);
             }
         } catch (err) {
-            setError("Failed to fetch tool");
+            setError(t("detail.errorFetch"));
             console.error("Error fetching tool:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [loading, user, toolUuid, getAccessToken]);
+    }, [loading, user, toolUuid, getAccessToken, t]);
 
     const populateFormFromTool = (tool: ToolResponse) => {
         setName(tool.name);
@@ -475,7 +477,7 @@ export default function ToolDetailPage() {
             // No validation needed for built-in tools
         } else if (tool.category === "transfer_agent") {
             if (!transferAgentWorkflowId) {
-                setError("Choose the agent to transfer to");
+                setError(t("detail.errorChooseAgent"));
                 return;
             }
             if (
@@ -487,13 +489,13 @@ export default function ToolDetailPage() {
             }
         } else if (tool.category === "transfer_call") {
             if (transferDestinationSource === "static" && !normalizedTransferDestination) {
-                setError("Please enter a transfer destination");
+                setError(t("detail.errorTransferDestination"));
                 return;
             }
             if (transferDestinationSource === "dynamic") {
                 const resolverUrlValidation = validateUrl(transferResolverUrl);
                 if (!resolverUrlValidation.valid) {
-                    setError(resolverUrlValidation.error || "Invalid resolver URL");
+                    setError(resolverUrlValidation.error || t("detail.errorInvalidResolverUrl"));
                     return;
                 }
 
@@ -501,40 +503,40 @@ export default function ToolDetailPage() {
                     (p) => !p.name.trim() || !p.description.trim()
                 );
                 if (invalidTransferParams.length > 0) {
-                    setError("All resolver arguments must have a name and description");
+                    setError(t("detail.errorResolverArgs"));
                     return;
                 }
                 const transferParamNames = transferParameters
                     .map((p) => p.name.trim())
                     .filter(Boolean);
                 if (new Set(transferParamNames).size !== transferParamNames.length) {
-                    setError("Resolver argument names must be unique");
+                    setError(t("detail.errorResolverArgNamesUnique"));
                     return;
                 }
                 const invalidPresetTransferParams = transferPresetParameters.filter(
                     (p) => !p.name.trim() || !p.valueTemplate.trim()
                 );
                 if (invalidPresetTransferParams.length > 0) {
-                    setError("All resolver preset parameters must have a name and a value");
+                    setError(t("detail.errorResolverPresetParams"));
                     return;
                 }
                 const transferPresetParamNames = transferPresetParameters
                     .map((p) => p.name.trim())
                     .filter(Boolean);
                 if (new Set(transferPresetParamNames).size !== transferPresetParamNames.length) {
-                    setError("Resolver preset parameter names must be unique");
+                    setError(t("detail.errorResolverPresetNamesUnique"));
                     return;
                 }
             }
             if (transferDestinationSource === "context_mapping") {
                 if (transferContextDestinationRules.length === 0) {
-                    setError("Add at least one context routing rule");
+                    setError(t("detail.errorAddContextRule"));
                     return;
                 }
                 for (const [index, rule] of transferContextDestinationRules.entries()) {
-                    const ruleLabel = `rule ${index + 1}`;
+                    const ruleLabel = t("detail.ruleLabel", { index: index + 1 });
                     if (!rule.context_path.trim()) {
-                        setError(`Please enter a context field for ${ruleLabel}`);
+                        setError(t("detail.errorContextField", { rule: ruleLabel }));
                         return;
                     }
                     if (
@@ -544,7 +546,7 @@ export default function ToolDetailPage() {
                         )
                     ) {
                         setError(
-                            `Add at least one complete context value to destination mapping in ${ruleLabel}`
+                            t("detail.errorContextMappingIncomplete", { rule: ruleLabel })
                         );
                         return;
                     }
@@ -552,7 +554,7 @@ export default function ToolDetailPage() {
                         route.context_value.trim().toLocaleLowerCase()
                     );
                     if (new Set(routeValues).size !== routeValues.length) {
-                        setError(`Destination mapping context values must be unique in ${ruleLabel}`);
+                        setError(t("detail.errorContextValuesUnique", { rule: ruleLabel }));
                         return;
                     }
                 }
@@ -560,30 +562,30 @@ export default function ToolDetailPage() {
         } else if (tool.category === "mcp") {
             // Validate MCP server URL (must be http(s))
             if (!mcpUrl.trim()) {
-                setError("Please enter the MCP server URL");
+                setError(t("detail.errorMcpUrlRequired"));
                 return;
             }
             if (!MCP_URL_PATTERN.test(mcpUrl.trim())) {
-                setError("MCP server URL must start with http:// or https://");
+                setError(t("detail.errorMcpUrlInvalid"));
                 return;
             }
         } else if (tool.category !== "end_call") {
             // Validate URL for HTTP API tools
             const urlValidation = validateUrl(url);
             if (!urlValidation.valid) {
-                setError(urlValidation.error || "Invalid URL");
+                setError(urlValidation.error || t("detail.errorInvalidUrl"));
                 return;
             }
 
             // Validate parameters have names
             const invalidParams = parameters.filter((p) => !p.name.trim());
             if (invalidParams.length > 0) {
-                setError("All parameters must have a name");
+                setError(t("detail.errorParamNames"));
                 return;
             }
             const paramNames = parameters.map((p) => p.name.trim()).filter(Boolean);
             if (new Set(paramNames).size !== paramNames.length) {
-                setError("Parameter names must be unique");
+                setError(t("detail.errorParamNamesUnique"));
                 return;
             }
 
@@ -591,7 +593,7 @@ export default function ToolDetailPage() {
                 (p) => !p.name.trim() || !p.valueTemplate.trim()
             );
             if (invalidPresetParams.length > 0) {
-                setError("All preset parameters must have a name and a value");
+                setError(t("detail.errorPresetParams"));
                 return;
             }
             if (
@@ -599,7 +601,7 @@ export default function ToolDetailPage() {
                 bodyTemplateEnabled &&
                 (!isBodyTemplateValid || bodyTemplate === null)
             ) {
-                setError("Body template must be a valid JSON object");
+                setError(t("detail.errorBodyTemplate"));
                 return;
             }
         }
@@ -790,7 +792,7 @@ export default function ToolDetailPage() {
             });
 
             if (response.error) {
-                setError(detailFromError(response.error, "Failed to save tool"));
+                setError(detailFromError(response.error, t("detail.errorSave")));
                 return;
             }
 
@@ -819,7 +821,7 @@ export default function ToolDetailPage() {
                 }
             }
         } catch (err) {
-            setError("Failed to save tool");
+            setError(t("detail.errorSave"));
             console.error("Error saving tool:", err);
         } finally {
             setIsSaving(false);
@@ -868,7 +870,7 @@ export default function ToolDetailPage() {
                 : parameters.length > 0 || presetParameters.length > 0);
 
         return `// ${tool.name}
-// ${tool.description || "HTTP API Tool"}
+// ${tool.description || t("toolTypes.httpApi")}
 
 const response = await fetch("${url}", {
     method: "${httpMethod}",
@@ -902,10 +904,10 @@ const data = await response.json();`;
     if (!tool) {
         return (
             <PageShell className="text-center">
-                <h1 className="text-2xl font-bold mb-4">Tool not found</h1>
+                <h1 className="text-2xl font-bold mb-4">{t("detail.notFound")}</h1>
                 <Button onClick={() => router.push("/tools")}>
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Tools
+                    {t("detail.backToTools")}
                 </Button>
             </PageShell>
         );
@@ -949,7 +951,7 @@ const data = await response.json();`;
                             onClick={() => router.push("/tools")}
                         >
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back
+                            {t("detail.back")}
                         </Button>
                         <div className="flex items-center gap-3">
                             <div
@@ -963,7 +965,7 @@ const data = await response.json();`;
                             <div>
                                 <h1 className="text-xl font-bold">{name}</h1>
                                 <p className="text-sm text-muted-foreground">
-                                    {getToolTypeLabel(tool.category)}
+                                    {t(getToolTypeKey(tool.category))}
                                 </p>
                             </div>
                         </div>
@@ -975,7 +977,7 @@ const data = await response.json();`;
                                 onClick={() => setShowCodeDialog(true)}
                             >
                                 <Code className="w-4 h-4 mr-2" />
-                                View Code
+                                {t("detail.viewCode")}
                             </Button>
                         )}
                         {TOOL_DOCUMENTATION_URLS[tool.category] && (
@@ -985,7 +987,7 @@ const data = await response.json();`;
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
-                                Docs
+                                {t("docs")}
                                 <ExternalLink className="h-3.5 w-3.5" />
                             </a>
                         )}
@@ -998,8 +1000,8 @@ const data = await response.json();`;
                         onNameChange={setName}
                         description={description}
                         onDescriptionChange={setDescription}
-                        title="Calculator Configuration"
-                        subtitle="Built-in calculator for arithmetic operations. No additional configuration needed."
+                        title={t("detail.calculatorConfigTitle")}
+                        subtitle={t("detail.calculatorConfigSubtitle")}
                     />
                 ) : isEndCallTool ? (
                     <EndCallToolConfig
@@ -1083,38 +1085,38 @@ const data = await response.json();`;
                 ) : isMcpTool ? (
                     <Card>
                         <CardHeader>
-                            <CardTitle>MCP Server Configuration</CardTitle>
+                            <CardTitle>{t("detail.mcpConfigTitle")}</CardTitle>
                             <CardDescription>
-                                Configure the MCP server endpoint. Its tools become available to the agent.
+                                {t("detail.mcpConfigDescription")}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="mcp-name">Tool Name</Label>
+                                <Label htmlFor="mcp-name">{t("list.toolName")}</Label>
                                 <Input
                                     id="mcp-name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="e.g., Customer MCP Server"
+                                    placeholder={t("detail.mcpNamePlaceholder")}
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="mcp-description">Description</Label>
+                                <Label htmlFor="mcp-description">{t("detail.descriptionLabel")}</Label>
                                 <p className="text-xs text-muted-foreground">
-                                    Provide a description which makes it easy for LLM to understand what this tool does
+                                    {t("list.descriptionHint")}
                                 </p>
                                 <Textarea
                                     id="mcp-description"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="What does this MCP server provide?"
+                                    placeholder={t("detail.mcpDescriptionPlaceholder")}
                                     rows={3}
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="mcp-url">MCP Server URL</Label>
+                                <Label htmlFor="mcp-url">{t("list.mcpServerUrl")}</Label>
                                 <Input
                                     id="mcp-url"
                                     value={mcpUrl}
@@ -1124,9 +1126,9 @@ const data = await response.json();`;
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Transport</Label>
+                                <Label>{t("list.transport")}</Label>
                                 <Input
-                                    value="Streamable HTTP"
+                                    value={t("list.streamableHttp")}
                                     disabled
                                     readOnly
                                 />
@@ -1135,20 +1137,20 @@ const data = await response.json();`;
                             <CredentialSelector
                                 value={mcpCredentialUuid}
                                 onChange={setMcpCredentialUuid}
-                                label="Credential (Optional)"
-                                description="Select a credential for authenticating with the MCP server, or leave empty for no auth."
+                                label={t("list.credentialOptional")}
+                                description={t("list.credentialDescription")}
                             />
 
                             <div className="space-y-2">
-                                <Label htmlFor="mcp-tools-filter">Tools Filter (Optional)</Label>
+                                <Label htmlFor="mcp-tools-filter">{t("list.toolsFilterOptional")}</Label>
                                 <Input
                                     id="mcp-tools-filter"
                                     value={mcpToolsFilter}
                                     onChange={(e) => setMcpToolsFilter(e.target.value)}
-                                    placeholder="e.g., tool_one, tool_two"
+                                    placeholder={t("list.toolsFilterPlaceholder")}
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Comma-separated list of tool names to allow. Leave empty to expose all tools from the server.
+                                    {t("list.toolsFilterHint")}
                                 </p>
                             </div>
                         </CardContent>
@@ -1208,7 +1210,7 @@ const data = await response.json();`;
 
                 {saveSuccess && (
                     <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-600">
-                        Tool saved successfully!
+                        {t("detail.savedSuccess")}
                     </div>
                 )}
 
@@ -1220,12 +1222,12 @@ const data = await response.json();`;
                                     <span className="inline-flex" tabIndex={0}>
                                         <Button type="button" variant="outline" disabled>
                                             <FlaskConical className="w-4 h-4 mr-2" />
-                                            Test Tool
+                                            {t("detail.testTool")}
                                         </Button>
                                     </span>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">
-                                    Save the tool before testing.
+                                    {t("detail.saveBeforeTest")}
                                 </TooltipContent>
                             </Tooltip>
                         ) : (
@@ -1236,7 +1238,7 @@ const data = await response.json();`;
                                 disabled={isSaving}
                             >
                                 <FlaskConical className="w-4 h-4 mr-2" />
-                                Test Tool
+                                {t("detail.testTool")}
                             </Button>
                         )
                     )}
@@ -1244,12 +1246,12 @@ const data = await response.json();`;
                         {isSaving ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Saving...
+                                {t("detail.saving")}
                             </>
                         ) : (
                             <>
                                 <Save className="w-4 h-4 mr-2" />
-                                Save
+                                {t("save")}
                             </>
                         )}
                     </Button>
@@ -1260,9 +1262,9 @@ const data = await response.json();`;
             <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Code Preview</DialogTitle>
+                        <DialogTitle>{t("detail.codePreviewTitle")}</DialogTitle>
                         <DialogDescription>
-                            JavaScript code to make this API call
+                            {t("detail.codePreviewDescription")}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="bg-muted rounded-lg p-4 font-mono text-sm overflow-auto max-h-96">

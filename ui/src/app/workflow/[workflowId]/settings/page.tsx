@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -23,6 +24,7 @@ import { WorkflowSettingsSections } from "./WorkflowSettingsSections";
 // ---------------------------------------------------------------------------
 
 export default function WorkflowSettingsPage() {
+    const t = useTranslations("Workflow");
     const params = useParams();
     const { user, redirectToLogin, loading: authLoading } = useAuth();
     const [workflow, setWorkflow] = useState<WorkflowResponse | undefined>(undefined);
@@ -44,7 +46,7 @@ export default function WorkflowSettingsPage() {
                 });
                 setWorkflow(response.data);
             } catch (err) {
-                setError("Failed to fetch workflow");
+                setError(t("failedToFetchWorkflow"));
                 logger.error(`Error fetching workflow settings: ${err}`);
             } finally {
                 setLoading(false);
@@ -58,7 +60,7 @@ export default function WorkflowSettingsPage() {
     if (error || !workflow) {
         return (
             <div className="flex min-h-screen items-center justify-center">
-                <div className="text-lg text-destructive">{error || "Workflow not found"}</div>
+                <div className="text-lg text-destructive">{error || t("workflowNotFound")}</div>
             </div>
         );
     }
@@ -95,6 +97,7 @@ function WorkflowSettingsInner({
     user: { id: string; email?: string };
 }) {
     const router = useRouter();
+    const t = useTranslations("Workflow");
     const { confirmNavigate } = useUnsavedChangesContext();
     const workflowId = workflow.id;
 
@@ -143,7 +146,7 @@ function WorkflowSettingsInner({
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <p className="text-xs text-muted-foreground">Workflow Settings</p>
+                    <p className="text-xs text-muted-foreground">{t("workflowSettings")}</p>
                     <h1 className="text-sm font-semibold">{workflowName}</h1>
                 </div>
             </header>

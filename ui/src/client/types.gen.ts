@@ -1219,6 +1219,11 @@ export type CreateWorkflowTemplateRequest = {
      * Activity Description
      */
     activity_description: string;
+    /**
+     * Language
+     * Language for the generated workflow (prompts, greetings, node copy). Defaults to "zh".
+     */
+    language?: string;
 };
 
 /**

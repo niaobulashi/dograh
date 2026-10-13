@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import { NamedConfigurationEditor } from "./NamedConfigurationEditor";
 import { useModelConnections } from "./useModelConnections";
 
 export function ModelConfigurationPage({ configurationUuid, duplicateUuid }: { configurationUuid?: string; duplicateUuid?: string }) {
+    const t = useTranslations("Models");
     const { catalog, connections, configurations, loading, error, reload, addConnection } = useModelConnections();
     const { refreshConfig } = useOrgConfig();
     const router = useRouter();
@@ -21,16 +23,16 @@ export function ModelConfigurationPage({ configurationUuid, duplicateUuid }: { c
     const saved = configurations.find(item => item.uuid === sourceUuid && item.is_active);
 
     return <PageShell className="space-y-6">
-        <Button asChild variant="ghost" className="-ml-3"><Link href="/model-configurations"><ArrowLeft className="h-4 w-4" />All model configurations</Link></Button>
+        <Button asChild variant="ghost" className="-ml-3"><Link href="/model-configurations"><ArrowLeft className="h-4 w-4" />{t("allModelConfigurations")}</Link></Button>
         {loading && !catalog ? <Skeleton className="h-80 w-full" /> : error ? <div role="alert" className="space-y-3 text-sm text-destructive">
-            <p>{error}</p><Button variant="outline" onClick={() => void reload()}>Retry</Button>
-        </div> : sourceUuid && !saved ? <p role="alert">This model configuration is unavailable.</p>
+            <p>{error}</p><Button variant="outline" onClick={() => void reload()}>{t("retry")}</Button>
+        </div> : sourceUuid && !saved ? <p role="alert">{t("modelConfigurationUnavailable")}</p>
             : catalog && <div className="rounded-lg border bg-card p-6">
                 <NamedConfigurationEditor key={`${sourceUuid || "new"}-${saved?.revision || 0}`} catalog={catalog} connections={connections} saved={saved} duplicate={Boolean(duplicateUuid)} onConnectionAdded={addConnection}
                     onSaved={async (uuid, editFallbacks) => {
                         await reload();
                         await refreshConfig();
-                        toast.success("Model configuration saved");
+                        toast.success(t("modelConfigurationSaved"));
                         if (editFallbacks) router.push(`/model-configurations/${uuid}/llm`);
                         else if (!configurationUuid) router.replace(`/model-configurations/${uuid}`);
                     }} />

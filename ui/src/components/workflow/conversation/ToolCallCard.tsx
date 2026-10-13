@@ -1,6 +1,7 @@
 "use client";
 
 import { Brain, ChevronRight, Wrench } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -19,11 +20,11 @@ interface ToolCallCardProps {
 }
 
 const STATUS_LABELS: Record<ToolCallStatus, string> = {
-    running: "Running",
-    completed: "Completed",
-    timeout: "Timeout",
-    failed: "Failed",
-    cancelled: "Cancelled",
+    running: "running",
+    completed: "completed",
+    timeout: "timeout",
+    failed: "failed",
+    cancelled: "cancelled",
 };
 
 export function ToolCallCard({
@@ -33,6 +34,7 @@ export function ToolCallCard({
     resultValue,
     reasoningDurationMs,
 }: ToolCallCardProps) {
+    const t = useTranslations("Workflow");
     const [open, setOpen] = useState(false);
     const hasArguments = argumentsValue !== undefined;
     const hasResult = resultValue !== undefined;
@@ -44,7 +46,7 @@ export function ToolCallCard({
                 {reasoningDurationMs !== undefined ? (
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                         <Brain className="h-3 w-3" />
-                        <span className="font-medium">Reasoning Delay:</span>
+                        <span className="font-medium">{t("reasoningDelay")}</span>
                         <span>{Math.round(reasoningDurationMs)}ms</span>
                     </div>
                 ) : null}
@@ -71,7 +73,7 @@ export function ToolCallCard({
                                                 : "border-destructive/40 text-destructive",
                                     )}
                                 >
-                                    {STATUS_LABELS[status]}
+                                    {t(STATUS_LABELS[status])}
                                 </Badge>
                             </div>
                             {hasDetails ? (
@@ -87,7 +89,7 @@ export function ToolCallCard({
                                                     open && "rotate-90",
                                                 )}
                                             />
-                                            Details
+                                            {t("details")}
                                         </button>
                                     </CollapsibleTrigger>
                                 </div>
@@ -100,7 +102,7 @@ export function ToolCallCard({
                                 {hasArguments ? (
                                     <div className="space-y-1">
                                         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                                            Arguments
+                                            {t("arguments")}
                                         </p>
                                         <pre className="overflow-x-auto rounded-xl bg-background/70 p-3 text-xs leading-5 text-foreground">
                                             {formatConversationValue(argumentsValue)}
@@ -110,7 +112,7 @@ export function ToolCallCard({
                                 {hasResult ? (
                                     <div className="space-y-1">
                                         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                                            Result
+                                            {t("result")}
                                         </p>
                                         <pre className="overflow-x-auto rounded-xl bg-background/70 p-3 text-xs leading-5 text-foreground">
                                             {formatConversationValue(resultValue)}

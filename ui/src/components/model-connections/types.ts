@@ -45,8 +45,9 @@ export interface FieldSchema {
 
 export const ROLES = ["llm", "stt", "tts", "realtime", "embeddings"] as const;
 export type ServiceRole = typeof ROLES[number];
-export const ROLE_LABELS: Record<ServiceRole, string> = {
-    llm: "LLM", stt: "STT", tts: "TTS", realtime: "Realtime", embeddings: "Embedding",
+/** next-intl message keys under the `Models` namespace. */
+export const ROLE_LABEL_KEYS: Record<ServiceRole, string> = {
+    llm: "roleLabelLlm", stt: "roleLabelStt", tts: "roleLabelTts", realtime: "roleLabelRealtime", embeddings: "roleLabelEmbeddings",
 };
 export interface ProviderCatalogEntry {
     title?: string;
@@ -76,8 +77,9 @@ export type ConfigurationSpec = Omit<ApiConfigurationSpec, ServiceRole | "llm_fa
 
 
 export type ConfigurationEditorMode = "dograh" | "cascade" | "realtime";
-export const MODE_LABELS: Record<ConfigurationEditorMode, string> = {
-    dograh: "Dograh", cascade: "BYOK", realtime: "Realtime",
+/** next-intl message keys under the `Models` namespace. */
+export const MODE_LABEL_KEYS: Record<ConfigurationEditorMode, string> = {
+    dograh: "modeLabelDograh", cascade: "modeLabelCascade", realtime: "modeLabelRealtime",
 };
 
 export type NamedModelConfiguration = Omit<NamedModelConfigurationResponse, "configuration"> & {

@@ -81,87 +81,90 @@ export function ruleRowsToContextMappingRules(
 
 export interface ToolCategoryConfig {
     value: ToolCategory;
-    label: string;
-    description: string;
+    /** next-intl message key under the `Tools` namespace. */
+    labelKey: string;
+    /** next-intl message key under the `Tools` namespace. */
+    descriptionKey: string;
     icon: LucideIcon;
     iconName: string; // String name for storing in database
     iconColor: string;
     disabled?: boolean;
     autoFill?: {
-        name: string;
-        description: string;
+        /** next-intl message keys under the `Tools` namespace. */
+        nameKey: string;
+        descriptionKey: string;
     };
 }
 
 export const TOOL_CATEGORIES: ToolCategoryConfig[] = [
     {
         value: "http_api",
-        label: "External HTTP API",
-        description: "Make HTTP requests to external APIs",
+        labelKey: "categories.httpApi.label",
+        descriptionKey: "categories.httpApi.description",
         icon: Globe,
         iconName: "globe",
         iconColor: "#3B82F6",
     },
     {
         value: "end_call",
-        label: "End Call",
-        description: "End the call when conditions are met",
+        labelKey: "categories.endCall.label",
+        descriptionKey: "categories.endCall.description",
         icon: PhoneOff,
         iconName: "phone-off",
         iconColor: "#EF4444",
         autoFill: {
-            name: "End Call",
-            description: "End the call when either user asks to disconnect the call, or when you believe its time to end the conversation",
+            nameKey: "categories.endCall.autoFillName",
+            descriptionKey: "categories.endCall.autoFillDescription",
         },
     },
     {
         value: "transfer_call",
-        label: "Transfer Call",
-        description: "Transfer the call to another phone number (Twilio, Plivo)",
+        labelKey: "categories.transferCall.label",
+        descriptionKey: "categories.transferCall.description",
         icon: PhoneForwarded,
         iconName: "phone-forwarded",
         iconColor: "#10B981",
         autoFill: {
-            name: "Transfer Call",
-            description: "Transfer the caller to another phone number when requested",
+            nameKey: "categories.transferCall.autoFillName",
+            descriptionKey: "categories.transferCall.autoFillDescription",
         },
     },
     {
         value: "transfer_agent",
-        label: "Transfer To Agent",
-        description: "Hand the live call to another Dograh agent, without dropping the caller",
+        labelKey: "categories.transferAgent.label",
+        descriptionKey: "categories.transferAgent.description",
         icon: ArrowLeftRight,
         iconName: "arrow-left-right",
         iconColor: "#0EA5E9",
         autoFill: {
-            name: "Transfer To Agent",
-            description: "Transfer the caller to a specialist agent when their question is outside what you handle",
+            nameKey: "categories.transferAgent.autoFillName",
+            descriptionKey: "categories.transferAgent.autoFillDescription",
         },
     },
     {
         value: "calculator",
-        label: "Calculator",
-        description: "Built-in calculator for arithmetic operations",
+        labelKey: "categories.calculator.label",
+        descriptionKey: "categories.calculator.description",
         icon: Calculator,
         iconName: "calculator",
         iconColor: "#F59E0B",
         autoFill: {
-            name: "Calculator",
-            description: "Perform arithmetic calculations (supports +, -, *, /, **, %, and parentheses)",
+            nameKey: "categories.calculator.autoFillName",
+            descriptionKey: "categories.calculator.autoFillDescription",
         },
     },
     {
         value: "mcp",
-        label: "MCP Server",
-        description: "Connect a customer MCP server; its tools become available to the agent",
+        labelKey: "categories.mcp.label",
+        descriptionKey: "categories.mcp.description",
         icon: Puzzle,
         iconName: "puzzle",
         iconColor: "#8B5CF6",
     },
     {
         value: "native",
-        label: "Native (Coming Soon)",
-        description: "Built-in tools like call transfer, DTMF input",
+        labelKey: "categories.native.label",
+        descriptionKey: "categories.native.description",
         icon: Cog,
         iconName: "cog",
         iconColor: "#6B7280",
@@ -169,8 +172,8 @@ export const TOOL_CATEGORIES: ToolCategoryConfig[] = [
     },
     {
         value: "integration",
-        label: "Integration (Coming Soon)",
-        description: "Third-party integrations like Google Calendar",
+        labelKey: "categories.integration.label",
+        descriptionKey: "categories.integration.description",
         icon: Puzzle,
         iconName: "puzzle",
         iconColor: "#8B5CF6",
@@ -197,26 +200,27 @@ export function renderToolIcon(category: string, className: string = "w-5 h-5 te
     return <Icon className={className} />;
 }
 
-export function getToolTypeLabel(category: string): string {
+/** next-intl message key under the `Tools` namespace for a tool's type label. */
+export function getToolTypeKey(category: string): string {
     switch (category) {
         case "end_call":
-            return "End Call Tool";
+            return "toolTypes.endCall";
         case "transfer_call":
-            return "Transfer Call Tool";
+            return "toolTypes.transferCall";
         case "transfer_agent":
-            return "Transfer To Agent Tool";
+            return "toolTypes.transferAgent";
         case "http_api":
-            return "HTTP API Tool";
+            return "toolTypes.httpApi";
         case "calculator":
-            return "Calculator Tool";
+            return "toolTypes.calculator";
         case "native":
-            return "Native Tool";
+            return "toolTypes.native";
         case "integration":
-            return "Integration Tool";
+            return "toolTypes.integration";
         case "mcp":
-            return "MCP Server Tool";
+            return "toolTypes.mcp";
         default:
-            return "Tool";
+            return "toolTypes.fallback";
     }
 }
 

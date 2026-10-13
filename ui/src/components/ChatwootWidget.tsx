@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -34,6 +35,7 @@ const isBuilderPath = (pathname: string) =>
   /^\/workflow\/(?!create(?:$|\/))[^/]+(?:\/.*)?$/.test(pathname);
 
 export default function ChatwootWidget() {
+  const t = useTranslations("Shared");
   const pathname = usePathname();
 
   // Load the Chatwoot SDK exactly once for the lifetime of the app.
@@ -53,7 +55,7 @@ export default function ChatwootWidget() {
     window.chatwootSettings = {
       position: "right",
       type: "standard",
-      launcherTitle: "Chat with us",
+      launcherTitle: t("chatWithUs"),
     };
 
     // Check if script is already loaded

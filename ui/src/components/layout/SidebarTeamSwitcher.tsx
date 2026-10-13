@@ -1,6 +1,7 @@
 "use client";
 
 import type { CurrentUser, Team } from "@stackframe/stack";
+import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -35,6 +36,7 @@ export function SidebarTeamSwitcher() {
 }
 
 function SidebarTeamSwitcherContent({ user }: { user: CurrentUser }) {
+  const t = useTranslations("Shared");
   const [isSwitching, setIsSwitching] = useState(false);
 
   const handleChange = async (team: Team | null) => {
@@ -45,7 +47,7 @@ function SidebarTeamSwitcherContent({ user }: { user: CurrentUser }) {
       reloadApp();
     } catch (error) {
       logger.error("Failed to switch Stack team", error);
-      toast.error("Could not switch teams. Please try again.");
+      toast.error(t("switchTeamsFailed"));
       setIsSwitching(false);
     }
   };
@@ -70,7 +72,7 @@ function SidebarTeamSwitcherContent({ user }: { user: CurrentUser }) {
           role="status"
           aria-live="polite"
         >
-          <SpinLoader label="Switching teams..." />
+          <SpinLoader label={t("switchingTeams")} />
         </div>
       )}
     </div>

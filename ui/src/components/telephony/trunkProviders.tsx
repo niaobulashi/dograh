@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ComponentType } from "react";
 
 import type { TelephonyConfigurationDetail } from "@/client/types.gen";
@@ -35,13 +36,16 @@ export interface TrunkSettingsFieldsProps {
   disabled?: boolean;
 }
 
+/** Minimal next-intl translator shape used by the provider validators. */
+type TranslationFn = (key: string) => string;
+
 export interface TrunkProviderUi {
   /** Settings a brand-new trunk starts with. */
   initialSettings: (configuration: TelephonyConfigurationDetail) => TrunkSettings;
   /** Extra form fields, rendered under the name and enabled controls. */
   Fields?: ComponentType<TrunkSettingsFieldsProps>;
   /** Mirrors the provider's server-side trunk schema; message or null. */
-  validate?: (name: string, settings: TrunkSettings) => string | null;
+  validate?: (name: string, settings: TrunkSettings, t: TranslationFn) => string | null;
   /** One line under the trunk name in the list. */
   summarize?: (settings: TrunkSettings) => string;
 }
@@ -59,6 +63,7 @@ function CloudonixTrunkFields({
   onChange,
   disabled,
 }: TrunkSettingsFieldsProps) {
+  const t = useTranslations("Telephony");
   const regions = regionsOf(configuration);
   const region = typeof settings.region === "string" ? settings.region : "";
   const sipDomain = typeof settings.sip_domain === "string" ? settings.sip_domain : "";
@@ -68,7 +73,7 @@ function CloudonixTrunkFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="trunk-sip-domain">SIP domain</Label>
+        <Label htmlFor="trunk-sip-domain">{t("sipDomain")}</Label>
         <Input
           id="trunk-sip-domain"
           value={sipDomain}
@@ -77,19 +82,18 @@ function CloudonixTrunkFields({
           disabled={disabled}
         />
         <p className="text-xs text-muted-foreground">
-          Your carrier or PBX. Used for both the SIP To header and the
-          Request-URI.
+          {t("sipDomainHint")}
         </p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="trunk-region">Region</Label>
+        <Label htmlFor="trunk-region">{t("region")}</Label>
         <Select
           value={region}
           onValueChange={(next) => onChange({ region: next })}
           disabled={disabled}
         >
-          <SelectTrigger id="trunk-region" aria-label="Trunk region">
-            <SelectValue placeholder="Select a region" />
+          <SelectTrigger id="trunk-region" aria-label={t("trunkRegionAria")}>
+            <SelectValue placeholder={t("selectRegionOpt")} />
           </SelectTrigger>
           <SelectContent>
             {regions.map((candidate) => (
@@ -100,9 +104,9 @@ function CloudonixTrunkFields({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Sets the remote peer Dograh dials for this trunk.
+          {t("regionHint")}
           {originIp
-            ? ` Calls leave from ${originIp} — allow it on your side.`
+            ? ` ${t("regionOriginIpHint", { ip: originIp })}`
             : ""}
         </p>
       </div>
@@ -119,12 +123,12 @@ const CLOUDONIX: TrunkProviderUi = {
     return { region: preferred?.region ?? "", sip_domain: "" };
   },
   Fields: CloudonixTrunkFields,
-  validate: (name, settings) => {
+  validate: (name, settings, t) => {
     if (!CLOUDONIX_TRUNK_NAME_PATTERN.test(name)) {
-      return "Trunk name may only contain letters, digits and hyphens";
+      return t("trunkNamePatternError");
     }
-    if (!settings.sip_domain) return "SIP domain is required";
-    if (!settings.region) return "Region is required";
+    if (!settings.sip_domain) return t("sipDomainRequired");
+    if (!settings.region) return t("regionRequired");
     return null;
   },
   summarize: (settings) =>
