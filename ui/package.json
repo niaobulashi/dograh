@@ -11,7 +11,8 @@
     "generate-client": "openapi-ts",
     "test": "vitest run",
     "test:display-options": "node scripts/test-display-options.mts",
-    "lint:lead-flow": "bash ../../user_onboarding/scripts/check_lead_flow.sh"
+    "lint:lead-flow": "bash ../../user_onboarding/scripts/check_lead_flow.sh",
+    "trans-from-zh": "node scripts/translate-locales.mjs"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
