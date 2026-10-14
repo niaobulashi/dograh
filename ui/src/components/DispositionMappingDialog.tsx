@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -78,6 +79,7 @@ export function DispositionMappingDialog({
   mapping,
   onSave,
 }: Props) {
+    const t = useTranslations("Shared");
   const { systemCodes, isLoading } = useDispositionCodes();
   const [rows, setRows] = useState<Row[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -136,29 +138,25 @@ export function DispositionMappingDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Configure disposition mapping</DialogTitle>
+          <DialogTitle>{t("configureDispositionMapping")}</DialogTitle>
           <DialogDescription>
-            Each Dograh disposition is sent as your own code wherever a call
-            outcome is reported &mdash; webhooks, run filters, reports, and
-            external PBX write-backs. Leave a row unchanged to send the
-            disposition as-is. Saving here applies the mapping immediately.
-          </DialogDescription>
+            {t("eachDograhDispositionIsSentAsYourOwnCodeWhereverACallOutcomeIsReportedWebhooksRunFiltersReportsAndExternalPbxWritebacksLeaveARowUnchangedToSendTheDispositionAsisSavingHereAppliesTheMappingImmediately")}</DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">
-            Loading dispositions...
-          </p>
+            {t("loadingDispositions")}</p>
         ) : (
           <>
             <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-x-3 gap-y-1 px-1 text-xs font-medium text-muted-foreground">
-              <span>Dograh disposition</span>
-              <span>Your code</span>
+              <span>{t("dograhDisposition")}</span>
+              <span>{t("yourCode")}</span>
               <span className="w-8" />
             </div>
 
             <div className="max-h-[50vh] space-y-2 overflow-y-auto px-1 pb-1">
               {rows.map((row, index) => {
+    const t = useTranslations("Shared");
                 const changed =
                   row.target.trim() !== "" &&
                   row.target.trim() !== row.source.trim();
@@ -177,13 +175,13 @@ export function DispositionMappingDialog({
                       </Label>
                     ) : (
                       <Input
-                        aria-label="Dograh disposition"
+                        aria-label={t("dograhDisposition")}
                         value={row.source}
                         disabled={isSaving}
                         onChange={(event) =>
                           updateRow(index, { source: event.target.value })
                         }
-                        placeholder="e.g. no_medicare_card"
+                        placeholder={t("egNomedicarecard")}
                         className="font-mono text-xs"
                       />
                     )}
@@ -208,12 +206,11 @@ export function DispositionMappingDialog({
                         // reflow as rows are edited.
                         disabled={isSaving || !changed}
                         onClick={() => updateRow(index, { target: row.source })}
-                        title="Reset to the Dograh disposition"
+                        title={t("resetToTheDograhDisposition")}
                       >
                         <RotateCcw className="h-3.5 w-3.5" />
                         <span className="sr-only">
-                          Reset {row.source} to its default
-                        </span>
+                          {t("reset")}{row.source} {t("toItsDefault")}</span>
                       </Button>
                     ) : (
                       <Button
@@ -223,11 +220,11 @@ export function DispositionMappingDialog({
                         className="h-8 w-8"
                         disabled={isSaving}
                         onClick={() => removeRow(index)}
-                        title="Remove this disposition"
+                        title={t("removeThisDisposition")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span className="sr-only">
-                          Remove {row.source || "this disposition"}
+                          {t("remove")}{row.source || "this disposition"}
                         </span>
                       </Button>
                     )}
@@ -245,8 +242,7 @@ export function DispositionMappingDialog({
                 onClick={addRow}
               >
                 <Plus className="mr-2 h-3.5 w-3.5" />
-                Add disposition
-              </Button>
+                {t("addDisposition")}</Button>
               <p className="text-xs text-muted-foreground">
                 {overrideCount === 0
                   ? "No overrides — every disposition is sent as-is."
@@ -263,8 +259,7 @@ export function DispositionMappingDialog({
             disabled={isSaving}
             onClick={() => onOpenChange(false)}
           >
-            Cancel
-          </Button>
+            {t("cancel")}</Button>
           <Button
             type="button"
             onClick={handleSave}

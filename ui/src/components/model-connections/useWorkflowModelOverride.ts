@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { WorkflowConfigurations } from "@/types/workflow-configurations";
 
@@ -25,6 +26,7 @@ export function useWorkflowModelOverride({ workflowName, workflowConfigurations,
     workflowConfigurations: WorkflowConfigurations;
     onSave: (configurations: WorkflowConfigurations, workflowName: string) => Promise<void>;
 }) {
+    const t = useTranslations("Models");
     const connections = useModelConnections();
     const { catalog, configurations, defaultUuid } = connections;
     const binding = useMemo(
@@ -64,7 +66,7 @@ export function useWorkflowModelOverride({ workflowName, workflowConfigurations,
                 await onSave(next, latest.current.workflowName);
                 return true;
             } catch (cause) {
-                if (mounted.current) setError(cause instanceof Error ? cause.message : "Failed to save model settings");
+                if (mounted.current) setError(cause instanceof Error ? cause.message : t("failedToSaveModelSettings"));
                 return false;
             } finally {
                 if (mounted.current) setSaving(false);

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { client } from "@/client/client.gen";
@@ -46,6 +47,7 @@ const HANDLED_SERVICE_ERROR_TYPES = new Set([
 const SPENT_RUN_ERROR_TYPES = new Set(['workflow_run_already_completed']);
 
 export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initialContextVariables, onNodeTransition }: UseWebSocketRTCProps) => {
+    const t = useTranslations("Workflow");
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
     const [connectionActive, setConnectionActive] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
@@ -438,7 +440,7 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
                                 setFeedbackMessages(prev => [...prev, {
                                     id: `interrupt-warning-${Date.now()}`,
                                     type: 'interrupt-warning',
-                                    text: 'Interruption is disabled for this step. The bot will finish speaking before processing your input. You can enable interruption in the workflow editor.',
+                                    text: t("interruptionIsDisabledForThisStepTheBotWillFinishSpeakingBeforeProcessingYourInputYouCanEnableInterruptionInTheWorkflowEditor"),
                                     timestamp: new Date().toISOString(),
                                 }]);
                             }
@@ -809,7 +811,7 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
                     await negotiate();
                 } catch (err) {
                     logger.error(`Could not acquire media: ${err}`);
-                    setPermissionError('Could not acquire media');
+                    setPermissionError(t("couldNotAcquireMedia"));
                     setConnectionStatus('failed');
                 }
             } else {

@@ -15,6 +15,10 @@
 - 命名空间约定：`Common`（跨页面通用词）、`Nav`（侧边栏）、`Sidebar`、`Auth`，后续按页面加命名空间（如 `Overview`、`Campaigns`）。
 - 组件里已有 `notranslate` / `translate="no"` 属性用于阻止浏览器自动翻译，保留不动。
 - 新增文案必须同时补 `zh-CN.json` 和 `en.json`，键位保持一致。
+- **i18n 覆盖已基本完成**（2026-10-14）：`messages/{zh-CN,en}.json` 各 24 命名空间 / 1939 key；346 个 tsx/ts 全量扫描后仅剩 `BigQuery`（专有名词，有意不译）。
+- **`getTranslations` 仅限真正的 server 文件**（需 `import { getTranslations } from "next-intl/server"`）：目前只有 `app/layout.tsx`（generateMetadata）、`app/workflow/page.tsx`、`app/handler/[...stack]/page.tsx`。**"use client" 文件里一律用 `useTranslations`**，且必须声明在**组件/hook 顶层**，不能塞进事件回调或 `useEffect` 内部。
+- **`ui/i18n-fragments/` 是死代码**（`src/i18n/request.ts` 只加载 `messages/${locale}.json`，全仓无引用），只维护 `messages/`。
+- i18n 工具脚本（ui/ 根目录，未提交）：`i18n_run.mjs <file> [ns|auto] [--apply] [--nothrow]`（AST 提取替换）、`check_syntax2.mjs`（语法，`*.ts` 必须按 `ScriptKind.TS` 解析否则泛型被误判 JSX）、`check_t_defined.mjs`（`t` 是否在作用域内）、`check_t_dup.mjs`（同 block 重复 `const t`）。
 
 ## Docker 部署（用户本地就是走 Docker，不是 npm run dev）
 - 启动：`docker-compose.yaml`（仓库根为构建上下文）。`ui` 服务**只有 image、没有 build 段**，默认拉 `dograhai/dograh-ui:latest`。

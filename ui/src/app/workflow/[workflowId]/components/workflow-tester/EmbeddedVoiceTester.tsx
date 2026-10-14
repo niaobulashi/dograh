@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Phone, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -28,6 +29,7 @@ export function EmbeddedVoiceTester({
     onReset,
     onNodeTransition,
 }: EmbeddedVoiceTesterProps) {
+    const t = useTranslations("Workflow");
     const router = useRouter();
     const {
         audioRef,
@@ -101,14 +103,14 @@ export function EmbeddedVoiceTester({
         appConfig?.backendStatus !== "reachable";
 
     const endButtonLabel = connectionActive
-        ? "End Call"
+        ? t("endCall")
         : isCompleted
-            ? "Start Another Test"
+            ? t("startAnotherTest")
             : connectionStatus === "failed"
-                ? "Retry Call"
+                ? t("retryCall")
                 : configUnreachable
-                    ? "Retry Connection"
-                    : "Starting Test...";
+                    ? t("retryConnection")
+                    : t("startingTest");
 
     const handleConfigRetry = () => {
         // Deliberately NOT resetting configRetriedRef here. It's already
@@ -172,7 +174,7 @@ export function EmbeddedVoiceTester({
                             ) : isStarting && connectionStatus !== "failed" ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Starting Test...
+                                    {t("startingTest")}
                                 </>
                             ) : connectionActive ? (
                                 <>
@@ -198,7 +200,7 @@ export function EmbeddedVoiceTester({
                         </Button>
                         {configUnreachable ? (
                             <p className="text-center text-sm text-muted-foreground">
-                                Couldn&apos;t reach the backend to confirm call settings. Tap retry once it&apos;s back.
+                                {t("backendUnreachableHint")}
                             </p>
                         ) : null}
                     </div>

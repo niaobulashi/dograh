@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -14,19 +15,19 @@ export const WorkflowConfigErrorDialog = ({
     error,
     onNavigateToWorkflow
 }: WorkflowConfigErrorProps) => {
+    const t = useTranslations("Workflow");
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Workflow Error</DialogTitle>
+                    <DialogTitle>{t("workflowError")}</DialogTitle>
                     <DialogDescription className="text-red-500 whitespace-pre-line">
                         {error}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <Button onClick={onNavigateToWorkflow}>
-                        Go to Workflow
-                    </Button>
+                        {t("goToWorkflow")}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

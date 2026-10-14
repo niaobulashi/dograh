@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { AlertCircle, CreditCard, ExternalLink, Key } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export const ApiKeyErrorDialog = ({
     onNavigateToDevelopers,
     onNavigateToModelConfig,
 }: ApiKeyErrorDialogProps) => {
+    const t = useTranslations("Workflow");
     const isBillingCreditsError = errorCode === 'insufficient_credits';
     const isServiceKeyOrgMismatch = errorCode === 'service_key_org_mismatch';
     const isQuotaError = isBillingCreditsError || errorCode === 'quota_exceeded';
@@ -60,8 +62,7 @@ export const ApiKeyErrorDialog = ({
                                 <p className="font-medium text-foreground">{error}</p>
                                 {isBillingCreditsError && (
                                     <p className="text-muted-foreground">
-                                        Purchase credits from Billing to continue using Dograh-managed models.
-                                    </p>
+                                        {t("purchaseCreditsFromBillingToContinueUsingDograhmanagedModels")}</p>
                                 )}
                                 {isServiceKeyOrgMismatch && (
                                     <a
@@ -70,7 +71,7 @@ export const ApiKeyErrorDialog = ({
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-0.5 text-muted-foreground underline"
                                     >
-                                        Learn more <ExternalLink className="h-3 w-3" />
+                                        {t("learnMore")}<ExternalLink className="h-3 w-3" />
                                     </a>
                                 )}
                             </div>
@@ -79,8 +80,7 @@ export const ApiKeyErrorDialog = ({
                 </DialogHeader>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
+                        {t("cancel")}</Button>
                     <Button onClick={onNavigate}>
                         {buttonText}
                     </Button>

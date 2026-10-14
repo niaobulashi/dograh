@@ -3,7 +3,7 @@ import "./globals.css";
 import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 
@@ -34,10 +34,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Dograh",
-  description: "Open Source Voice Assistant Workflow Builder",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Common");
+  return {
+    title: t("dograh"),
+    description: t("openSourceVoiceAssistantWorkflowBuilder"),
+  };
+}
 
 export default async function RootLayout({
   children

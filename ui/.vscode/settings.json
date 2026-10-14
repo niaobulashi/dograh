@@ -1,0 +1,39 @@
+{
+  // ===== i18n Ally 配置（前端一键翻译插件）=====
+  // 作用：在 VS Code / Cursor 侧边栏显示所有文案，缺译标红，
+  //       右键目标语种 → "Translate All" 即可把中文一键机翻成其他语种。
+  // 前提：在编辑器扩展市场安装 "i18n Ally" 插件。
+
+  // 文案目录（相对于本 ui/ 工作区根）。next-intl 的 messages 就在这里。
+  "i18n-ally.localesPaths": ["messages"],
+
+  // 键结构：messages/*.json 是嵌套对象，用 nested 才能正确对应 namespace。
+  "i18n-ally.keystyle": "nested",
+
+  // 红线：源语言必须是 zh-CN。配错会把中文当目标语言覆盖掉。
+  "i18n-ally.sourceLanguage": "zh-CN",
+
+  // 编辑器里默认显示中文（方便对照原文）。
+  "i18n-ally.displayLanguage": "zh-CN",
+
+  // 框架探测：next-intl / react-i18next 都基于 react-intl 格式。
+  "i18n-ally.enabledFrameworks": ["react", "i18next"],
+
+  // 翻译引擎：google-cn 免 API key（走谷歌国内端点），开箱即用。
+  // 如需更准可改 "baidu" / "deepl" / "openai"，并在下方填对应 key（用 env 引用，勿硬编码）。
+  "i18n-ally.translate.engines": ["google-cn"],
+
+  // baidu 备选（有免费额度，需注册后填 appId/appSecret）：
+  // "i18n-ally.translate.baidu.appId": "IOYc_db7fcjp5u499a6737ph0",
+  // "i18n-ally.translate.baidu.appSecret": "${env:BAIDU_SECRET}",
+
+  // 翻译时保留中文里的占位符 {var} 与大小写，避免机翻破坏 ICU 语法。
+  "i18n-ally.translate.keepSpace": true,
+  "i18n-ally.translate.keepAnnotations": true,
+
+  // 不自动按字母排序 key，保持现有手动顺序（namespace 内顺序可控）。
+  "i18n-ally.sortKeys": false,
+
+  // 提取时若已有译文则不覆盖，保护人工修正。
+  "i18n-ally.keepFulfilledTranslationOnExtraction": true
+}

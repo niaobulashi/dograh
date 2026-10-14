@@ -122,7 +122,7 @@ export function EnterpriseModal({ open, onOpenChange, source, prefill }: Enterpr
         onOpenChange(false);
       }
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
       setSubmitting(false);
     }
   };
@@ -135,7 +135,7 @@ export function EnterpriseModal({ open, onOpenChange, source, prefill }: Enterpr
         onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}
         icon={ShieldCheck}
         eyebrow="Enterprise"
-        title="Book a Strategy Call"
+        title={t("bookAStrategyCall")}
         description="Pick a time that works for you."
         primary={{ label: "Done", onClick: () => { reset(); onOpenChange(false); } }}
       >
@@ -157,7 +157,7 @@ export function EnterpriseModal({ open, onOpenChange, source, prefill }: Enterpr
       onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}
       icon={ShieldCheck}
       eyebrow="Enterprise"
-      title="Book a Strategy Call"
+      title={t("bookAStrategyCall")}
       description="SSO, on-prem, data residency, committed volume. Tell us about your environment."
       primary={{ label: "Submit", onClick: handleSubmit, disabled: !canSubmit, loading: submitting }}
       secondary={{ label: "Cancel", onClick: () => onOpenChange(false), disabled: submitting }}

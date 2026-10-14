@@ -2,6 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -80,19 +81,19 @@ export function validateCallDispositionRows(
         const errors: RowErrors = {};
 
         if (!code) {
-            errors.code = "Disposition code is required.";
+            errors.code = "dispositionCodeRequired";
         } else if (code.length > MAX_CALL_DISPOSITION_CODE_LENGTH) {
-            errors.code = `Disposition code must be at most ${MAX_CALL_DISPOSITION_CODE_LENGTH} characters.`;
+            errors.code = "dispositionCodeMaxLength";
         } else if (!CALL_DISPOSITION_CODE_PATTERN.test(code)) {
-            errors.code = "Start with a letter and use only letters, numbers, underscores, or hyphens.";
+            errors.code = "dispositionCodePattern";
         } else if ((codeCounts.get(code.toLowerCase()) ?? 0) > 1) {
-            errors.code = "Disposition codes must be unique.";
+            errors.code = "dispositionCodesUnique";
         }
 
         if (!description) {
-            errors.description = "Description is required.";
+            errors.description = "descriptionRequired";
         } else if (description.length > MAX_CALL_DISPOSITION_DESCRIPTION_LENGTH) {
-            errors.description = `Description must be at most ${MAX_CALL_DISPOSITION_DESCRIPTION_LENGTH.toLocaleString()} characters.`;
+            errors.description = "descriptionMaxLength";
         }
 
         if (errors.code || errors.description) {
@@ -105,7 +106,7 @@ export function validateCallDispositionRows(
         0,
     );
     const totalError = totalDescriptionLength > MAX_CALL_DISPOSITION_DESCRIPTIONS_TOTAL_LENGTH
-        ? `Descriptions must total at most ${MAX_CALL_DISPOSITION_DESCRIPTIONS_TOTAL_LENGTH.toLocaleString()} characters.`
+        ? "descriptionsTotalMaxLength"
         : undefined;
 
     return {
@@ -128,6 +129,7 @@ export function CallDispositionEditor({
     onChange: (rows: CallDispositionRow[]) => void;
     defaultDispositions?: CallDispositionOption[];
 }) {
+    const t = useTranslations("Workflow");
     const enabled = rows.length > 0;
     const rememberedRows = useRef<CallDispositionRow[]>(rows);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -173,12 +175,12 @@ export function CallDispositionEditor({
             <div className="flex items-center justify-between gap-6">
                 <div className="space-y-1">
                     <Label htmlFor="call-disposition-extraction-enabled" className="text-sm font-medium">
-                        Extract call disposition at the end of the call
+                        {t("extractCallDisposition")}
                     </Label>
                     <p className="text-xs text-muted-foreground">
                         {enabled
-                            ? `${rows.length} outcome${rows.length === 1 ? "" : "s"} configured. Dograh will classify the completed conversation into one of them.`
-                            : "Disabled. Dograh will keep the disposition recorded by the call-ending event."}
+                            ? t("dispositionConfigured", { count: rows.length })
+                            : t("dispositionDisabled")}
                     </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
@@ -189,7 +191,7 @@ export function CallDispositionEditor({
                             size="sm"
                             onClick={() => openEditor(rows)}
                         >
-                            Configure options
+                            {t("configureOptions")}
                         </Button>
                     )}
                     <Switch
@@ -203,9 +205,9 @@ export function CallDispositionEditor({
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Call disposition extraction</DialogTitle>
+                        <DialogTitle>{t("callDispositionExtraction")}</DialogTitle>
                         <DialogDescription>
-                            Configure the code and description pairs the model can choose from. Codes are recorded before organization-level disposition mapping is applied.
+                            {t("callDispositionExtractionDescription")}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -223,14 +225,14 @@ export function CallDispositionEditor({
                             variant="outline"
                             onClick={() => setDialogOpen(false)}
                         >
-                            Cancel
+                            {t("cancel")}
                         </Button>
                         <Button
                             type="button"
                             disabled={draftRows.length === 0 || !draftValidation.isValid}
                             onClick={handleApply}
                         >
-                            {enabled ? "Save options" : "Enable extraction"}
+                            {enabled ? t("saveOptions") : t("enableExtraction")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -249,6 +251,8 @@ function CallDispositionRowsEditor({
     validation: CallDispositionValidation;
 }) {
 
+    const t = useTranslations("Workflow");
+
     const updateRow = (
         rowId: string,
         update: Partial<Pick<CallDispositionRow, "code" | "description">>,
@@ -259,7 +263,7 @@ function CallDispositionRowsEditor({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-4">
-                <Label className="text-sm">Disposition options</Label>
+                <Label className="text-sm">{t("dispositionOptions")}</Label>
                 <Button
                     type="button"
                     variant="outline"
@@ -270,7 +274,7 @@ function CallDispositionRowsEditor({
                         { id: createUuid(), code: "", description: "" },
                     ])}
                 >
-                    <Plus className="mr-1 h-4 w-4" /> Add custom disposition
+                    <Plus className="mr-1 h-4 w-4" /> {t("addCustomDisposition")}
                 </Button>
             </div>
 
@@ -287,11 +291,11 @@ function CallDispositionRowsEditor({
                             <div className="flex items-start gap-3">
                                 <div className="min-w-0 flex-1 space-y-3">
                                     <p className="text-xs font-medium text-muted-foreground">
-                                        Disposition {index + 1}
+                                        {t("dispositionN", { n: index + 1 })}
                                     </p>
                                     <div className="space-y-1.5">
                                         <Label htmlFor={codeId} className="text-xs">
-                                            Disposition Code
+                                            {t("dispositionCode")}
                                         </Label>
                                         <Input
                                             id={codeId}
@@ -300,17 +304,17 @@ function CallDispositionRowsEditor({
                                             aria-invalid={Boolean(errors?.code)}
                                             aria-describedby={errors?.code ? `${codeId}-error` : undefined}
                                             onChange={(event) => updateRow(row.id, { code: event.target.value })}
-                                            placeholder="qualified"
+                                            placeholder={t("placeholderQualified")}
                                         />
                                         {errors?.code && (
                                             <p id={`${codeId}-error`} className="text-xs text-destructive">
-                                                {errors.code}
+                                                {t(errors.code)}
                                             </p>
                                         )}
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label htmlFor={descriptionId} className="text-xs">
-                                            Description
+                                            {t("dispositionDescription")}
                                         </Label>
                                         <Textarea
                                             id={descriptionId}
@@ -320,11 +324,11 @@ function CallDispositionRowsEditor({
                                             aria-invalid={Boolean(errors?.description)}
                                             aria-describedby={errors?.description ? `${descriptionId}-error` : undefined}
                                             onChange={(event) => updateRow(row.id, { description: event.target.value })}
-                                            placeholder="Use when the customer meets the qualification criteria and wants to proceed."
+                                            placeholder={t("dispositionDescriptionPlaceholder")}
                                         />
                                         {errors?.description && (
                                             <p id={`${descriptionId}-error`} className="text-xs text-destructive">
-                                                {errors.description}
+                                                {t(errors.description)}
                                             </p>
                                         )}
                                     </div>
@@ -333,7 +337,7 @@ function CallDispositionRowsEditor({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    aria-label={`Remove disposition ${index + 1}`}
+                                    aria-label={t("removeDisposition", { n: index + 1 })}
                                     onClick={() => onChange(rows.filter((item) => item.id !== row.id))}
                                 >
                                     <Trash2 className="h-4 w-4" />
@@ -345,20 +349,20 @@ function CallDispositionRowsEditor({
 
                 {rows.length === 0 && (
                     <div className="rounded-md border border-dashed p-4 text-center">
-                        <p className="text-sm font-medium">Add at least one disposition</p>
+                        <p className="text-sm font-medium">{t("addAtLeastOneDisposition")}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Extraction needs a closed list of outcomes to choose from.
+                            {t("extractionNeedsClosedList")}
                         </p>
                     </div>
                 )}
 
                 <div className="flex justify-end text-xs text-muted-foreground">
                     <p className={validation.totalError ? "text-destructive" : undefined}>
-                        {validation.totalDescriptionLength.toLocaleString()} / {MAX_CALL_DISPOSITION_DESCRIPTIONS_TOTAL_LENGTH.toLocaleString()} description characters
+                        {t("descriptionCharacters", { current: validation.totalDescriptionLength.toLocaleString(), max: MAX_CALL_DISPOSITION_DESCRIPTIONS_TOTAL_LENGTH.toLocaleString() })}
                     </p>
                 </div>
                 {validation.totalError && (
-                    <p className="text-xs text-destructive">{validation.totalError}</p>
+                    <p className="text-xs text-destructive">{t(validation.totalError)}</p>
                 )}
             </div>
         </div>

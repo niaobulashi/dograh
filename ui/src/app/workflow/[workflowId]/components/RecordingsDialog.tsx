@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Loader2, Mic, Pause, Play, Square, Trash2Icon, Upload, X } from "lucide-react";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -65,6 +66,7 @@ export const RecordingsDialog = ({
     onRecordingsChange,
     ttsOverrides,
 }: RecordingsDialogProps) => {
+    const t = useTranslations("Workflow");
     const { userConfig } = useUserConfig();
     const [recordings, setRecordings] = useState<RecordingResponseSchema[]>([]);
     const [loading, setLoading] = useState(false);
@@ -101,7 +103,7 @@ export const RecordingsDialog = ({
             setRecordings(recs);
             onRecordingsChange?.(recs);
         } catch {
-            setError("Failed to load recordings");
+            setError(t("failedToLoadRecordings"));
         } finally {
             setLoading(false);
         }
@@ -241,7 +243,7 @@ export const RecordingsDialog = ({
                 setRecordingDuration((d) => d + 1);
             }, 1000);
         } catch {
-            setError("Microphone access denied. Please allow microphone permissions.");
+            setError(t("microphoneAccessDeniedPermissions"));
             resetRecordingState();
         }
     };
@@ -261,7 +263,7 @@ export const RecordingsDialog = ({
         if (ready.length === 0) return;
         if (!ttsProvider || !ttsModel || !ttsVoiceId) {
             setError(
-                "TTS configuration (provider, model, voice) must be set in your user configuration before uploading."
+                t("ttsConfigurationMustBeSet")
             );
             return;
         }
@@ -283,7 +285,7 @@ export const RecordingsDialog = ({
                 });
 
             if (!uploadUrlResponse.data?.items) {
-                throw new Error("Failed to get upload URLs");
+                throw new Error(t("failedToGetUploadUrls"));
             }
 
             const items = uploadUrlResponse.data.items;
@@ -347,7 +349,7 @@ export const RecordingsDialog = ({
             });
             await fetchRecordings();
         } catch {
-            setError("Failed to delete recording");
+            setError(t("failedToDeleteRecording"));
         }
     };
 
@@ -359,7 +361,7 @@ export const RecordingsDialog = ({
                 source: 'recordings_dialog',
             });
         } catch {
-            setError("Failed to play recording");
+            setError(t("failedToPlayRecording"));
         }
     };
 
@@ -372,36 +374,31 @@ export const RecordingsDialog = ({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Workflow Recordings</DialogTitle>
+                    <DialogTitle>{t("workflowRecordings")}</DialogTitle>
                     <DialogDescription>
-                        Upload or record audio for hybrid prompts. Recordings are
-                        scoped to your current TTS configuration. Use{" "}
-                        <code className="text-xs bg-muted px-1 rounded">@</code> in
-                        prompt fields to insert them.
-                    </DialogDescription>
+                        {t("uploadOrRecordAudioForHybridPromptsRecordingsAreScopedToYourCurrentTtsConfigurationUse")}{" "}
+                        <code className="text-xs bg-muted px-1 rounded">@</code> {t("inPromptFieldsToInsertThem")}</DialogDescription>
                 </DialogHeader>
 
                 {/* Current TTS Config */}
                 <div className="rounded-md border p-3 bg-muted/30 text-sm space-y-1">
                     <div className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
-                        Current TTS Configuration
-                    </div>
+                        {t("currentTtsConfiguration")}</div>
                     {ttsProvider ? (
                         <div className="flex flex-wrap gap-2 text-xs">
                             <span className="bg-background px-2 py-0.5 rounded border">
-                                Provider: {ttsProvider}
+                                {t("provider")}{ttsProvider}
                             </span>
                             <span className="bg-background px-2 py-0.5 rounded border">
-                                Model: {ttsModel}
+                                {t("model")}{ttsModel}
                             </span>
                             <span className="bg-background px-2 py-0.5 rounded border truncate max-w-[200px]">
-                                VoiceID: {ttsVoiceId}
+                                {t("voiceid")}{ttsVoiceId}
                             </span>
                         </div>
                     ) : (
                         <p className="text-xs text-destructive">
-                            No TTS configuration found. Set it in Model Configurations.
-                        </p>
+                            {t("noTtsConfigurationFoundSetItInModelConfigurations")}</p>
                     )}
                 </div>
 
@@ -413,13 +410,12 @@ export const RecordingsDialog = ({
 
                 {/* Upload Section */}
                 <div className="space-y-3 border rounded-md p-3">
-                    <Label className="text-sm font-medium">Add New Recordings</Label>
+                    <Label className="text-sm font-medium">{t("addNewRecordings")}</Label>
 
                     {/* Audio source: file picker or record */}
                     <div>
                         <Label className="text-xs text-muted-foreground">
-                            Audio Files
-                        </Label>
+                            {t("audioFiles")}</Label>
                         <div className="flex gap-2">
                             <input
                                 ref={fileInputRef}
@@ -438,7 +434,7 @@ export const RecordingsDialog = ({
                                 disabled={isBusy}
                             >
                                 <Upload className="w-4 h-4 mr-2 shrink-0" />
-                                <span className="text-muted-foreground">Choose audio files (max 5MB each)</span>
+                                <span className="text-muted-foreground">{t("chooseAudioFilesMax5mbEach")}</span>
                             </Button>
                             {recordingStep === "idle" && (
                                 <Button
@@ -449,8 +445,7 @@ export const RecordingsDialog = ({
                                     disabled={uploading || anyTranscribing}
                                 >
                                     <Mic className="w-4 h-4 mr-1" />
-                                    Record
-                                </Button>
+                                    {t("record")}</Button>
                             )}
                         </div>
                     </div>
@@ -462,10 +457,9 @@ export const RecordingsDialog = ({
                                 <>
                                     <div>
                                         <Label className="text-xs text-muted-foreground">
-                                            Recording Name
-                                        </Label>
+                                            {t("recordingName")}</Label>
                                         <Input
-                                            placeholder="e.g. greeting, hold-message"
+                                            placeholder={t("egGreetingHoldmessage")}
                                             value={recordingFilename}
                                             onChange={(e) => setRecordingFilename(e.target.value)}
                                             autoFocus
@@ -478,15 +472,13 @@ export const RecordingsDialog = ({
                                             disabled={!recordingFilename.trim()}
                                         >
                                             <Mic className="w-4 h-4 mr-1" />
-                                            Start Recording
-                                        </Button>
+                                            {t("startRecording")}</Button>
                                         <Button
                                             size="sm"
                                             variant="ghost"
                                             onClick={resetRecordingState}
                                         >
-                                            Cancel
-                                        </Button>
+                                            {t("cancel")}</Button>
                                     </div>
                                 </>
                             )}
@@ -507,8 +499,7 @@ export const RecordingsDialog = ({
                                         className="ml-auto"
                                     >
                                         <Square className="w-4 h-4 mr-1" />
-                                        Stop
-                                    </Button>
+                                        {t("stop")}</Button>
                                 </div>
                             )}
                         </div>
@@ -518,14 +509,13 @@ export const RecordingsDialog = ({
                     {pendingFiles.length > 0 && (
                         <div className="space-y-2">
                             <Label className="text-xs text-muted-foreground">
-                                Pending ({pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""})
+                                {t("pending")}{pendingFiles.length} {t("file")}{pendingFiles.length !== 1 ? "s" : ""})
                             </Label>
                             {pendingFiles.map((pf) => (
                                 <div key={pf.id} className="rounded-md border p-2 space-y-1.5 bg-muted/10">
                                     <div className="flex items-center gap-2">
                                         <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono truncate flex-1">
-                                            {pf.file.name} ({(pf.file.size / (1024 * 1024)).toFixed(1)}MB)
-                                        </code>
+                                            {pf.file.name} ({(pf.file.size / (1024 * 1024)).toFixed(1)}{t("mb")}</code>
                                         {pf.isTranscribing && (
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground shrink-0" />
                                         )}
@@ -558,8 +548,7 @@ export const RecordingsDialog = ({
                     {/* Language */}
                     <div>
                         <Label className="text-xs text-muted-foreground">
-                            Language
-                        </Label>
+                            {t("language")}</Label>
                         <Select value={language} onValueChange={setLanguage}>
                             <SelectTrigger className="h-9 text-sm">
                                 <SelectValue />
@@ -593,7 +582,7 @@ export const RecordingsDialog = ({
                 {/* Recordings List */}
                 <div className="space-y-2">
                     <Label className="text-sm font-medium">
-                        Recordings{" "}
+                        {t("recordings")}{" "}
                         {!loading && (
                             <span className="text-muted-foreground font-normal">
                                 ({recordings.length})
@@ -606,8 +595,7 @@ export const RecordingsDialog = ({
                         </div>
                     ) : recordings.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-2">
-                            No recordings yet for this TTS configuration.
-                        </p>
+                            {t("noRecordingsYetForThisTtsConfiguration")}</p>
                     ) : (
                         recordings.map((rec) => (
                             <div

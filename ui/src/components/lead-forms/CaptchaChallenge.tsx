@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 // Anti-spam quick-check shown as a popup ON TOP of a lead form (via the
 // LeadModalShell `overlay` slot) so it can't be scrolled past or missed.
 // Generates a fresh sum each time it mounts; calls onVerified once the correct
@@ -20,6 +21,7 @@ export function CaptchaChallenge({
   onVerified: () => void;
   onCancel: () => void;
 }) {
+    const t = useTranslations("LeadForms");
   const [a, setA] = useState(0);
   const [b, setB] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -36,10 +38,11 @@ export function CaptchaChallenge({
   }, []);
 
   const confirm = () => {
+    const t = useTranslations("LeadForms");
     if (answer.trim() !== "" && parseInt(answer, 10) === a + b) {
       onVerified();
     } else {
-      toast.error("That's not quite right - try again.");
+      toast.error(t("thatsNotQuiteRightTryAgain"));
       regenerate();
     }
   };
@@ -52,13 +55,13 @@ export function CaptchaChallenge({
             <ShieldCheck className="size-4" />
           </span>
           <div className="space-y-1">
-            <p className="text-sm font-semibold">Quick check</p>
-            <p className="text-xs text-muted-foreground">Confirm you&apos;re human before we send this.</p>
+            <p className="text-sm font-semibold">{t("quickCheck")}</p>
+            <p className="text-xs text-muted-foreground">{t("confirmYoureHumanBeforeWeSendThis")}</p>
           </div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="captcha-answer">
-            What is {a} + {b}?
+            {t("whatIs")}{a} + {b}?
           </Label>
           <Input
             id="captcha-answer"
@@ -69,20 +72,18 @@ export function CaptchaChallenge({
             onKeyDown={(e) => {
               if (e.key === "Enter") confirm();
             }}
-            placeholder="Answer"
+            placeholder={t("answer")}
           />
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
-          </Button>
+            {t("cancel")}</Button>
           <Button
             type="button"
             onClick={confirm}
             className="bg-cta text-cta-foreground shadow-md shadow-cta/25 hover:bg-cta/90 hover:shadow-cta/35 focus-visible:ring-cta/50"
           >
-            Confirm &amp; submit
-          </Button>
+            {t("confirmSubmit")}</Button>
         </div>
       </div>
     </div>
