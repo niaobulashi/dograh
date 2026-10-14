@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
@@ -11,6 +12,44 @@ import {
     normalizeCallDispositions,
     validateCallDispositionRows,
 } from "./CallDispositionEditor";
+
+// Minimal messages so the component's useTranslations calls resolve in tests.
+// Values are English to keep the existing text assertions stable.
+const messages = {
+    Workflow: {
+        cancel: "Cancel",
+        extractCallDisposition: "Extract call disposition at the end of the call",
+        dispositionConfigured:
+            "{count, plural, =1 {# outcome configured. Dograh will classify the completed conversation into one of them.} other {# outcomes configured. Dograh will classify the completed conversation into one of them.}}",
+        dispositionDisabled:
+            "Disabled. Dograh will keep the disposition recorded by the call-ending event.",
+        configureOptions: "Configure options",
+        callDispositionExtraction: "Call disposition extraction",
+        callDispositionExtractionDescription:
+            "Configure the code and description pairs the model can choose from. Codes are recorded before organization-level disposition mapping is applied.",
+        saveOptions: "Save options",
+        enableExtraction: "Enable extraction",
+        dispositionOptions: "Disposition options",
+        addCustomDisposition: "Add custom disposition",
+        dispositionN: "Disposition {n}",
+        dispositionCode: "Disposition Code",
+        dispositionDescription: "Description",
+        dispositionDescriptionPlaceholder:
+            "Use when the customer meets the qualification criteria and wants to proceed.",
+        removeDisposition: "Remove disposition {n}",
+        addAtLeastOneDisposition: "Add at least one disposition",
+        extractionNeedsClosedList: "Extraction needs a closed list of outcomes to choose from.",
+        descriptionCharacters: "{current} / {max} description characters",
+        dispositionCodeRequired: "Disposition code is required.",
+        dispositionCodeMaxLength: "Disposition code must be at most 64 characters.",
+        dispositionCodePattern:
+            "Start with a letter and use only letters, numbers, underscores, or hyphens.",
+        dispositionCodesUnique: "Disposition codes must be unique.",
+        descriptionRequired: "Description is required.",
+        descriptionMaxLength: "Description must be at most 1,000 characters.",
+        descriptionsTotalMaxLength: "Descriptions must total at most 4,000 characters.",
+    },
+};
 
 const DEFAULT_DISPOSITIONS = [
     { code: "qualified", description: "The call achieved its goal." },
@@ -26,11 +65,13 @@ function Harness({
 }) {
     const [rows, setRows] = useState(initialRows);
     return (
-        <CallDispositionEditor
-            rows={rows}
-            onChange={setRows}
-            defaultDispositions={defaultDispositions}
-        />
+        <NextIntlClientProvider locale="en" messages={messages}>
+            <CallDispositionEditor
+                rows={rows}
+                onChange={setRows}
+                defaultDispositions={defaultDispositions}
+            />
+        </NextIntlClientProvider>
     );
 }
 
@@ -141,9 +182,9 @@ describe("CallDispositionEditor", () => {
         ]);
 
         expect(validation.isValid).toBe(false);
-        expect(validation.rowErrors.unsafe.code).toMatch(/only letters/i);
-        expect(validation.rowErrors.unsafe.description).toMatch(/at most/i);
-        expect(validation.totalError).toMatch(/total at most/i);
+        expect(validation.rowErrors.unsafe.code).toBe("dispositionCodePattern");
+        expect(validation.rowErrors.unsafe.description).toBe("descriptionMaxLength");
+        expect(validation.totalError).toBe("descriptionsTotalMaxLength");
     });
 
     it("normalizes only persisted fields", () => {

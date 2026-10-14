@@ -516,7 +516,7 @@ export function HttpToolTestDialog({
             >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{t("testDialog.editTitle", { name: jsonEditTarget?.name })}</DialogTitle>
+                        <DialogTitle>{t("testDialog.editTitle", { name: jsonEditTarget?.name ?? "" })}</DialogTitle>
                         <DialogDescription>
                             {t("testDialog.editDescription")}
                         </DialogDescription>

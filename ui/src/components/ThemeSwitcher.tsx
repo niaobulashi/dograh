@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -19,6 +20,7 @@ export default function ThemeToggle({
   variant = "ghost",
   size = "icon"
 }: ThemeToggleProps) {
+    const t = useTranslations("Shared");
   // Start with null to avoid hydration mismatch - theme is set by inline script in layout.tsx
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
@@ -54,9 +56,9 @@ export default function ThemeToggle({
         !showLabel && "absolute"
       )} />
       {showLabel && theme && (
-        <span className="ml-2">{theme === "light" ? "Light" : "Dark"} Mode</span>
+        <span className="ml-2">{theme === "light" ? "Light" : "Dark"} {t("mode")}</span>
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{t("toggleTheme")}</span>
     </Button>
   );
 }

@@ -213,7 +213,7 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                 }
             } catch {
                 if (id !== requestId.current) return;
-                setError("Failed to load voices");
+                setError(t("failedToLoadVoices"));
                 setVoices([]);
             } finally { if (id === requestId.current) setIsLoading(false); }
         })();
@@ -315,18 +315,18 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
                     <DialogHeader className="border-b px-6 py-4">
-                        <DialogTitle>Select Voice</DialogTitle>
-                        <DialogDescription className="sr-only">Preview voices, select one, then choose Use this voice.</DialogDescription>
+                        <DialogTitle>{t("selectVoiceTitle")}</DialogTitle>
+                        <DialogDescription className="sr-only">{t("selectVoiceDescription")}</DialogDescription>
                     </DialogHeader>
 
                     {/* Filter row: Gender · Accent · Language · Search */}
                     <div className="flex flex-wrap items-center gap-2 border-b px-6 py-3">
                         <Select value={gender} onValueChange={setGender}>
                             <SelectTrigger className="h-9 w-[130px]">
-                                <SelectValue placeholder="Gender" />
+                                <SelectValue placeholder={t("gender")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL_FILTER_VALUE}>All genders</SelectItem>
+                                <SelectItem value={ALL_FILTER_VALUE}>{t("allGenders")}</SelectItem>
                                 {genderOptions.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -337,10 +337,10 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
 
                         <Select value={accent} onValueChange={setAccent}>
                             <SelectTrigger className="h-9 w-[140px]">
-                                <SelectValue placeholder="Accent" />
+                                <SelectValue placeholder={t("accent")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL_FILTER_VALUE}>All accents</SelectItem>
+                                <SelectItem value={ALL_FILTER_VALUE}>{t("allAccents")}</SelectItem>
                                 {accentOptions.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -351,10 +351,10 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
 
                         <Select value={language} onValueChange={setLanguage}>
                             <SelectTrigger className="h-9 w-[150px]">
-                                <SelectValue placeholder="Language" />
+                                <SelectValue placeholder={t("language")} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL_FILTER_VALUE}>All languages</SelectItem>
+                                <SelectItem value={ALL_FILTER_VALUE}>{t("allLanguages")}</SelectItem>
                                 {languageOptions.map((option) => (
                                     <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -381,8 +381,7 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                             </div>
                         ) : voices.length === 0 ? (
                             <p className="py-10 text-center text-sm text-muted-foreground">
-                                No voices match these filters
-                            </p>
+                                {t("noVoicesMatch")}</p>
                         ) : (
                             <div className="grid gap-2 sm:grid-cols-2">
                                 {voices.map((voice) => {
@@ -454,15 +453,13 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                         </span>
                         <div className="ml-auto flex items-center gap-2">
                             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                                Cancel
-                            </Button>
+                                {t("cancel")}</Button>
                             <Button
                                 type="button"
                                 onClick={commitSelection}
                                 disabled={!pendingVoiceId}
                             >
-                                Use this voice
-                            </Button>
+                                {t("useThisVoice")}</Button>
                         </div>
                     </div>
                 </DialogContent>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from "next-intl";
 import {
     Bot,
     Check,
@@ -240,6 +241,7 @@ function SplitTracksSection({
     userRecordingUrl: string;
     botRecordingUrl: string;
 }) {
+    const t = useTranslations("Workflow");
     const userAudioRef = useRef<HTMLAudioElement | null>(null);
     const botAudioRef = useRef<HTMLAudioElement | null>(null);
     const [signedUrls, setSignedUrls] = useState<{ user: string | null; bot: string | null }>({
@@ -505,11 +507,11 @@ function SplitTracksSection({
                 onDurationChange={updateTimeline}
             />
             <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Split Tracks</CardTitle>
+                <CardTitle className="text-lg">{t("splitTracks")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2" role="group" aria-label="Playback tracks">
+                    <div className="flex items-center gap-2" role="group" aria-label={t("playbackTracks")}>
                         <Button
                             type="button"
                             variant="outline"
@@ -525,8 +527,7 @@ function SplitTracksSection({
                             )}
                         >
                             <UserRound className="h-4 w-4" />
-                            User
-                        </Button>
+                            {t("user")}</Button>
                         <span className="h-4 w-px bg-border" />
                         <Button
                             type="button"
@@ -543,8 +544,7 @@ function SplitTracksSection({
                             )}
                         >
                             <Bot className="h-4 w-4" />
-                            Bot
-                        </Button>
+                            {t("bot")}</Button>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
@@ -555,8 +555,7 @@ function SplitTracksSection({
                             className="gap-2"
                         >
                             <Download className="h-4 w-4" />
-                            User
-                        </Button>
+                            {t("user")}</Button>
                         <Button
                             type="button"
                             variant="outline"
@@ -565,8 +564,7 @@ function SplitTracksSection({
                             className="gap-2"
                         >
                             <Download className="h-4 w-4" />
-                            Bot
-                        </Button>
+                            {t("bot")}</Button>
                     </div>
                 </div>
                 <div className="space-y-3">
@@ -585,8 +583,7 @@ function SplitTracksSection({
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center bg-background/70 text-xs text-muted-foreground">
                                 <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                Loading
-                            </div>
+                                {t("loading")}</div>
                         )}
                     </div>
                     <div className="flex items-center gap-3">
@@ -601,7 +598,7 @@ function SplitTracksSection({
                             value={currentTime}
                             onChange={(event) => void seekTo(Number(event.target.value))}
                             disabled={!canSeek}
-                            aria-label="Playback position"
+                            aria-label={t("playbackPosition")}
                             aria-valuetext={`${formatPlaybackTime(currentTime)} of ${formatPlaybackTime(timeline.duration)}`}
                             className="h-5 min-w-0 flex-1 cursor-pointer accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
                         />
@@ -609,7 +606,7 @@ function SplitTracksSection({
                             {formatPlaybackTime(timeline.duration)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-center gap-3" role="group" aria-label="Playback controls">
+                    <div className="flex items-center justify-center gap-3" role="group" aria-label={t("playbackControls")}>
                         <Button
                             type="button"
                             variant="ghost"
@@ -621,8 +618,7 @@ function SplitTracksSection({
                             className="gap-1.5"
                         >
                             <RotateCcw className="h-4 w-4" />
-                            {PLAYBACK_SKIP_SECONDS}s
-                        </Button>
+                            {PLAYBACK_SKIP_SECONDS}{t("s")}</Button>
                         <Button
                             type="button"
                             size="icon"
@@ -645,8 +641,7 @@ function SplitTracksSection({
                             className="gap-1.5"
                         >
                             <RotateCw className="h-4 w-4" />
-                            {PLAYBACK_SKIP_SECONDS}s
-                        </Button>
+                            {PLAYBACK_SKIP_SECONDS}{t("s")}</Button>
                     </div>
                 </div>
             </CardContent>
@@ -663,12 +658,13 @@ function RunMetricsSection({
     logs: WorkflowRunLogs | null;
     gatheredContext: Record<string, string | number | boolean | object> | null;
 }) {
+    const t = useTranslations("Workflow");
     const metrics = getTranscriptMetrics(logs, gatheredContext);
 
     return (
         <Card className="border-border">
             <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Run Metrics</CardTitle>
+                <CardTitle className="text-lg">{t("runMetrics")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <MetricCard label="Duration" value={formatDuration(costInfo?.call_duration_seconds)} />
@@ -682,6 +678,7 @@ function RunMetricsSection({
 }
 
 function ContextDisplay({ title, context }: { title: string; context: Record<string, string | number | boolean | object> | null }) {
+    const t = useTranslations("Workflow");
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async () => {
@@ -691,7 +688,7 @@ function ContextDisplay({ title, context }: { title: string; context: Record<str
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            toast.error('Failed to copy context');
+            toast.error(t("failedToCopyContext"));
         }
     };
 
@@ -702,7 +699,7 @@ function ContextDisplay({ title, context }: { title: string; context: Record<str
                     <CardTitle className="text-lg">{title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">No data available</p>
+                    <p className="text-sm text-muted-foreground">{t("noDataAvailable")}</p>
                 </CardContent>
             </Card>
         );
@@ -728,6 +725,7 @@ function ContextDisplay({ title, context }: { title: string; context: Record<str
 
 
 export default function WorkflowRunPage() {
+    const t = useTranslations("Workflow");
     const params = useParams();
     const [isLoading, setIsLoading] = useState(true);
     const auth = useAuth();
@@ -847,8 +845,7 @@ export default function WorkflowRunPage() {
                                         </div>
                                         <div className="min-w-0">
                                             <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                                                Agent
-                                            </p>
+                                                {t("agentNodeBadge")}</p>
                                             <p className="truncate text-xl font-semibold text-foreground">
                                                 {workflowName}
                                             </p>
@@ -876,7 +873,7 @@ export default function WorkflowRunPage() {
                                 {workflowRun?.created_at && (
                                     <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                                         <Clock className="h-4 w-4" />
-                                        Call time: {formatDateTime(workflowRun.created_at, organizationTimezone)}
+                                        {t("callTime")}{formatDateTime(workflowRun.created_at, organizationTimezone)}
                                     </p>
                                 )}
                             </div>
@@ -889,8 +886,7 @@ export default function WorkflowRunPage() {
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
-                                        Customize Agent
-                                    </Button>
+                                        {t("customizeAgent")}</Button>
                                 </Link>
                             </div>
                         </CardHeader>
@@ -905,7 +901,7 @@ export default function WorkflowRunPage() {
                                 {!isTextChatRun && (
                                     <>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm text-muted-foreground">Preview:</span>
+                                            <span className="text-sm text-muted-foreground">{t("preview")}</span>
                                             <MediaPreviewButton
                                                 recordingUrl={workflowRun?.recording_url}
                                                 transcriptUrl={workflowRun?.transcript_url}
@@ -914,7 +910,7 @@ export default function WorkflowRunPage() {
                                             />
                                         </div>
                                         <div className="flex items-center gap-2 border-l border-border pl-4">
-                                            <span className="text-sm text-muted-foreground">Download:</span>
+                                            <span className="text-sm text-muted-foreground">{t("download")}</span>
                                             <Button
                                                 onClick={() => downloadFile(workflowRun?.transcript_url ?? null)}
                                                 disabled={!workflowRun?.transcript_url || !auth.isAuthenticated}
@@ -922,8 +918,7 @@ export default function WorkflowRunPage() {
                                                 className="gap-2"
                                             >
                                                 <FileText className="h-4 w-4" />
-                                                Transcript
-                                            </Button>
+                                                {t("transcript")}</Button>
                                             <Button
                                                 onClick={() => downloadFile(workflowRun?.recording_url ?? null)}
                                                 disabled={!workflowRun?.recording_url || !auth.isAuthenticated}
@@ -931,14 +926,13 @@ export default function WorkflowRunPage() {
                                                 className="gap-2"
                                             >
                                                 <Video className="h-4 w-4" />
-                                                Recording
-                                            </Button>
+                                                {t("recordingOption")}</Button>
                                         </div>
                                     </>
                                 )}
                                 {workflowRun?.gathered_context?.trace_url && (
                                     <div className={`flex items-center gap-2 ${isTextChatRun ? '' : 'border-l border-border pl-4'}`}>
-                                        <span className="text-sm text-muted-foreground">Trace:</span>
+                                        <span className="text-sm text-muted-foreground">{t("trace")}</span>
                                         <Button
                                             asChild
                                             size="sm"
@@ -951,8 +945,7 @@ export default function WorkflowRunPage() {
                                                 rel="noopener noreferrer"
                                             >
                                                 <ExternalLink className="h-4 w-4" />
-                                                View Trace
-                                            </a>
+                                                {t("viewTrace")}</a>
                                         </Button>
                                     </div>
                                 )}
@@ -975,18 +968,18 @@ export default function WorkflowRunPage() {
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <ContextDisplay
-                                title="Initial Context"
+                                title={t("initialContext")}
                                 context={workflowRun?.initial_context ?? null}
                             />
                             <ContextDisplay
-                                title="Gathered Context"
+                                title={t("gatheredContext")}
                                 context={workflowRun?.gathered_context ?? null}
                             />
                         </div>
 
                         {workflowRun?.annotations && Object.keys(workflowRun.annotations).length > 0 && (
                             <ContextDisplay
-                                title="QA Results"
+                                title={t("qaResults")}
                                 context={workflowRun.annotations as Record<string, string | number | boolean | object>}
                             />
                         )}
@@ -1010,16 +1003,14 @@ export default function WorkflowRunPage() {
             <div className="flex h-full items-center justify-center p-6">
                 <Card className="w-full max-w-xl border-border">
                     <CardHeader className="space-y-2">
-                        <CardTitle className="text-2xl">Run Details Unavailable</CardTitle>
+                        <CardTitle className="text-2xl">{t("runDetailsUnavailable")}</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                            This run does not have a details view yet. Go back to the workflow to continue testing or make changes.
-                        </p>
+                            {t("thisRunDoesNotHaveADetailsViewYetGoBackToTheWorkflowToContinueTestingOrMakeChanges")}</p>
                     </CardHeader>
                     <CardFooter>
                         <Button asChild className="gap-2">
                             <Link href={`/workflow/${params.workflowId}`}>
-                                Customize Agent
-                            </Link>
+                                {t("customizeAgent")}</Link>
                         </Button>
                     </CardFooter>
                 </Card>
@@ -1036,7 +1027,7 @@ export default function WorkflowRunPage() {
             {showRunDetailsView && (
                 <OnboardingTooltip
                     tooltipKey="customize_workflow"
-                    title='Customize Your Workflow'
+                    title={t("customizeYourWorkflow")}
                     targetRef={customizeButtonRef}
                     message="Edit your workflow to adjust the voice agent's behavior, add new steps, or modify the conversation flow."
                     showNext={false}

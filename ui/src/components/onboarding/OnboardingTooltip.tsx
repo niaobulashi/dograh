@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from "next-intl";
 import { arrow, autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react-dom';
 import { X } from 'lucide-react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
@@ -31,6 +32,7 @@ export const OnboardingTooltip = ({
     onNext,
     showNext = true,
 }: OnboardingTooltipProps) => {
+    const t = useTranslations("Onboarding");
     const { hasSeenTooltip, markTooltipSeen } = useOnboarding();
     const arrowRef = useRef<HTMLDivElement>(null);
     const messageId = useId();
@@ -125,7 +127,7 @@ export const OnboardingTooltip = ({
                 <button
                     onClick={dismiss}
                     className="absolute top-2 right-2 p-1 hover:bg-blue-600 rounded-full transition-colors"
-                    aria-label="Close tooltip"
+                    aria-label={t("closeTooltip")}
                 >
                     <X className="h-4 w-4" />
                 </button>
@@ -144,8 +146,7 @@ export const OnboardingTooltip = ({
                         onClick={dismiss}
                         className="bg-white text-blue-500 px-4 py-1.5 rounded font-medium text-sm hover:bg-blue-50 transition-colors cursor-pointer"
                     >
-                        Close
-                    </button>
+                        {t("close")}</button>
 
                     {showNext && (
                         <button
@@ -155,8 +156,7 @@ export const OnboardingTooltip = ({
                             }}
                             className="bg-white text-blue-500 px-4 py-1.5 rounded font-medium text-sm hover:bg-blue-50 transition-colors"
                         >
-                            Next
-                        </button>
+                            {t("next")}</button>
                     )}
                 </div>
             </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 // Compact self-serve "Buy Credits" control. The amount chips + custom input live
 // in a popover that only opens when the user clicks "Buy Credits" — so the
 // billing card stays clean until they intend to top up. Presets + custom (min $5)
@@ -25,6 +26,7 @@ const parseAmount = (raw: string): number | null => {
 };
 
 export function BuyCreditsControl({ className }: { className?: string }) {
+    const t = useTranslations("Billing");
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
@@ -62,7 +64,7 @@ export function BuyCreditsControl({ className }: { className?: string }) {
       await startTopUp(amount);
     } catch {
       // The seam is intentionally unimplemented until Razorpay lands.
-      setError("Self-serve top-up is coming soon. Use \"Hire an Expert\" or contact us for now.");
+      setError(t("selfServeTopUpComingSoon"));
     } finally {
       setBusy(false);
     }
@@ -78,13 +80,12 @@ export function BuyCreditsControl({ className }: { className?: string }) {
             className,
           )}
         >
-          Buy Credits
-        </Button>
+          {t("buyCredits")}</Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 space-y-3">
         <div className="space-y-0.5">
-          <p className="text-sm font-medium">Top up credits</p>
-          <p className="text-xs text-muted-foreground">Pick an amount (min ${MIN_TOPUP_USD}).</p>
+          <p className="text-sm font-medium">{t("topUpCredits")}</p>
+          <p className="text-xs text-muted-foreground">{t("pickAnAmountMin")}{MIN_TOPUP_USD}).</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -111,7 +112,7 @@ export function BuyCreditsControl({ className }: { className?: string }) {
               inputMode="decimal"
               value={custom}
               onChange={(e) => onCustomChange(e.target.value)}
-              placeholder="Custom"
+              placeholder={t("custom")}
               aria-label={`Custom amount (min $${MIN_TOPUP_USD})`}
               className="h-9 w-24 pl-5"
             />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import 'react-international-phone/style.css';
 
 import { Loader2 } from "lucide-react";
@@ -66,6 +67,7 @@ export const PhoneCallDialog = ({
     workflowId,
     user,
 }: PhoneCallDialogProps) => {
+    const t = useTranslations("Workflow");
     const router = useRouter();
     const { refreshConfig } = useUserConfig();
     const [preferences, setPreferences] = useState<OrganizationPreferences>({});
@@ -260,6 +262,7 @@ export const PhoneCallDialog = ({
     };
 
     const savePhoneNumberPreference = async () => {
+        const t = useTranslations("Workflow");
         const result =
             await savePreferencesApiV1OrganizationsPreferencesPut({
                 body: {
@@ -268,10 +271,10 @@ export const PhoneCallDialog = ({
             });
 
         if (result.error) {
-            throw new Error(detailFromError(result.error, "Failed to save phone preferences"));
+            throw new Error(detailFromError(result.error, t("failedToSavePhonePreferences")));
         }
         if (!result.data) {
-            throw new Error("Failed to save phone preferences");
+            throw new Error(t("failedToSavePhonePreferences"));
         }
 
         setPreferences(result.data);
@@ -345,7 +348,7 @@ export const PhoneCallDialog = ({
     const renderLoading = () => (
         <>
             <DialogHeader>
-                <DialogTitle>Phone Call</DialogTitle>
+                <DialogTitle>{t("phoneCall")}</DialogTitle>
             </DialogHeader>
             <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -361,6 +364,7 @@ export const PhoneCallDialog = ({
     // option names a provider — both are derived from the registry, because
     // Cloudonix won't stay the only SIP connector.
     const renderConnectPhoneService = () => {
+    const t = useTranslations("Workflow");
         // A SIP connection the org already has (every hosted signup is
         // provisioned one) is worth deep-linking to; otherwise they add one.
         const sipConfig = telephonyConfigs.find(
@@ -373,11 +377,9 @@ export const PhoneCallDialog = ({
         return (
             <>
                 <DialogHeader>
-                    <DialogTitle>Connect phone service</DialogTitle>
+                    <DialogTitle>{t("connectPhoneService")}</DialogTitle>
                     <DialogDescription>
-                        Dograh doesn&apos;t sell phone numbers or minutes. Choose how
-                        this agent should place and receive calls.
-                    </DialogDescription>
+                        {t("dograhDoesntSellPhoneNumbersOrMinutesChooseHowThisAgentShouldPlaceAndReceiveCalls")}</DialogDescription>
                 </DialogHeader>
 
                 <div className="flex flex-col gap-3">
@@ -385,33 +387,25 @@ export const PhoneCallDialog = ({
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
                                 <h3 className="text-sm font-medium">
-                                    Use a telephony provider
-                                </h3>
+                                    {t("useATelephonyProvider")}</h3>
                                 <span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-teal-700 dark:text-teal-400">
-                                    Recommended
-                                </span>
+                                    {t("recommended")}</span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Open an account with {joinNames(apiProviderNames)}, paste
-                                the credentials here, and call using their numbers.
-                                Quickest way to get started.
-                            </p>
+                                {t("openAnAccountWith")}{joinNames(apiProviderNames)}{t("PasteTheCredentialsHereAndCallUsingTheirNumbersQuickestWayToGetStarted")}</p>
                         </div>
                         <Button
                             size="sm"
                             onClick={() => goToConfiguration({ add: true })}
                         >
-                            Add provider
-                        </Button>
+                            {t("addProvider")}</Button>
                     </div>
 
                     <div className="rounded-lg border p-4 space-y-3">
                         <div className="space-y-1">
-                            <h3 className="text-sm font-medium">Bring your own SIP</h3>
+                            <h3 className="text-sm font-medium">{t("bringYourOwnSip")}</h3>
                             <p className="text-sm text-muted-foreground">
-                                Already have a SIP trunk or a PBX? Point it at Dograh and
-                                keep your existing carrier and numbers.
-                                {sipConfig
+                                {t("alreadyHaveASipTrunkOrAPbxPointItAtDograhAndKeepYourExistingCarrierAndNumbers")}{sipConfig
                                     ? ` “${sipConfig.name}” is provisioned and waiting for your carrier details.`
                                     : ""}
                             </p>
@@ -437,8 +431,7 @@ export const PhoneCallDialog = ({
 
                 <DialogFooter>
                     <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                        Do it Later
-                    </Button>
+                        {t("doItLater")}</Button>
                 </DialogFooter>
             </>
         );
@@ -448,17 +441,16 @@ export const PhoneCallDialog = ({
     const renderPhoneCallForm = () => (
         <>
             <DialogHeader>
-                <DialogTitle>Phone Call</DialogTitle>
+                <DialogTitle>{t("phoneCall")}</DialogTitle>
                 <DialogDescription>
-                    Enter the phone number or SIP endpoint to call. The number will be saved automatically.
-                </DialogDescription>
+                    {t("enterThePhoneNumberOrSipEndpointToCallTheNumberWillBeSavedAutomatically")}</DialogDescription>
             </DialogHeader>
             {telephonyConfigs.length > 0 && (
                 <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="telephony-config">Telephony configuration</Label>
+                    <Label htmlFor="telephony-config">{t("telephonyConfiguration")}</Label>
                     <Select value={selectedConfigId} onValueChange={setSelectedConfigId}>
                         <SelectTrigger id="telephony-config" className="w-full">
-                            <SelectValue placeholder="Select a configuration" />
+                            <SelectValue placeholder={t("selectAConfiguration")} />
                         </SelectTrigger>
                         <SelectContent>
                             {telephonyConfigs.map((config) => (
@@ -491,19 +483,18 @@ export const PhoneCallDialog = ({
             )}
             {selectedConfigId && (
                 <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="from-phone-number">Caller ID (from)</Label>
+                    <Label htmlFor="from-phone-number">{t("callerIdFrom")}</Label>
                     {loadingPhoneNumbers ? (
                         <div className="flex items-center text-sm text-muted-foreground">
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Loading phone numbers...
-                        </div>
+                            {t("loadingPhoneNumbers")}</div>
                     ) : fromPhoneNumbers.length > 0 ? (
                         <Select
                             value={selectedFromPhoneNumberId}
                             onValueChange={setSelectedFromPhoneNumberId}
                         >
                             <SelectTrigger id="from-phone-number" className="w-full">
-                                <SelectValue placeholder="Select a phone number" />
+                                <SelectValue placeholder={t("selectAPhoneNumber")} />
                             </SelectTrigger>
                             <SelectContent>
                                 {fromPhoneNumbers.map((phone) => (
@@ -518,12 +509,10 @@ export const PhoneCallDialog = ({
                         // Never claim a fallback here: providers that require a
                         // caller ID reject the call outright when none exists.
                         <div className="text-xs text-amber-600 dark:text-amber-500">
-                            No phone numbers in this configuration.
-                        </div>
+                            {t("noPhoneNumbersInThisConfiguration")}</div>
                     ) : (
                         <div className="text-xs text-muted-foreground">
-                            No phone numbers in this configuration. The provider will pick one automatically.
-                        </div>
+                            {t("noPhoneNumbersInThisConfigurationTheProviderWillPickOneAutomatically")}</div>
                     )}
                 </div>
             )}
@@ -531,7 +520,7 @@ export const PhoneCallDialog = ({
                 <Input
                     value={phoneNumber}
                     onChange={(e) => handlePhoneInputChange(e.target.value)}
-                    placeholder="PJSIP/1234 or SIP/1234"
+                    placeholder={t("pjsip1234OrSip1234")}
                 />
             ) : (
                 <PhoneInput
@@ -555,11 +544,10 @@ export const PhoneCallDialog = ({
                         router.push('/telephony-configurations');
                     }}
                 >
-                    Configure Telephony
-                </Button>
+                    {t("configureTelephony")}</Button>
                 <div className="flex gap-2 flex-1 justify-end">
                     <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="outline">{t("cancel")}</Button>
                     </DialogClose>
                     {!callSuccessMsg ? (
                         <Button
@@ -571,11 +559,9 @@ export const PhoneCallDialog = ({
                     ) : (
                         <>
                             <Button variant="outline" onClick={() => { setCallSuccessMsg(null); setCallError(null); }}>
-                                Call Again
-                            </Button>
+                                {t("callAgain")}</Button>
                             <Button onClick={() => onOpenChange(false)}>
-                                Close
-                            </Button>
+                                {t("close")}</Button>
                         </>
                     )}
                 </div>

@@ -264,7 +264,7 @@ export default function TelephonyConfigurationsPage() {
                         )}
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {t("phoneCount", { count: item.phone_number_count })}
+                        {t("phoneCount", { count: item.phone_number_count ?? 0 })}
                       </span>
                       {item.inactive && (
                         <span className="text-sm text-destructive">
