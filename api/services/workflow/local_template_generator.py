@@ -22,6 +22,7 @@ renders unchanged in the existing UI / runtime.
 from __future__ import annotations
 
 import json
+import time
 from typing import Optional
 
 import httpx
@@ -234,22 +235,35 @@ async def generate_workflow_from_template(
         httpx.HTTPStatusError: If the LLM API call fails.
     """
     if not DEEPSEEK_API_KEY:
+        logger.error("[local_template_generator] DEEPSEEK_API_KEY is not set")
         raise RuntimeError(
             "DEEPSEEK_API_KEY is not set. Set it (and WORKFLOW_TEMPLATE_GENERATOR=local) "
             "to generate workflow templates without MPS."
         )
 
+    user_prompt = _build_user_prompt(
+        call_type=call_type,
+        use_case=use_case,
+        activity_description=activity_description,
+        language=language,
+    )
+    logger.info(
+        "[local_template_generator] REQUEST -> call_type={call_type} language={language} "
+        "use_case={use_case!r} model={model} base_url={base_url}",
+        call_type=call_type,
+        language=language,
+        use_case=use_case,
+        model=DEEPSEEK_MODEL,
+        base_url=DEEPSEEK_BASE_URL,
+    )
+    logger.debug(
+        "[local_template_generator] user prompt (activity_description):\n{activity}",
+        activity=activity_description,
+    )
+
     messages = [
         {"role": "system", "content": _SYSTEM_PROMPT},
-        {
-            "role": "user",
-            "content": _build_user_prompt(
-                call_type=call_type,
-                use_case=use_case,
-                activity_description=activity_description,
-                language=language,
-            ),
-        },
+        {"role": "user", "content": user_prompt},
     ]
 
     body = {
@@ -260,6 +274,13 @@ async def generate_workflow_from_template(
         "max_tokens": 4096,
     }
 
+    logger.info(
+        "[local_template_generator] Calling DeepSeek chat/completions (max_tokens={mt}, "
+        "temperature={temp})",
+        mt=body["max_tokens"],
+        temp=body["temperature"],
+    )
+    req_start = time.monotonic()
     async with httpx.AsyncClient(timeout=httpx.Timeout(90.0)) as client:
         response = await client.post(
             f"{DEEPSEEK_BASE_URL.rstrip('/')}/chat/completions",
@@ -269,9 +290,13 @@ async def generate_workflow_from_template(
                 "Content-Type": "application/json",
             },
         )
+        elapsed = time.monotonic() - req_start
         if response.status_code != 200:
             logger.error(
-                f"DeepSeek workflow generation failed: {response.status_code} - {response.text}"
+                "[local_template_generator] DeepSeek HTTP {status} in {elapsed:.2f}s: {text}",
+                status=response.status_code,
+                elapsed=elapsed,
+                text=response.text,
             )
             raise httpx.HTTPStatusError(
                 f"DeepSeek workflow generation failed: {response.text}",
@@ -282,12 +307,50 @@ async def generate_workflow_from_template(
         data = response.json()
         content = data["choices"][0]["message"]["content"]
 
+    logger.info(
+        "[local_template_generator] DeepSeek OK in {elapsed:.2f}s | response chars={n_chars}",
+        elapsed=elapsed,
+        n_chars=len(content),
+    )
+    logger.debug(
+        "[local_template_generator] raw LLM content (first 1000 chars):\n{head}",
+        head=content[:1000],
+    )
+
     try:
         payload = json.loads(content)
     except json.JSONDecodeError as exc:
+        logger.error(
+            "[local_template_generator] LLM output was not valid JSON: {exc}", exc=exc
+        )
         raise ValueError(f"LLM did not return valid JSON: {exc}") from exc
 
     if not payload.get("name"):
         payload["name"] = f"{use_case} - {call_type}"
 
-    return _validate_definition(payload)
+    wf = payload.get("workflow_definition", {}) or {}
+    logger.info(
+        "[local_template_generator] PARSED name={name!r} nodes={n_nodes} edges={n_edges}",
+        name=payload.get("name"),
+        n_nodes=len(wf.get("nodes", [])),
+        n_edges=len(wf.get("edges", [])),
+    )
+
+    try:
+        validated = _validate_definition(payload)
+    except ValueError as exc:
+        logger.error(
+            "[local_template_generator] validation failed: {exc}", exc=exc
+        )
+        raise
+
+    vwf = validated.get("workflow_definition", {})
+    logger.info(
+        "[local_template_generator] VALIDATED ok | name={name!r} nodes={n_nodes} "
+        "edges={n_edges} viewport={viewport}",
+        name=validated.get("name"),
+        n_nodes=len(vwf.get("nodes", [])),
+        n_edges=len(vwf.get("edges", [])),
+        viewport=vwf.get("viewport"),
+    )
+    return validated

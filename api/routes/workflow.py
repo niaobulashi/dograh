@@ -1,5 +1,6 @@
 import json
 import re
+import time
 import uuid
 from datetime import datetime
 from typing import Annotated, List, Literal, Optional
@@ -581,10 +582,26 @@ async def create_workflow_from_template(
         HTTPException: If MPS API call fails
     """
     try:
+        logger.info(
+            "[create/template] REQUEST in: call_type={call_type} language={language} "
+            "use_case={use_case!r} activity_description={activity} "
+            "user.provider_id={provider_id} organization_id={org_id} "
+            "generator={generator}",
+            call_type=request.call_type,
+            language=request.language,
+            use_case=request.use_case,
+            activity=request.activity_description,
+            provider_id=getattr(user, "provider_id", None),
+            org_id=user.selected_organization_id,
+            generator=WORKFLOW_TEMPLATE_GENERATOR,
+        )
+
         # Generate the workflow definition. By default delegate to MPS; when
         # WORKFLOW_TEMPLATE_GENERATOR=local, build it locally with a
         # self-hosted LLM (DeepSeek) so the endpoint has no MPS dependency.
+        gen_start = time.monotonic()
         if WORKFLOW_TEMPLATE_GENERATOR == "local":
+            logger.info("[create/template] Using LOCAL generator (DeepSeek)")
             workflow_data = await generate_workflow_from_template(
                 call_type=request.call_type.upper(),
                 use_case=request.use_case,
@@ -592,6 +609,7 @@ async def create_workflow_from_template(
                 language=request.language,
             )
         elif DEPLOYMENT_MODE == "oss":
+            logger.info("[create/template] Using MPS generator (oss mode)")
             workflow_data = await mps_service_key_client.call_workflow_api(
                 call_type=request.call_type.upper(),
                 use_case=request.use_case,
@@ -610,6 +628,20 @@ async def create_workflow_from_template(
                 language=request.language,
                 organization_id=user.selected_organization_id,
             )
+
+        gen_elapsed = time.monotonic() - gen_start
+        wf_def = workflow_data.get("workflow_definition", {}) or {}
+        logger.info(
+            "[create/template] GENERATED workflow name={name!r} in {elapsed:.2f}s | "
+            "nodes={n_nodes} edges={n_edges} has_global={has_global}",
+            name=workflow_data.get("name"),
+            elapsed=gen_elapsed,
+            n_nodes=len(wf_def.get("nodes", [])),
+            n_edges=len(wf_def.get("edges", [])),
+            has_global=any(
+                n.get("type") == "globalNode" for n in wf_def.get("nodes", [])
+            ),
+        )
 
         # Create the workflow in our database
         # Regenerate trigger UUIDs to avoid conflicts with existing triggers
@@ -631,6 +663,14 @@ async def create_workflow_from_template(
             workflow_definition=workflow_def,
             user_id=user.id,
             organization_id=user.selected_organization_id,
+        )
+        logger.info(
+            "[create/template] CREATED workflow id={workflow_id} name={name!r} "
+            "user_id={user_id} organization_id={org_id}",
+            workflow_id=workflow.id,
+            name=workflow.name,
+            user_id=user.id,
+            org_id=user.selected_organization_id,
         )
 
         capture_event(
@@ -670,7 +710,10 @@ async def create_workflow_from_template(
     except HTTPException:
         raise
     except RequestError as e:
-        logger.error(f"MPS API connection error: {e}")
+        logger.error(
+            f"[create/template] MPS/LLM connection error: call_type={request.call_type} "
+            f"use_case={request.use_case!r} language={request.language}: {e}"
+        )
         raise HTTPException(
             status_code=503,
             detail=(
@@ -681,13 +724,20 @@ async def create_workflow_from_template(
             ),
         )
     except HTTPStatusError as e:
-        logger.error(f"MPS API error: {e}")
+        logger.error(
+            f"[create/template] MPS/LLM HTTP error: call_type={request.call_type} "
+            f"use_case={request.use_case!r} language={request.language}: {e}"
+        )
         raise HTTPException(
             status_code=e.response.status_code if hasattr(e, "response") else 500,
             detail=str(e),
         )
     except Exception as e:
-        logger.error(f"Unexpected error creating workflow from template: {e}")
+        logger.error(
+            f"[create/template] Unexpected error: call_type={request.call_type} "
+            f"use_case={request.use_case!r} language={request.language}: {e}",
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=500,
             detail=f"An unexpected error occurred: {str(e)}",
