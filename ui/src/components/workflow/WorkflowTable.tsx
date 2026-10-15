@@ -8,6 +8,7 @@ import {
     Inbox,
     Pencil,
     RotateCcw,
+    Trash2,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -15,6 +16,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import {
+    deleteWorkflowApiV1WorkflowWorkflowIdDelete,
     moveWorkflowToFolderApiV1WorkflowWorkflowIdFolderPut,
     updateWorkflowStatusApiV1WorkflowWorkflowIdStatusPut,
 } from '@/client/sdk.gen';
@@ -37,6 +39,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useOrganizationTimezone } from '@/hooks/useOrganizationTimezone';
 import { formatDate } from '@/lib/dateTime';
 
@@ -73,6 +85,8 @@ export function WorkflowTable({
     const [isPending, startTransition] = useTransition();
     const [loadingWorkflowId, setLoadingWorkflowId] = useState<number | null>(null);
     const [movingWorkflowId, setMovingWorkflowId] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
     const handleEdit = (id: number) => {
         router.push(`/workflow/${id}`);
@@ -133,7 +147,30 @@ export function WorkflowTable({
         }
     };
 
+    const handleDelete = async (id: number) => {
+        setIsDeleting(true);
+        try {
+            const response = await deleteWorkflowApiV1WorkflowWorkflowIdDelete({
+                path: { workflow_id: id },
+            });
+            if (response.error) {
+                throw new Error(t('failedToDeleteWorkflow'));
+            }
+            toast.success(t('workflowDeleted'));
+            setConfirmDeleteId(null);
+            startTransition(() => {
+                router.refresh();
+            });
+        } catch (error) {
+            console.error('Error deleting workflow:', error);
+            toast.error(t('failedToDeleteWorkflow'));
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
+        <>
         <Card className="overflow-hidden">
             <CardContent className="p-0">
                 <Table>
@@ -265,6 +302,16 @@ export function WorkflowTable({
                                                 </>
                                             )}
                                         </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setConfirmDeleteId(workflow.id)}
+                                            disabled={isPending || isDeleting}
+                                            className="flex items-center gap-2 text-destructive hover:text-destructive"
+                                        >
+                                            <Trash2 size={16} />
+                                            {t('delete')}
+                                        </Button>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -273,5 +320,29 @@ export function WorkflowTable({
                 </Table>
             </CardContent>
         </Card>
+
+        <AlertDialog open={confirmDeleteId !== null} onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t('deleteWorkflowConfirm')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {t('deleteWorkflowDescription')}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={(e) => {
+                            e.preventDefault();
+                            if (confirmDeleteId !== null) handleDelete(confirmDeleteId);
+                        }}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                        {isDeleting ? t('deleting') : t('delete')}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

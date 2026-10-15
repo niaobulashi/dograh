@@ -2146,6 +2146,13 @@ export const createFolderApiV1FolderPost = <ThrowOnError extends boolean = false
 export const deleteFolderApiV1FolderFolderIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteFolderApiV1FolderFolderIdDeleteData, ThrowOnError>): RequestResult<DeleteFolderApiV1FolderFolderIdDeleteResponses, DeleteFolderApiV1FolderFolderIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteFolderApiV1FolderFolderIdDeleteResponses, DeleteFolderApiV1FolderFolderIdDeleteErrors, ThrowOnError>({ url: '/api/v1/folder/{folder_id}', ...options });
 
 /**
+ * Delete Workflow
+ *
+ * Delete a workflow and all of its versions, runs, and bound campaigns.
+ */
+export const deleteWorkflowApiV1WorkflowWorkflowIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteWorkflowApiV1WorkflowWorkflowIdDeleteData, ThrowOnError>): RequestResult<DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponses, DeleteWorkflowApiV1WorkflowWorkflowIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponses, DeleteWorkflowApiV1WorkflowWorkflowIdDeleteErrors, ThrowOnError>({ url: '/api/v1/workflow/{workflow_id}', ...options });
+
+/**
  * Rename Folder
  *
  * Rename a folder owned by the authenticated user's organization.

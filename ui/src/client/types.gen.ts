@@ -15499,6 +15499,54 @@ export type DeleteFolderApiV1FolderFolderIdDeleteResponses = {
 
 export type DeleteFolderApiV1FolderFolderIdDeleteResponse = DeleteFolderApiV1FolderFolderIdDeleteResponses[keyof DeleteFolderApiV1FolderFolderIdDeleteResponses];
 
+export type DeleteWorkflowApiV1WorkflowWorkflowIdDeleteData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path: {
+        /**
+         * Workflow Id
+         */
+        workflow_id: number;
+    };
+    query?: never;
+    url: '/api/v1/workflow/{workflow_id}';
+};
+
+export type DeleteWorkflowApiV1WorkflowWorkflowIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteWorkflowApiV1WorkflowWorkflowIdDeleteError = DeleteWorkflowApiV1WorkflowWorkflowIdDeleteErrors[keyof DeleteWorkflowApiV1WorkflowWorkflowIdDeleteErrors];
+
+export type DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponses = {
+    /**
+     * Response Delete Workflow Api V1 Workflow  Workflow Id  Delete
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: boolean;
+    };
+};
+
+export type DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponse = DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponses[keyof DeleteWorkflowApiV1WorkflowWorkflowIdDeleteResponses];
+
 export type RenameFolderApiV1FolderFolderIdPutData = {
     body: UpdateFolderRequest;
     headers?: {
