@@ -344,5 +344,6 @@ export function WorkflowTable({
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+        </>
     );
 }
