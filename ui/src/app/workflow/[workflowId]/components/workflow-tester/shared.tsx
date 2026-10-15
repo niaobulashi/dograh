@@ -1,9 +1,8 @@
 "use client";
 
 import { AlertCircle, MessageSquareText } from "lucide-react";
-import type { ReactNode } from "react";
-
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

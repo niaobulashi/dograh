@@ -1,5 +1,5 @@
-import { useTranslations } from "next-intl";
 import { Loader2, Mic, Pause, Play, Square, Trash2Icon, Upload, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 

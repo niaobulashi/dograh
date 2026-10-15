@@ -2,7 +2,6 @@
 
 import { Copy, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { translateSchemaText } from "@/i18n/schemaText";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +15,7 @@ import type {
   TelephonyConfigurationDetail,
   TelephonyProviderMetadata,
 } from "@/client/types.gen";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 type TelephonyConfigPayload = TelephonyConfigurationCreateRequest["config"];
 import { Button } from "@/components/ui/button";

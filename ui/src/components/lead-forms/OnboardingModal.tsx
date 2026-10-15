@@ -150,7 +150,6 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   };
 
   const handleSubmit = () => {
-    const t = useTranslations("Campaigns");
     if (!baseValid) {
       toast.error(
         isOtherProvider && !migratingOtherProvider.trim()

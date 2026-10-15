@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,6 @@ export function DispositionMappingDialog({
 
             <div className="max-h-[50vh] space-y-2 overflow-y-auto px-1 pb-1">
               {rows.map((row, index) => {
-    const t = useTranslations("Shared");
                 const changed =
                   row.target.trim() !== "" &&
                   row.target.trim() !== row.source.trim();

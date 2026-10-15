@@ -2,7 +2,6 @@
 
 import { ExternalLink, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { translateSchemaText } from "@/i18n/schemaText";
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VoiceSelector } from "@/components/VoiceSelector";
 import { VoiceSelectorModal } from "@/components/VoiceSelectorModal";
 import { LANGUAGE_DISPLAY_NAMES } from "@/constants/languages";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 import { fieldForModel, isFieldVisible, resolveFieldSchema, schemaDefaults } from "./configuration";
 import { ConfigurationSelect } from "./ConfigurationSelect";

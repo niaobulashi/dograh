@@ -82,7 +82,6 @@ export function HireExpertModal({ open, onOpenChange, source, onOpenEnterprise }
 
   // Validate, then pop the anti-spam check on top of the modal.
   const handleSubmit = () => {
-    const t = useTranslations("Campaigns");
     if (!baseValid) {
       toast.error(t("pleaseFillInAllRequiredFields"));
       return;

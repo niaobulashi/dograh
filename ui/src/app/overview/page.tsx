@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { GitHubStarBadge } from '@/components/layout/GitHubStarBadge';
 import { PageLayout } from '@/components/layout/PageLayout';

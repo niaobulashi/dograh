@@ -7,8 +7,8 @@ import {
     ReactFlowInstance,
 } from "@xyflow/react";
 import { EdgeChange, NodeChange } from "@xyflow/system";
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";

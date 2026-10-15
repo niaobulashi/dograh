@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   isLocale,
+  type Locale,
   LOCALE_COOKIE,
   localeLabels,
   locales,
-  type Locale,
 } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 

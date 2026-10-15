@@ -1,12 +1,12 @@
 import * as LucideIcons from 'lucide-react';
 import { Circle, ExternalLink, type LucideIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { translateSchemaText } from '@/i18n/schemaText';
 import { useEffect, useMemo } from 'react';
 
 import type { NodeSpec } from '@/client/types.gen';
 import { useNodeSpecs } from '@/components/flow/renderer';
 import { Button } from '@/components/ui/button';
+import { translateSchemaText } from '@/i18n/schemaText';
 
 import { FlowNode, NodeType } from './types';
 

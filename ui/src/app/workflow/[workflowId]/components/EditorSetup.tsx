@@ -1,8 +1,8 @@
 "use client";
 
 import { Braces, Brain, Settings, Workflow } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 
 import type { FlowNode } from "@/components/flow/types";

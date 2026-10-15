@@ -1,5 +1,5 @@
-import { useTranslations } from "next-intl";
 import { AlertCircle, CreditCard, ExternalLink, Key } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

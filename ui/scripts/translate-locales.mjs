@@ -23,8 +23,8 @@
  *   aliyun  : ALIYUN_ACCESS_KEY_ID + ALIYUN_ACCESS_KEY_SECRET  (需 npm i -D @alicloud/pop-core)
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { existsSync,readFileSync, writeFileSync } from "node:fs";
+import { dirname,resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
