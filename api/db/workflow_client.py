@@ -2,13 +2,14 @@ from datetime import UTC, datetime
 from typing import Optional
 
 from loguru import logger
-from sqlalchemy import func, update
+from sqlalchemy import delete, func, update
 from sqlalchemy.future import select
 from sqlalchemy.orm import load_only, selectinload
 
 from api.db.base_client import BaseDBClient
 from api.db.model_connection_client import ModelCatalogNotFound, ModelConnectionClient
 from api.db.models import (
+    CampaignModel,
     NamedModelConfigurationModel,
     ProviderConnectionModel,
     WorkflowDefinitionModel,
@@ -168,8 +169,52 @@ class WorkflowClient(BaseDBClient):
             except Exception as e:
                 await session.rollback()
                 raise e
-            await session.refresh(new_workflow)
+                await session.refresh(new_workflow)
         return new_workflow
+
+    async def delete_workflow(self, workflow_id: int, organization_id: int) -> bool:
+        """Hard-delete a workflow and everything bound to it.
+
+        Child tables without a DB-level cascade from ``workflows`` are removed
+        explicitly (definitions, runs, campaigns). Triggers and embed tokens
+        cascade via ``ondelete=CASCADE`` at the DB level. Campaigns bind to
+        exactly one workflow (NOT NULL FK) so they are removed with it; their
+        queued runs cascade at the DB level.
+        """
+        async with self.async_session() as session:
+            existing = await session.scalar(
+                select(WorkflowModel.id).where(
+                    WorkflowModel.id == workflow_id,
+                    WorkflowModel.organization_id == organization_id,
+                )
+            )
+            if existing is None:
+                return False
+
+            # Drop the self-referential pointer so the definition rows can go.
+            await session.execute(
+                update(WorkflowModel)
+                .where(WorkflowModel.id == workflow_id)
+                .values(released_definition_id=None)
+            )
+            await session.execute(
+                delete(WorkflowDefinitionModel).where(
+                    WorkflowDefinitionModel.workflow_id == workflow_id
+                )
+            )
+            await session.execute(
+                delete(WorkflowRunModel).where(
+                    WorkflowRunModel.workflow_id == workflow_id
+                )
+            )
+            await session.execute(
+                delete(CampaignModel).where(CampaignModel.workflow_id == workflow_id)
+            )
+            await session.execute(
+                delete(WorkflowModel).where(WorkflowModel.id == workflow_id)
+            )
+            await session.commit()
+        return True
 
     # ------------------------------------------------------------------
     # Versioning methods
