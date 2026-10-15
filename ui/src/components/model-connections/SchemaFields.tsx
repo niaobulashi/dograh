@@ -2,6 +2,7 @@
 
 import { ExternalLink, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 import { useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,7 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
             const editing = !configured || replacing.includes(name);
             const removing = configured && values[name] === null;
             const suggestions = field.model_options?.[String(resolvedValues.model || "")];
-            const label = field.title || name.replaceAll("_", " ");
+            const label = translateSchemaText(field.title) || name.replaceAll("_", " ");
             const fullWidth = field.multiline || field.type === "array" || field.anyOf?.some(option => option.type === "array") || (role === "tts" && name === "voice");
             // Remount a dependent input when what it depends on changes, so local
             // control state such as manual entry does not outlive the old choice.
@@ -187,7 +188,7 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
                     setReplacing(previous => previous.filter(field => field !== name));
                     onChange(name, undefined);
                 }}>{t("keepExistingCredential")}</button>}
-                {(field.description || field.docs_url) && <p className="text-xs text-muted-foreground">{field.description}{" "}
+                {(field.description || field.docs_url) && <p className="text-xs text-muted-foreground">{translateSchemaText(field.description)}{" "}
                     {field.docs_url && <a href={field.docs_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
                         {field.docs_label || t("learnMore")}<ExternalLink className="h-3 w-3" />
                     </a>}
