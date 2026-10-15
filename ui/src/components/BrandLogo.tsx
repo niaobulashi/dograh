@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 // Reusable Dograh wordmark. Theme-aware by default: the dark logo shows on light

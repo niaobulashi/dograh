@@ -1,8 +1,8 @@
 "use client";
 
 import { ExternalLink, FileText } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import type { DocumentResponseSchema } from "@/client/types.gen";

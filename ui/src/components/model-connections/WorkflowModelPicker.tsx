@@ -1,8 +1,8 @@
 "use client";
 
 import { ExternalLink, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

@@ -1,6 +1,5 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { translateSchemaText } from "@/i18n/schemaText";
 
 import type {
     DocumentResponseSchema,
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 import { evaluateDisplayOptions } from "./displayOptions";
 import {

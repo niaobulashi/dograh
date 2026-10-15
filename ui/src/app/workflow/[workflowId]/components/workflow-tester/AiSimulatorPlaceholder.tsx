@@ -1,9 +1,8 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
-
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

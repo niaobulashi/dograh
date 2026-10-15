@@ -1,10 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import 'react-international-phone/style.css';
 
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { PhoneInput } from 'react-international-phone';
 
@@ -258,7 +258,6 @@ export const PhoneCallDialog = ({
     };
 
     const savePhoneNumberPreference = async () => {
-        const t = useTranslations("Workflow");
         const result =
             await savePreferencesApiV1OrganizationsPreferencesPut({
                 body: {
@@ -360,7 +359,6 @@ export const PhoneCallDialog = ({
     // option names a provider — both are derived from the registry, because
     // Cloudonix won't stay the only SIP connector.
     const renderConnectPhoneService = () => {
-    const t = useTranslations("Workflow");
         // A SIP connection the org already has (every hosted signup is
         // provisioned one) is worth deep-linking to; otherwise they add one.
         const sipConfig = telephonyConfigs.find(

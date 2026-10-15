@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 declare global {

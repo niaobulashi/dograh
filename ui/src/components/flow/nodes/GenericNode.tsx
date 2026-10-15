@@ -1,9 +1,8 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import * as LucideIcons from "lucide-react";
 import { Check, Circle, Copy, Edit, type LucideIcon, Trash2Icon } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { translateSchemaText } from "@/i18n/schemaText";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useAppConfig } from "@/context/AppConfigContext";
+import { translateSchemaText } from "@/i18n/schemaText";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 import { createUuid } from "@/lib/uuid";

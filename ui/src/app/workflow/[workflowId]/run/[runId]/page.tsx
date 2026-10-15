@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from "next-intl";
 import {
     Bot,
     Check,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from "next-intl";
 import posthog from 'posthog-js';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';

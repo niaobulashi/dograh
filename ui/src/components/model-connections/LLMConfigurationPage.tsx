@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { PageShell } from "@/components/layout/PageShell";

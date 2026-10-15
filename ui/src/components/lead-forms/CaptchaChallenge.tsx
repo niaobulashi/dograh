@@ -1,12 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 // Anti-spam quick-check shown as a popup ON TOP of a lead form (via the
 // LeadModalShell `overlay` slot) so it can't be scrolled past or missed.
 // Generates a fresh sum each time it mounts; calls onVerified once the correct
 // answer is confirmed, onCancel to dismiss back to the form.
-
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -38,7 +37,6 @@ export function CaptchaChallenge({
   }, []);
 
   const confirm = () => {
-    const t = useTranslations("LeadForms");
     if (answer.trim() !== "" && parseInt(answer, 10) === a + b) {
       onVerified();
     } else {

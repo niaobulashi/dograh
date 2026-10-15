@@ -2,7 +2,6 @@
 
 import { AlertTriangle, Check, Circle, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { translateSchemaText } from "@/i18n/schemaText";
 
 import type {
   ProviderSetupChecklist,
@@ -15,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 interface SetupChecklistCardProps {
   checklist: ProviderSetupChecklist;
