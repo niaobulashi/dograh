@@ -2,6 +2,7 @@
 
 import { Copy, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -339,7 +340,7 @@ export function ConfigFormDialog({
                     </div>
                   )}
                   <Label htmlFor={`cfg-field-${field.name}`}>
-                    {field.label}
+                    {translateSchemaText(field.label)}
                     {!field.required && field.type !== "readonly" && (
                       <span className="ml-1 text-xs text-muted-foreground">
                         {t("optionalParen")}
@@ -353,7 +354,7 @@ export function ConfigFormDialog({
                     isEdit={isEdit}
                   />
                   {field.description && (
-                    <p className="text-xs text-muted-foreground">{field.description}</p>
+                    <p className="text-xs text-muted-foreground">{translateSchemaText(field.description)}</p>
                   )}
                 </div>
               ))}

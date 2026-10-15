@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Check, Circle, ExternalLink } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 import type {
   ProviderSetupChecklist,
@@ -100,10 +101,10 @@ export function SetupChecklistCard({
                       step.complete ? "text-muted-foreground" : ""
                     }`}
                   >
-                    {step.title}
+                    {translateSchemaText(step.title)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {step.description}
+                    {translateSchemaText(step.description)}
                   </p>
                 </div>
               </li>

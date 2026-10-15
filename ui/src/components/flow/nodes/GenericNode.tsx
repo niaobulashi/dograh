@@ -2,6 +2,7 @@ import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import * as LucideIcons from "lucide-react";
 import { Check, Circle, Copy, Edit, type LucideIcon, Trash2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 import Link from "next/link";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -175,7 +176,7 @@ function getBadgeForSpec(
         case "qa":
             return { label: t("qaAnalysisBadge"), className: "bg-teal-500 text-white" };
         case "integration":
-            return { label: spec.display_name, className: "bg-cyan-600 text-white" };
+            return { label: translateSchemaText(spec.display_name), className: "bg-cyan-600 text-white" };
     }
 }
 
@@ -630,7 +631,7 @@ export const GenericNode = memo(({ data, selected, id, type }: GenericNodeProps)
 
     // Edit dialog title: "Edit {display_name}". Webhook keeps the original
     // "Edit Webhook" wording — display_name is "Webhook" so it works out.
-    const dialogTitle = spec ? t("editNamed", { name: spec.display_name }) : t("editNode");
+    const dialogTitle = spec ? t("editNamed", { name: translateSchemaText(spec.display_name) }) : t("editNode");
     const fallbackTitle = spec?.display_name ?? t("nodeBadge");
 
     return (

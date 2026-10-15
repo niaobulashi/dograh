@@ -1,6 +1,7 @@
 import * as LucideIcons from 'lucide-react';
 import { Circle, ExternalLink, type LucideIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { translateSchemaText } from '@/i18n/schemaText';
 import { useEffect, useMemo } from 'react';
 
 import type { NodeSpec } from '@/client/types.gen';
@@ -71,7 +72,7 @@ function NodeSection({
                             disabled={disabled}
                             title={
                                 disabled
-                                    ? t("nodeLimitReachedForWorkflow", { name: spec.display_name })
+                                    ? t("nodeLimitReachedForWorkflow", { name: translateSchemaText(spec.display_name) })
                                     : undefined
                             }
                         >
@@ -80,12 +81,12 @@ function NodeSection({
                                     <Icon className="h-5 w-5" />
                                 </div>
                                 <div className="flex flex-col items-start text-left min-w-0">
-                                    <span className="font-medium text-sm">
-                                        {spec.display_name}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground whitespace-normal">
-                                        {spec.description}
-                                    </span>
+                                        <span className="font-medium text-sm">
+                                            {translateSchemaText(spec.display_name)}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground whitespace-normal">
+                                            {translateSchemaText(spec.description)}
+                                        </span>
                                 </div>
                             </div>
                         </Button>

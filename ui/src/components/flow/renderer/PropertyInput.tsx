@@ -1,5 +1,6 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 
 import type {
     DocumentResponseSchema,
@@ -136,11 +137,11 @@ function StackedLabel({ spec }: { spec: PropertySpec }) {
     return (
         <>
             <Label>
-                {spec.display_name}
+                {translateSchemaText(spec.display_name)}
                 {spec.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             {spec.description && (
-                <Label className="text-xs text-muted-foreground">{spec.description}</Label>
+                <Label className="text-xs text-muted-foreground">{translateSchemaText(spec.description)}</Label>
             )}
         </>
     );
@@ -214,10 +215,10 @@ function BooleanWidget({ spec, value, onChange }: WidgetProps) {
     return (
         <div className="flex items-center space-x-2">
             <Switch id={`prop-${spec.name}`} checked={v} onCheckedChange={onChange} />
-            <Label htmlFor={`prop-${spec.name}`}>{spec.display_name}</Label>
+            <Label htmlFor={`prop-${spec.name}`}>{translateSchemaText(spec.display_name)}</Label>
             {spec.description && (
                 <Label className="text-xs text-muted-foreground ml-2">
-                    {spec.description}
+                    {translateSchemaText(spec.description)}
                 </Label>
             )}
         </div>
@@ -436,8 +437,8 @@ function ToolRefsWidget({
             value={(value as string[] | undefined) ?? []}
             onChange={onChange}
             tools={tools}
-            label={spec.display_name}
-            description={spec.description}
+            label={translateSchemaText(spec.display_name)}
+            description={translateSchemaText(spec.description)}
             mcpToolFilters={mcpToolFilters}
             onMcpToolFiltersChange={onMcpToolFiltersChange}
         />
@@ -455,8 +456,8 @@ function DocumentRefsWidget({
             value={(value as string[] | undefined) ?? []}
             onChange={onChange}
             documents={documents}
-            label={spec.display_name}
-            description={spec.description}
+            label={translateSchemaText(spec.display_name)}
+            description={translateSchemaText(spec.description)}
         />
     );
 }

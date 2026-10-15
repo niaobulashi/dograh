@@ -2,6 +2,7 @@
 
 import { ExternalLink, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { translateSchemaText } from "@/i18n/schemaText";
 import { useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -150,7 +151,7 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
             const editing = !configured || replacing.includes(name);
             const removing = configured && values[name] === null;
             const suggestions = field.model_options?.[String(resolvedValues.model || "")];
-            const label = field.title || name.replaceAll("_", " ");
+            const label = translateSchemaText(field.title) || name.replaceAll("_", " ");
             const fullWidth = field.multiline || field.type === "array" || field.anyOf?.some(option => option.type === "array") || (role === "tts" && name === "voice");
             return <div key={name} className={`space-y-1.5 ${fullWidth ? "sm:col-span-2" : ""}`}>
                 <div className="flex min-h-6 items-center justify-between gap-2">
@@ -171,7 +172,7 @@ export function SchemaFields({ schema, values, onChange, secret = false, configu
                     setReplacing(previous => previous.filter(field => field !== name));
                     onChange(name, undefined);
                 }}>{t("keepExistingCredential")}</button>}
-                {(field.description || field.docs_url) && <p className="text-xs text-muted-foreground">{field.description}{" "}
+                {(field.description || field.docs_url) && <p className="text-xs text-muted-foreground">{translateSchemaText(field.description)}{" "}
                     {field.docs_url && <a href={field.docs_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 underline">
                         {field.docs_label || t("learnMore")}<ExternalLink className="h-3 w-3" />
                     </a>}
