@@ -165,7 +165,7 @@ function StringWidget({ spec, value, onChange }: WidgetProps) {
                 <Textarea
                     value={v}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder={spec.placeholder ?? undefined}
+                    placeholder={translateSchemaText(spec.placeholder) || undefined}
                     className="min-h-[80px] max-h-[200px] resize-none"
                     style={{ overflowY: "auto" }}
                 />
@@ -173,7 +173,7 @@ function StringWidget({ spec, value, onChange }: WidgetProps) {
                 <Input
                     value={v}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder={spec.placeholder ?? undefined}
+                    placeholder={translateSchemaText(spec.placeholder) || undefined}
                 />
             )}
         </div>
@@ -203,7 +203,7 @@ function NumberWidget({ spec, value, onChange }: WidgetProps) {
                     const next = e.target.value;
                     onChange(next === "" ? undefined : parseFloat(next));
                 }}
-                placeholder={spec.placeholder ?? undefined}
+                placeholder={translateSchemaText(spec.placeholder) || undefined}
                 className={isCompact ? "w-full" : "w-32"}
             />
         </div>
@@ -240,7 +240,7 @@ function OptionsWidget({ spec, value, onChange }: WidgetProps) {
             >
                 {spec.options?.map((o) => (
                     <option key={String(o.value)} value={String(o.value)}>
-                        {o.label}
+                        {translateSchemaText(o.label)}
                     </option>
                 ))}
             </select>
@@ -272,7 +272,7 @@ function MultiOptionsWidget({ spec, value, onChange }: WidgetProps) {
                                     );
                                 }}
                             />
-                            {o.label}
+                            {translateSchemaText(o.label)}
                         </label>
                     );
                 })}
@@ -393,7 +393,7 @@ function UrlWidget({ spec, value, onChange }: WidgetProps) {
             <UrlInput
                 value={(value as string | undefined) ?? ""}
                 onChange={onChange}
-                placeholder={spec.placeholder ?? undefined}
+                placeholder={translateSchemaText(spec.placeholder) || undefined}
                 showValidation
             />
         </div>
@@ -412,7 +412,7 @@ function MentionWidget({
             <MentionTextarea
                 value={(value as string | undefined) ?? ""}
                 onChange={onChange}
-                placeholder={spec.placeholder ?? undefined}
+                placeholder={translateSchemaText(spec.placeholder) || undefined}
                 className="min-h-[100px] max-h-[300px] resize-none overflow-y-auto"
                 recordings={recordings}
             />
