@@ -75,10 +75,12 @@ git add ui/messages/ && git commit -m "i18n: 同步新增中文条目到 en"
 | 引擎 | 环境变量 | 示例 |
 |---|---|---|
 | `openai`（默认） | `OPENAI_API_KEY`（可选 `OPENAI_BASE_URL` / `OPENAI_MODEL`） | `OPENAI_API_KEY=sk-xxx npm run trans-from-zh -- ja` |
+| `deepseek` | `OPENAI_API_KEY`（DeepSeek 官方，默认 base `https://api.deepseek.com/v1`，模型 `deepseek-chat`；可用 `OPENAI_MODEL=deepseek-reasoner` 切换） | `TRANSLATE_ENGINE=deepseek OPENAI_API_KEY=sk-xxx npm run trans-from-zh` |
 | `deepl` | `DEEPL_API_KEY`（`xxx:fx` 走免费端点） | `TRANSLATE_ENGINE=deepl DEEPL_API_KEY=xxx npm run trans-from-zh -- en` |
 | `aliyun` | `ALIYUN_ACCESS_KEY_ID` + `ALIYUN_ACCESS_KEY_SECRET`（需 `npm i -D @alicloud/pop-core`） | `TRANSLATE_ENGINE=aliyun ALIYUN_ACCESS_KEY_ID=... ALIYUN_ACCESS_KEY_SECRET=... npm run trans-from-zh -- ja` |
 
 > 脚本特性：**只翻译缺失 key、保留人工译本、ICU 占位符 `{count}` 保护、plural/select 语法自动跳过并标记人工**（避免机翻毁掉 ICU 语法）。
+> **批量调用**：默认每批 40 条合成一次 LLM 请求（`TRANSLATE_BATCH_SIZE` 可调），2562 条约 65 次请求而非 2562 次。DeepSeek/OpenAI 一次多文本请求，DeepL 原生批量数组，阿里云退化为逐条并发。
 > 若目标文件里 key 已存在（即使是空串），脚本会判定「已存在」而跳过——确认是真缺失再跑。
 
 ---

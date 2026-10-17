@@ -11,6 +11,8 @@
  *   - ICU 占位符保护：{count} / {name} 不会被送进翻译，译完原样回填
  *   - plural / select 语法自动跳过并标记人工（机器翻译会毁掉 ICU 语法）
  *   - 引擎凭据走 env，不硬编码
+ *   - 批量调用：每批 N 条合成一次 LLM 请求（默认 40，TRANSLATE_BATCH_SIZE 可调），
+ *     大幅减少请求数（2562 条 ≈ 65 次请求，而非 2562 次）
  *
  * 用法：
  *   node scripts/translate-locales.mjs                   # 不指定 → 翻译 config.ts 注册的所有语种（除 zh-CN）
@@ -19,13 +21,16 @@
  *   TARGET_LOCALES=ja,ko node scripts/translate-locales.mjs
  *
  * 引擎（TRANSLATE_ENGINE，默认 openai）：
- *   openai  : OPENAI_API_KEY (+ OPENAI_BASE_URL, OPENAI_MODEL) 任意 OpenAI 兼容端点 (Qwen/DeepSeek/...)
- *   deepl   : DEEPL_API_KEY
- *   aliyun  : ALIYUN_ACCESS_KEY_ID + ALIYUN_ACCESS_KEY_SECRET  (需 npm i -D @alicloud/pop-core)
+ *   openai  : OPENAI_API_KEY (+ OPENAI_BASE_URL, OPENAI_MODEL) 任意 OpenAI 兼容端点
+ *   deepseek: OPENAI_API_KEY（DeepSeek 官方，默认 base https://api.deepseek.com/v1，模型 deepseek-chat）
+ *   deepl   : DEEPL_API_KEY（原生支持批量数组）
+ *   aliyun  : ALIYUN_ACCESS_KEY_ID + ALIYUN_ACCESS_KEY_SECRET（需 npm i -D @alicloud/pop-core）
+ *
+ * 调优：TRANSLATE_BATCH_SIZE（默认 40，单次请求携带的文案条数）
  */
 
-import { existsSync,readFileSync, writeFileSync } from "node:fs";
-import { dirname,resolve } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -46,6 +51,8 @@ function readConfigLocales() {
     return [];
   }
 }
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- 参数解析 ----------
 const args = process.argv.slice(2);
@@ -68,9 +75,10 @@ if (!locales.length) {
   process.exit(1);
 }
 
-console.log(`目标语种: ${locales.join(", ")}（源: ${SRC_LOCALE}）`);
-
 const ENGINE = process.env.TRANSLATE_ENGINE || "openai";
+const BATCH_SIZE = Math.max(1, parseInt(process.env.TRANSLATE_BATCH_SIZE || "40", 10));
+
+console.log(`目标语种: ${locales.join(", ")}（源: ${SRC_LOCALE}）引擎: ${ENGINE} 批大小: ${BATCH_SIZE}`);
 
 // ---------- ICU 占位符保护 ----------
 const ICU_PLACEHOLDER = /\{([^{}]*\{[^}]*\}[^{}]*|[^{}]+)\}/g; // 匹配 {count} 或 {count, plural, other {...}}
@@ -94,14 +102,20 @@ function restoreICU(translated, tokens) {
   return out;
 }
 
-// ---------- 翻译引擎 ----------
+// ---------- 批量翻译引擎 ----------
+// 所有引擎统一返回 (texts: string[], to: string) => Promise<string[]>
+// 调用方保证 texts 与返回数组一一对应、长度一致。
 async function makeEngine() {
-  if (ENGINE === "openai") {
+  if (ENGINE === "openai" || ENGINE === "deepseek") {
     const key = process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("OPENAI_API_KEY 未设置");
-    const base = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
-    const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
-    return async (zh, to) => {
+    if (!key) throw new Error("OPENAI_API_KEY 未设置（DeepSeek 复用同一变量）");
+    const base =
+      ENGINE === "deepseek"
+        ? process.env.OPENAI_BASE_URL || "https://api.deepseek.com/v1"
+        : process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    const model =
+      process.env.OPENAI_MODEL || (ENGINE === "deepseek" ? "deepseek-chat" : "gpt-4o-mini");
+    return async (texts, to) => {
       const res = await fetch(`${base}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
@@ -112,32 +126,36 @@ async function makeEngine() {
             {
               role: "system",
               content:
-                "You are a localization engine. Translate the user text to the target language. " +
+                "You are a localization engine. You will receive a JSON object {\"texts\": [...]} " +
+                "containing multiple source strings (Chinese). Translate ALL of them to the target " +
+                "language. Return a JSON object {\"translations\": [\"t0\", \"t1\", ...]} where " +
+                "translations[i] is the translation of texts[i], in the same order. " +
                 "Keep any __PHn__ tokens EXACTLY as-is (do not translate or rename them). " +
-                "Output only the translated text, no quotes, no explanations.",
+                "Output ONLY the JSON object, no markdown fences, no explanations.",
             },
-            { role: "user", content: `[to=${to}] ${zh}` },
+            { role: "user", content: `[to=${to}]\n${JSON.stringify({ texts })}` },
           ],
         }),
       });
-      if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+      if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
       const j = await res.json();
-      return j.choices[0].message.content.trim().replace(/^["']|["']$/g, "");
+      return parseBatchArray(j.choices?.[0]?.message?.content ?? "", texts.length);
     };
   }
   if (ENGINE === "deepl") {
     const key = process.env.DEEPL_API_KEY;
     if (!key) throw new Error("DEEPL_API_KEY 未设置");
-    const url = key.endsWith(":fx") ? "https://api-free.deepl.com/v2/translate" : "https://api.deepl.com/v2/translate";
-    return async (zh, to) => {
+    const url =
+      key.endsWith(":fx") ? "https://api-free.deepl.com/v2/translate" : "https://api.deepl.com/v2/translate";
+    return async (texts, to) => {
       const res = await fetch(url, {
         method: "POST",
         headers: { Authorization: `DeepL-Auth-Key ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ text: [zh], target_lang: to.toUpperCase() }),
+        body: JSON.stringify({ text: texts, target_lang: to.toUpperCase() }),
       });
       if (!res.ok) throw new Error(`DeepL ${res.status}: ${await res.text()}`);
       const j = await res.json();
-      return j.translations[0].text;
+      return j.translations.map((t) => t.text);
     };
   }
   if (ENGINE === "aliyun") {
@@ -151,17 +169,44 @@ async function makeEngine() {
       endpoint: "https://mt.cn-hangzhou.aliyuncs.com",
       apiVersion: "2018-10-12",
     });
-    // 阿里云语种码：zh -> zh / 目标用标准码
-    return async (zh, to) => {
+    const one = async (text, to) => {
       const r = await client.request(
         "TranslateGeneral",
-        { FormatType: "text", SourceLanguage: "zh", TargetLanguage: to, SourceText: zh, Scene: "general" },
+        { FormatType: "text", SourceLanguage: "zh", TargetLanguage: to, SourceText: text, Scene: "general" },
         { method: "POST" }
       );
       return r.Data.Translated;
     };
+    // 阿里云 TranslateGeneral 单次仅接受单条文本，这里并行逐条调用。
+    return async (texts, to) => Promise.all(texts.map((t) => one(t, to)));
   }
-  throw new Error(`未知引擎: ${ENGINE}（支持 openai / deepl / aliyun）`);
+  throw new Error(`未知引擎: ${ENGINE}（支持 openai / deepseek / deepl / aliyun）`);
+}
+
+// 从 LLM 返回文本中稳健解析出 string[]（期望 {"translations":[...]} 或裸数组）。
+function parseBatchArray(content, n) {
+  let s = (content || "").trim();
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fence) s = fence[1].trim();
+  let arr;
+  try {
+    const parsed = JSON.parse(s);
+    arr = Array.isArray(parsed) ? parsed : parsed.translations;
+  } catch {
+    const m = s.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (m) {
+      try {
+        const parsed = JSON.parse(m[0]);
+        arr = Array.isArray(parsed) ? parsed : parsed.translations;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  if (!Array.isArray(arr)) throw new Error("无法解析批量翻译结果");
+  // 长度不符时尽力补齐/截断，避免整批失败
+  if (arr.length < n) arr = arr.concat(Array(n - arr.length).fill(""));
+  return arr.slice(0, n);
 }
 
 // ---------- 嵌套结构遍历 ----------
@@ -210,10 +255,11 @@ async function run() {
     let kept = 0;
     let skippedICU = 0;
     const manual = [];
+    const toTranslate = []; // { key, clean, tokens }
 
+    // 1) 遍历源，分类：保留 / ICU人工 / 待翻译
     for (const { key, value } of leaves) {
       if (typeof value !== "string") {
-        // 非字符串（如 number/boolean）直接沿用源（next-intl 极少见），保结构
         if (getPath(target, key) === undefined) setPath(target, key, value);
         continue;
       }
@@ -222,36 +268,51 @@ async function run() {
         kept++;
         continue; // 已存在 → 保留人工翻译
       }
-      // 缺失 → 是否需要人工
       if (ICU_SYNTAX.test(value)) {
         skippedICU++;
         manual.push(key.join("."));
-        // 不自动翻译，留空让人工填（避免破坏 ICU 语法）
         if (getPath(target, key) === undefined) setPath(target, key, value);
         continue;
       }
-      if (DRY_RUN) {
-        missing++;
-        console.log(`  [${locale}][缺失] ${key.join(".")}  =  ${value}`);
-        continue;
-      }
-      try {
-        const { clean, tokens } = protectICU(value);
-        const translated = await engine(clean, langCode(locale));
-        const restored = restoreICU(translated, tokens);
-        setPath(target, key, restored);
-        missing++;
-        console.log(`  [${locale}] ${key.join(".")}  ${value}  →  ${restored}`);
-      } catch (e) {
-        console.error(`  [${locale}][失败] ${key.join(".")}: ${e.message}`);
-      }
-      await new Promise((r) => setTimeout(r, 120)); // 限流
+      const { clean, tokens } = protectICU(value);
+      toTranslate.push({ key, clean, tokens });
     }
 
     if (DRY_RUN) {
+      for (const b of toTranslate) {
+        missing++;
+        console.log(`  [${locale}][缺失] ${b.key.join(".")}  =  ${b.clean}`);
+      }
       console.log(`→ ${locale}: 缺失 ${missing} / 已保留 ${kept} / ICU需人工 ${skippedICU}`);
       if (manual.length) console.log(`  ICU 需人工: ${manual.join(", ")}`);
       continue;
+    }
+
+    // 2) 批量翻译：每批 BATCH_SIZE 条合成一次请求
+    for (let i = 0; i < toTranslate.length; i += BATCH_SIZE) {
+      const batch = toTranslate.slice(i, i + BATCH_SIZE);
+      const texts = batch.map((b) => b.clean);
+      let translated;
+      try {
+        translated = await engine(texts, langCode(locale));
+      } catch (e) {
+        console.error(`  [${locale}][批次失败 ${i + 1}-${i + batch.length}] ${e.message}`);
+        await sleep(500);
+        continue;
+      }
+      if (!Array.isArray(translated) || translated.length !== batch.length) {
+        console.error(
+          `  [${locale}][批次长度不符 ${i + 1}] 期望 ${batch.length} 实得 ${translated?.length ?? 0}`
+        );
+        continue;
+      }
+      batch.forEach((b, idx) => {
+        const tr = translated[idx] ?? b.clean;
+        setPath(target, b.key, restoreICU(tr, b.tokens));
+        missing++;
+        console.log(`  [${locale}] ${b.key.join(".")}  ${b.clean}  →  ${tr}`);
+      });
+      await sleep(200); // 批次间限流
     }
 
     writeFileSync(targetPath, JSON.stringify(target, null, 2) + "\n", "utf8");
