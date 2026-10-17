@@ -1,0 +1,223 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "startCall",
+      "position": { "x": 175, "y": 60 },
+      "data": {
+        "prompt": "你是家电维修服务中心的语音小助手，语气亲切、耐心、专业。\n\n【本次通话目标】\n问清称呼 → 问清家电类型和故障 → 需要上门就收集手机号、地址、上门时间。\n\n【本节点任务】\n自我介绍一句，然后只问称呼。用户回答后用姓名称呼对方一次。\n\n【规则】\n- 每轮只说一到两句话，每轮只问一个问题。\n- 听不清或噪音时，礼貌请对方再说一遍，不要猜。\n- 不要报价、不要承诺到达时间。\n- 用户没说姓名就直接往下走，不要纠缠。",
+        "name": "开始通话",
+        "allow_interrupt": true,
+        "add_global_prompt": true,
+        "delayed_start": false,
+        "is_start": true
+      },
+      "measured": { "width": 400, "height": 200 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "2",
+      "type": "agentNode",
+      "position": { "x": 615, "y": 380 },
+      "data": {
+        "prompt": "【本节点任务】\n判断家电类型和故障现象，给出最常见原因，然后问是否需要预约上门。\n\n【流程】\n1. 还不知道家电类型：只问「是哪一类家电出了问题」。知道就跳过。\n2. 还不知道故障现象：只问「具体是什么情况」。知道就跳过。\n3. 用一到两句话说明最常见原因，可给一个自查建议。\n4. 问：「需要帮您预约师傅上门看一下吗？」\n\n【规则】\n- 每轮两到三句话，只问一个问题。\n- 常见原因只是参考，不要说「肯定是」这种结论式诊断。\n- 不报价、不承诺上门时间。\n- 本节点不索要手机号和地址，也不主动结束通话。\n\n【成功标准】\n- 用户明确表示需要上门维修 → 才调用 to_booking。\n- 用户明确表示不需要上门、自己处理 → 才调用 end_call_declined。\n- 用户还在描述问题、或你还没问过是否需要上门时，不要调用任何工具。",
+        "name": "故障判断与解答",
+        "allow_interrupt": true,
+        "extraction_enabled": false,
+        "extraction_prompt": "",
+        "extraction_variables": [],
+        "add_global_prompt": true
+      },
+      "measured": { "width": 400, "height": 240 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "3",
+      "type": "agentNode",
+      "position": { "x": 615, "y": 720 },
+      "data": {
+        "prompt": "【本节点任务】\n依次收集三项：手机号 → 详细地址 → 上门时间。一次只问一项。\n\n【流程】\n1. 问手机号：「方便留一个手机号吗？师傅上门前会先跟您联系。」用户说完复述：「我记一下，是 138xxxx，对吗？」确认后再往下。\n2. 问地址：「麻烦说一下详细地址，包括小区和门牌号。」复述确认。\n3. 问时间：「您哪天方便？上午还是下午？」用户说得含糊就追问到具体时段。复述确认。\n4. 三项都确认后，调用 go_to_confirm 做最终复述。\n\n【规则】\n- 一条回复里只能问一项，绝对不能把手机号、地址、时间一起问。\n- 用户答非所问或只答了一部分，就重复同一个问题，不要跳到下一项。\n- 手机号必须凑齐 11 位，缺位就请对方补一遍；听不清就请对方重复。\n- 地址要听到城市/区和门牌号，只说了小区就追问门牌。\n- 用户要改前面说过的信息，回到那一项重新确认。\n- 本节点不要自己结束通话。\n\n【成功标准】\n- 手机号、地址、上门时间三项都拿到并复述确认过 → 才调用 go_to_confirm。\n- 任一项缺失或被用户否认 → 不要调用 go_to_confirm，继续问。",
+        "name": "预约信息收集",
+        "allow_interrupt": true,
+        "extraction_enabled": true,
+        "extraction_prompt": "从对话中提取用户提供的手机号、上门地址、预约时间。只提取用户明确说出并确认过的值；用户否认或修改过的取最后一次确认的值；没提到的不要编造。",
+        "extraction_variables": [
+          {
+            "name": "mobile_number",
+            "type": "string",
+            "prompt": "用户本人的 11 位手机号，纯数字，不含中文和空格"
+          },
+          {
+            "name": "address",
+            "type": "string",
+            "prompt": "上门维修的详细地址，包含城市/区、小区、门牌号"
+          },
+          {
+            "name": "appointment_time",
+            "type": "string",
+            "prompt": "用户同意的上门时间，包含日期和时段（上午/下午/几点）"
+          }
+        ],
+        "add_global_prompt": true
+      },
+      "measured": { "width": 400, "height": 300 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "4",
+      "type": "agentNode",
+      "position": { "x": 615, "y": 1080 },
+      "data": {
+        "prompt": "【本节点任务】\n把已收集的三项信息一次复述清楚，请用户确认，然后结束。\n\n【流程】\n1. 逐项复述：手机号、详细地址、上门时间。\n2. 问：「以上信息对吗？」\n3. 用户确认 → 调用 close_success。\n4. 用户要改某一项 → 调用 back_to_booking 回去改。\n\n【规则】\n- 只复述，不新增信息，不重复追问已经确认过的内容。\n- 用户没有明确确认之前，不要结束通话。",
+        "name": "复述确认",
+        "allow_interrupt": true,
+        "extraction_enabled": false,
+        "extraction_prompt": "",
+        "extraction_variables": [],
+        "add_global_prompt": true
+      },
+      "measured": { "width": 400, "height": 180 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "5",
+      "type": "endCall",
+      "position": { "x": 175, "y": 1440 },
+      "data": {
+        "prompt": "复述一句已记录的预约时间，说明师傅会在上门前用这个手机号联系，感谢来电并道别。",
+        "name": "预约成功结束",
+        "allow_interrupt": true,
+        "extraction_enabled": false,
+        "extraction_prompt": "",
+        "extraction_variables": [],
+        "add_global_prompt": false,
+        "is_end": true
+      },
+      "measured": { "width": 320, "height": 128 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "6",
+      "type": "endCall",
+      "position": { "x": 1055, "y": 380 },
+      "data": {
+        "prompt": "礼貌收尾，说明之后有需要随时来电，祝对方生活愉快，道别。",
+        "name": "婉拒结束",
+        "allow_interrupt": true,
+        "extraction_enabled": false,
+        "extraction_prompt": "",
+        "extraction_variables": [],
+        "add_global_prompt": false,
+        "is_end": true
+      },
+      "measured": { "width": 320, "height": 128 },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "7",
+      "type": "globalNode",
+      "position": { "x": -325, "y": 480 },
+      "data": {
+        "prompt": "你是家电维修服务中心的语音小助手，语气亲切、耐心、专业。回答简短，每次控制在两三句话内。\n每轮只问一个问题，用户没答完就不要问下一项。\n遇到听不清或噪音时，礼貌请对方再说一遍。\n不要编造维修价格，不要承诺具体到达时间；不确定时说明会安排师傅联系确认。\n没有明确的收尾指令时，不要结束通话。",
+        "name": "全局设定",
+        "allow_interrupt": true
+      },
+      "measured": { "width": 400, "height": 196 },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "1",
+      "target": "2",
+      "data": {
+        "label": "to_diagnose",
+        "condition": "用户已经说出称呼或明确不想说姓名，并且已经说明来电意图（咨询或维修某类家电）。这两个条件都满足才调用；缺一个就继续在本节点追问。"
+      },
+      "id": "1-2",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "1",
+      "target": "6",
+      "data": {
+        "label": "end_call_declined",
+        "condition": "用户一开口就明确表示打错了、不需要、要挂断。仅此情况调用。"
+      },
+      "id": "1-6",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "2",
+      "target": "3",
+      "data": {
+        "label": "to_booking",
+        "condition": "用户明确表示需要师傅上门维修。仅在用户同意上门后调用；用户还在描述故障、犹豫、或在问价格时不要调用。"
+      },
+      "id": "2-3",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "2",
+      "target": "6",
+      "data": {
+        "label": "end_call_declined",
+        "condition": "用户明确表示不需要上门、自己处理，或明确表示不想继续通话。仅在用户明确拒绝后调用。"
+      },
+      "id": "2-6",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "3",
+      "target": "4",
+      "data": {
+        "label": "go_to_confirm",
+        "condition": "手机号、地址、上门时间三项都已经问到，并且每一项都经过复述确认。任一项缺失或被用户否认时不要调用，继续在当前节点追问。"
+      },
+      "id": "3-4",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "4",
+      "target": "5",
+      "data": {
+        "label": "close_success",
+        "condition": "用户明确确认复述的手机号、地址、上门时间都正确。没有得到明确确认不要调用。"
+      },
+      "id": "4-5",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "custom",
+      "source": "4",
+      "target": "3",
+      "data": {
+        "label": "back_to_booking",
+        "condition": "用户指出复述的信息中有任何一项需要修改。"
+      },
+      "id": "4-3",
+      "selected": false
+    }
+  ],
+  "viewport": { "x": 403.0625, "y": 96.5, "zoom": 0.55 }
+}
