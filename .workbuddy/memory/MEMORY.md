@@ -35,6 +35,15 @@
   4. ffmpeg-static 阶段：apt 同上，且下载改为**镜像轮询**——`gh-proxy.com` → `ghfast.top` → GitHub 直连，每个源下完都过一遍 sha256 校验（sha256 是钉死的，走第三方源不影响供应链安全），`--max-time` 提到 900。原因：GitHub 直连只有 55 kB/s，35MB 的包在原来的 `--max-time 600` 内拉不完，重试 3 次也是死。
   回退方式：`git checkout api/Dockerfile`。
 
+## 前端 next build 会因 lint / 类型错误阻断（不只是语法）
+- `ui/next.config.ts` 未设 `eslint.ignoreDuringBuilds`，所以 `next build`（docker 构建跑的就是它）依次过：编译 → **tsc 类型检查** → **ESLint**。任何一环 error 都让构建失败，且 `npm run dev` 不会提前暴露（dev 不跑 tsc/lint）。
+- i18n 改造引入的三类会阻断 build 的问题（已修复于 `68fab924` + `ef13f690`，但后人手动加 i18n 仍会复现）：
+  1. import 排序：`simple-import-sort/imports` 设为 error，i18n 工具/手改把 `import { useTranslations } from 'next-intl'` 插在不合规位置就会报。修法：`eslint . --fix`（自动重排），或提交前跑 `npm run fix-lint`。
+  2. **rules-of-hooks**：`useTranslations` 只能声明在组件/hook 顶层；插进普通函数、事件回调、`rows.map` 回调里会报 `react-hooks/rules-of-hooks` 且**运行时必崩**。修法：删内层重复 `t`，复用组件顶层 `t`（闭包可见）。
+  3. 手写 SDK：`src/client/{sdk,types}.gen.ts` 手写追加端点时，必须在 `sdk.gen.ts` 顶部 import 对应的 `*Data`/`*Errors`/`*Responses` 类型（types.gen.ts 里已生成），否则 tsc 报 `Cannot find name`。
+- 本地自查 build 就绪：`cd ui && ./node_modules/.bin/tsc --noEmit` 与 `./node_modules/.bin/eslint .` 都要 0 error（warning 如 `exhaustive-deps` 不阻断）。
+- `eslint.config.mjs` 已忽略 `src/client/*`（生成文件）与 `i18n_run.mjs` 等 i18n 工具脚本（dev 工具，非 app 源码）。
+
 ## 本地 PG 连接（Navicat）
 - 本机装了**原生 Windows PostgreSQL 18**：`E:\server\PostgreSQL\18`，服务名 `postgresql-x64-18`，占用 5432。
 - Dograh 的 `dograh-postgres-1`（pgvector/pg17）**宿主端口已改为 5433**（`docker-compose.override.yaml` 用 `ports: !override` 覆盖；Compose 对 ports 默认是列表合并，必须用 `!override`）。
