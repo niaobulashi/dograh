@@ -31,16 +31,16 @@ export const ApiKeyErrorDialog = ({
     const isQuotaError = isBillingCreditsError || errorCode === 'quota_exceeded';
 
     const title = isQuotaError
-        ? "Insufficient Credits"
+        ? t("insufficientCredits")
         : isServiceKeyOrgMismatch
-            ? "Service Token Account Mismatch"
-            : "API Configuration Error";
+            ? t("serviceTokenAccountMismatch")
+            : t("apiConfigurationError");
     const icon = isQuotaError ? <CreditCard className="h-5 w-5 text-orange-500" /> : <Key className="h-5 w-5 text-red-500" />;
     const buttonText = isBillingCreditsError
-        ? "Go to Billing"
+        ? t("goToBilling")
         : isServiceKeyOrgMismatch
-            ? "Go to Developers"
-            : "Go to Model Configurations";
+            ? t("goToDevelopers")
+            : t("goToModelConfigurations");
     const onNavigate = isBillingCreditsError
         ? onNavigateToBilling
         : isServiceKeyOrgMismatch

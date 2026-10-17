@@ -1,6 +1,8 @@
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 export const useDeviceInputs = () => {
+    const t = useTranslations("Workflow");
     const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
     const [selectedAudioInput, setSelectedAudioInput] = useState('');
     const [permissionError, setPermissionError] = useState<string | null>(null);
@@ -16,9 +18,9 @@ export const useDeviceInputs = () => {
                 setSelectedAudioInput(defaultAudioInput.deviceId);
             }
         } catch {
-            setPermissionError('Could not enumerate devices');
+            setPermissionError(t("couldNotEnumerateDevices"));
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         getAudioInputDevices();

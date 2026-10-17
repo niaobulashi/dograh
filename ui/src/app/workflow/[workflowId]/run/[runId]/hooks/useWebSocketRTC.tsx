@@ -398,7 +398,7 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
 
                                 // Set error state for display
                                 setApiKeyErrorCode(message.payload.error_type);
-                                setApiKeyError(message.payload.message || 'Service quota exceeded');
+                                setApiKeyError(message.payload.message || t("serviceQuotaExceeded"));
                                 setApiKeyModalOpen(true);
 
                                 // Stop the connection and surface the handled service error.
@@ -406,14 +406,14 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
                             } else if (SPENT_RUN_ERROR_TYPES.has(message.payload?.error_type)) {
                                 logger.info('Run is no longer callable:', message.payload.message);
                                 setPermissionError(
-                                    message.payload?.message || 'This test run has already finished.'
+                                    message.payload?.message || t("testRunAlreadyFinished")
                                 );
                                 // Completed rather than failed: the run did its
                                 // work, so the footer offers a new test instead
                                 // of a retry that would be refused again.
                                 cleanupConnection({ graceful: true, status: 'idle' });
                             } else {
-                                const serverErrorMessage = message.payload?.message || 'Server error';
+                                const serverErrorMessage = message.payload?.message || t("serverError");
                                 logger.error('Server error:', message.payload);
                                 setPermissionError(serverErrorMessage);
                                 cleanupConnection({ graceful: false, status: 'failed' });
@@ -634,7 +634,7 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
                 }
             };
         });
-    }, [getWebSocketUrl, cleanupConnection, setPermissionError]);
+    }, [getWebSocketUrl, cleanupConnection, setPermissionError, t]);
 
     const negotiate = async () => {
         const pc = pcRef.current;
@@ -731,8 +731,8 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
                 const message = detailFromError(
                     response.error,
                     isServiceUnavailable
-                        ? 'Dograh is temporarily unavailable. Please try again later.'
-                        : 'API Key Error',
+                        ? t("dograhTemporarilyUnavailable")
+                        : t("apiKeyErrorTitle"),
                 );
 
                 if (isServiceUnavailable) {
@@ -765,7 +765,7 @@ export const useWebSocketRTC = ({ workflowId, workflowRunId, accessToken, initia
 
             if (workflowResponse.error) {
                 setWorkflowConfigModalOpen(true);
-                let msg = 'Workflow validation failed';
+                let msg = t("workflowValidationFailed");
                 const errorDetail = workflowResponse.error as { detail?: { errors: WorkflowValidationError[] } };
                 if (errorDetail?.detail?.errors) {
                     msg = errorDetail.detail.errors
