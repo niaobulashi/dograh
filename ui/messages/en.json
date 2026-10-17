@@ -2662,7 +2662,11 @@
     "embedCode2": "Embed Code",
     "click": "Click",
     "saveConfigurations": "Save Configurations",
-    "toGenerateYourEmbedScript": "to generate your embed script."
+    "toGenerateYourEmbedScript": "to generate your embed script.",
+    "deleteWorkflowConfirm": "Are you sure you want to delete this voice agent? This action cannot be undone and will also delete all its versions, run records, and associated outbound call tasks.",
+    "deleteWorkflowDescription": "Once deleted, it cannot be recovered.",
+    "failedToDeleteWorkflow": "Failed to delete voice agent",
+    "workflowDeleted": "Voice agent deleted"
   },
   "LeadForms": {
     "quickCheck": "Quick check",

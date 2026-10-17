@@ -899,21 +899,22 @@ async def get_workflow(
         "workflow_uuid": workflow.workflow_uuid,
     }
 
-    @router.delete("/{workflow_id}")
-    async def delete_workflow(
-        workflow_id: int,
-        user: UserModel = Depends(get_user),
-    ) -> dict[str, bool]:
-        """Delete a workflow and all of its versions, runs, and bound campaigns."""
-        deleted = await db_client.delete_workflow(
-            workflow_id=workflow_id,
-            organization_id=user.selected_organization_id,
+
+@router.delete("/{workflow_id}")
+async def delete_workflow(
+    workflow_id: int,
+    user: UserModel = Depends(get_user),
+) -> dict[str, bool]:
+    """Delete a workflow and all of its versions, runs, and bound campaigns."""
+    deleted = await db_client.delete_workflow(
+        workflow_id=workflow_id,
+        organization_id=user.selected_organization_id,
+    )
+    if not deleted:
+        raise HTTPException(
+            status_code=404, detail=f"Workflow with id {workflow_id} not found"
         )
-        if not deleted:
-            raise HTTPException(
-                status_code=404, detail=f"Workflow with id {workflow_id} not found"
-            )
-        return {"success": True}
+    return {"success": True}
 
 
 class WorkflowVersionSummaryResponse(BaseModel):

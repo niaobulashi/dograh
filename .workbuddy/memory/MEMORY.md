@@ -28,6 +28,8 @@
 - 前端容器基础镜像是 `node:22-alpine`（musl），lock 里必须包含 `-musl` 变体的原生可选依赖。
 - **ui / api 必须同源构建**：只 override 一个服务、另一个搭官方 `:latest`，只要本地码领先于已发布镜像就会大面积 404（且 OPTIONS 返回 200、极具迷惑性）。官方 `dograhai/dograh-api:latest` 与 `ghcr.io/dograh-hq/dograh-api:latest` 都停留在 1.48.0（2026-10-02 构建），不含 2026-10-07 才入库的 model-connections 路由。
 - 本地单人环境**不要并发构建 ui 和 api**（compose v5 用 Bake 并行），两个重构建同时跑会把 Docker VM 内存打满，apt 步骤被 OOM kill。
+- **改 `.env` 里的环境变量后，`docker compose restart` 无效**（只重启旧容器、沿用旧 env）。必须 `docker compose --profile tunnel up -d <svc>` 触发 recreate；只有改源码才需要 `--build`。典型症状：报「api key invalid」但 .env 里明明是新 key —— 先 `docker inspect <容器> --format '{{range .Config.Env}}{{println .}}{{end}}'` 对比容器 env 与 `docker compose config` 解析结果。
+- 模板生成（`WORKFLOW_TEMPLATE_GENERATOR=local`）走 `api/services/workflow/local_template_generator.py`，`DEEPSEEK_API_KEY/BASE_URL/MODEL` 在 `api/constants.py` import 时读一次 `os.getenv`，改值必须重启进程。
 - **国内网络构建必须换源**，否则必然失败。已对 `api/Dockerfile` 打了 4 处 LOCAL PATCH（已实测）：
   1. builder 阶段 apt → `mirrors.tuna.tsinghua.edu.cn`（实测 1.0 MB/s vs 官方 20 kB/s，约 50x；换源后该层 44 秒跑通）
   2. `ENV UV_DEFAULT_INDEX` + `UV_INDEX_URL` → 清华 PyPI（实测 uv 0.13.0 命中 tuna，无弃用警告）
