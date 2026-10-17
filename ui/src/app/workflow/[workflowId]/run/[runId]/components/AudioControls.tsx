@@ -110,8 +110,8 @@ export const AudioControls = ({
                     <p className="text-foreground font-medium">{t("audioPermissionsRequired")}</p>
                     <p className="text-sm text-muted-foreground">
                         {isRequestingPermission
-                            ? "Please allow microphone access in the browser dialog"
-                            : "Click below to grant microphone access"}
+                            ? t("pleaseAllowMicrophoneAccessDialog")
+                            : t("clickToGrantMicrophoneAccess")}
                     </p>
                 </div>
                 <Button

@@ -112,6 +112,7 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 }
 
 function CopyDebugIdButton({ label, value }: { label: string; value: string }) {
+    const t = useTranslations("Workflow");
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async () => {
@@ -120,7 +121,7 @@ function CopyDebugIdButton({ label, value }: { label: string; value: string }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            toast.error(`Failed to copy ${label}`);
+            toast.error(t("failedToCopyValue"));
         }
     };
 
@@ -136,7 +137,7 @@ function CopyDebugIdButton({ label, value }: { label: string; value: string }) {
                 size="icon"
                 className="h-7 w-7 shrink-0"
                 onClick={handleCopy}
-                aria-label={`Copy ${label.toLowerCase()}`}
+                aria-label={t("copyButton")}
             >
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
@@ -484,7 +485,7 @@ function SplitTracksSection({
     const progressPercent = timeline.duration > 0 ? (currentTime / timeline.duration) * 100 : 0;
     const userTrackActive = playbackMode !== 'bot';
     const botTrackActive = playbackMode !== 'user';
-    const playbackTargetLabel = playbackMode === 'both' ? 'split tracks' : `${playbackMode} track`;
+    const playbackTargetLabel = playbackMode === 'both' ? t("splitTracksLabel") : playbackMode === 'user' ? t("userTrackLabel") : t("botTrackLabel");
 
     return (
         <Card className="border-border">
@@ -517,7 +518,7 @@ function SplitTracksSection({
                             variant="outline"
                             size="sm"
                             aria-pressed={userTrackActive}
-                            aria-label={playbackMode === 'user' ? 'Play both tracks' : 'Play user track only'}
+                            aria-label={playbackMode === 'user' ? t("playBothTracks") : t("playUserTrackOnly")}
                             onClick={() => handleTrackButtonClick('user')}
                             className={cn(
                                 'gap-1.5',
@@ -534,7 +535,7 @@ function SplitTracksSection({
                             variant="outline"
                             size="sm"
                             aria-pressed={botTrackActive}
-                            aria-label={playbackMode === 'bot' ? 'Play both tracks' : 'Play bot track only'}
+                            aria-label={playbackMode === 'bot' ? t("playBothTracks") : t("playBotTrackOnly")}
                             onClick={() => handleTrackButtonClick('bot')}
                             className={cn(
                                 'gap-1.5',
@@ -613,8 +614,8 @@ function SplitTracksSection({
                             size="sm"
                             onClick={() => skipPlayback(-PLAYBACK_SKIP_SECONDS)}
                             disabled={!canSeek || currentTime <= 0}
-                            aria-label={`Skip backward ${PLAYBACK_SKIP_SECONDS} seconds`}
-                            title={`Skip backward ${PLAYBACK_SKIP_SECONDS} seconds`}
+                            aria-label={t("skipBackwardSeconds", { seconds: PLAYBACK_SKIP_SECONDS })}
+                            title={t("skipBackwardSeconds", { seconds: PLAYBACK_SKIP_SECONDS })}
                             className="gap-1.5"
                         >
                             <RotateCcw className="h-4 w-4" />
@@ -625,7 +626,7 @@ function SplitTracksSection({
                             variant={isPlaying ? 'default' : 'outline'}
                             onClick={togglePlayback}
                             disabled={!canPlay}
-                            aria-label={isPlaying ? `Pause ${playbackTargetLabel}` : `Play ${playbackTargetLabel}`}
+                            aria-label={isPlaying ? t("pauseTarget", { target: playbackTargetLabel }) : t("playTarget", { target: playbackTargetLabel })}
                             className="h-10 w-10 shrink-0"
                         >
                             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -636,8 +637,8 @@ function SplitTracksSection({
                             size="sm"
                             onClick={() => skipPlayback(PLAYBACK_SKIP_SECONDS)}
                             disabled={!canSeek || currentTime >= timeline.duration}
-                            aria-label={`Skip forward ${PLAYBACK_SKIP_SECONDS} seconds`}
-                            title={`Skip forward ${PLAYBACK_SKIP_SECONDS} seconds`}
+                            aria-label={t("skipForwardSeconds", { seconds: PLAYBACK_SKIP_SECONDS })}
+                            title={t("skipForwardSeconds", { seconds: PLAYBACK_SKIP_SECONDS })}
                             className="gap-1.5"
                         >
                             <RotateCw className="h-4 w-4" />
@@ -667,11 +668,11 @@ function RunMetricsSection({
                 <CardTitle className="text-lg">{t("runMetrics")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <MetricCard label="Duration" value={formatDuration(costInfo?.call_duration_seconds)} />
-                <MetricCard label="User Turns" value={String(metrics.userTurns)} />
-                <MetricCard label="Bot Turns" value={String(metrics.botTurns)} />
-                <MetricCard label="Tool Calls" value={String(metrics.toolCalls)} />
-                <MetricCard label="Nodes Visited" value={String(metrics.visitedNodes)} />
+                <MetricCard label={t("runMetricDuration")} value={formatDuration(costInfo?.call_duration_seconds)} />
+                <MetricCard label={t("runMetricUserTurns")} value={String(metrics.userTurns)} />
+                <MetricCard label={t("runMetricBotTurns")} value={String(metrics.botTurns)} />
+                <MetricCard label={t("runMetricToolCalls")} value={String(metrics.toolCalls)} />
+                <MetricCard label={t("runMetricNodesVisited")} value={String(metrics.visitedNodes)} />
             </CardContent>
         </Card>
     );
@@ -711,7 +712,7 @@ function ContextDisplay({ title, context }: { title: string; context: Record<str
                 <CardTitle className="text-lg">{title}</CardTitle>
                 <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-2">
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? t("copied") : t("copyButton")}
                 </Button>
             </CardHeader>
             <CardContent>
@@ -853,12 +854,12 @@ export default function WorkflowRunPage() {
                                     </div>
                                 )}
                                 <div className="flex flex-wrap gap-2 pt-1">
-                                    <CopyDebugIdButton label="Agent ID" value={workflowId} />
-                                    <CopyDebugIdButton label="Run ID" value={runId} />
+                                    <CopyDebugIdButton label={t("agentId")} value={workflowId} />
+                                    <CopyDebugIdButton label={t("runId")} value={runId} />
                                 </div>
                                 <div className="flex min-w-0 items-center gap-4 pt-1">
                                     <CardTitle className="min-w-0 text-2xl">
-                                        {isTextChatRun ? 'Text Chat Session' : 'Agent Run Completed'}
+                                        {isTextChatRun ? t("textChatSession") : t("agentRunCompleted")}
                                     </CardTitle>
                                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${isTextChatRun ? 'bg-sky-500/15' : 'bg-emerald-500/20'}`}>
                                         {isTextChatRun ? (
@@ -893,8 +894,8 @@ export default function WorkflowRunPage() {
                         <CardContent>
                             <p className="text-muted-foreground mb-8">
                                 {isTextChatRun
-                                    ? 'Review the conversation history, metrics, and context captured for this text session.'
-                                    : 'Your voice agent run has been completed successfully. You can preview or download the transcript and recording.'}
+                                    ? t("textChatSessionDescription")
+                                    : t("voiceRunCompletedDescription")}
                             </p>
 
                             <div className="flex flex-wrap gap-4">
@@ -1029,7 +1030,7 @@ export default function WorkflowRunPage() {
                     tooltipKey="customize_workflow"
                     title={t("customizeYourWorkflow")}
                     targetRef={customizeButtonRef}
-                    message="Edit your workflow to adjust the voice agent's behavior, add new steps, or modify the conversation flow."
+                    message={t("customizeWorkflowTooltip")}
                     showNext={false}
                 />
             )}
