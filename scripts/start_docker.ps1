@@ -95,13 +95,16 @@ function Get-PostgresVolumeName {
 function Test-DockerVolumeExists {
     param([string]$Name)
 
-    docker volume inspect $Name *> $null
+    # PS 5.1 turns the first stderr line of a native command into a terminating
+    # error when stderr is redirected and $ErrorActionPreference is 'Stop'.
+    # Do the redirect inside cmd so PowerShell never wraps it.
+    cmd /c "docker volume inspect $Name >nul 2>&1"
     return $LASTEXITCODE -eq 0
 }
 
 function Wait-PostgresReady {
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
-        docker compose exec -T postgres pg_isready -U postgres *> $null
+        cmd /c "docker compose exec -T postgres pg_isready -U postgres >nul 2>&1"
         if ($LASTEXITCODE -eq 0) {
             return
         }

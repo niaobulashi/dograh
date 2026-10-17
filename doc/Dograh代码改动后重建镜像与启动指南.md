@@ -24,6 +24,8 @@ docker compose --profile tunnel up -d
 
 或者 
 docker compose --profile tunnel up -d --build api
+
+docker compose --profile tunnel up -d api
 ```
 
 ## 前后端都改
