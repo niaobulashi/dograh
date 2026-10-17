@@ -165,12 +165,30 @@ class WorkflowClient(BaseDBClient):
                 # Set the released pointer
                 new_workflow.released_definition_id = definition.id
 
+                # Grab the id before commit: commit expires every attribute, and
+                # reading it afterwards would trigger another SELECT.
+                workflow_id = new_workflow.id
+
                 await session.commit()
+
+                # ``commit()`` expires all attributes (expire_on_commit defaults to
+                # True) and this session closes right after, so handing ``new_workflow``
+                # back as-is makes the caller's first attribute read raise
+                # DetachedInstanceError. Re-load the row — with the same eager loads
+                # as ``get_workflow`` — while the session is still open.
+                reloaded = await session.get(
+                    WorkflowModel,
+                    workflow_id,
+                    options=[
+                        selectinload(WorkflowModel.current_definition),
+                        selectinload(WorkflowModel.released_definition),
+                    ],
+                    populate_existing=True,
+                )
+                return reloaded if reloaded is not None else new_workflow
             except Exception as e:
                 await session.rollback()
                 raise e
-                await session.refresh(new_workflow)
-        return new_workflow
 
     async def delete_workflow(self, workflow_id: int, organization_id: int) -> bool:
         """Hard-delete a workflow and everything bound to it.

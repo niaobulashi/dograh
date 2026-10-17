@@ -36,6 +36,10 @@
 - **CLI（推荐批量 / 可进 CI）**——只补「缺失」key，已存在的人工译文永不被覆盖：
   ```bash
   cd ui
+  # 需要配置大模型
+  \dograh\ui>set TRANSLATE_ENGINE=deepseek
+  # 配置apikey
+  \dograh\ui>set OPENAI_API_KEY=sk-xxxxx
   # 不指定语种 → 默认翻译 config.ts 注册的所有语种（除 zh-CN）。先看会翻多少：
   npm run trans-from-zh -- --dry-run
   # 正式：一次性同步所有已注册语种（zh-CN 里新增、其他语种缺失的才翻）

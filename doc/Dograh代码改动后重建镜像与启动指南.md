@@ -5,6 +5,11 @@
 ```powershell
 docker compose build ui
 docker compose --profile tunnel up -d
+
+或者 
+docker compose --profile tunnel up -d --build ui
+
+
 ```
 
 前提是已经建好 `docker-compose.override.yaml`（见文末「首次准备」）。
@@ -16,6 +21,9 @@ docker compose --profile tunnel up -d
 ```powershell
 docker compose build api
 docker compose --profile tunnel up -d
+
+或者 
+docker compose --profile tunnel up -d --build api
 ```
 
 ## 前后端都改
