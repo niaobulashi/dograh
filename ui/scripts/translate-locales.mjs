@@ -13,7 +13,8 @@
  *   - 引擎凭据走 env，不硬编码
  *
  * 用法：
- *   node scripts/translate-locales.mjs ja                 # 翻译缺失 key 到 ja
+ *   node scripts/translate-locales.mjs                   # 不指定 → 翻译 config.ts 注册的所有语种（除 zh-CN）
+ *   node scripts/translate-locales.mjs ja                 # 仅翻译缺失 key 到 ja
  *   node scripts/translate-locales.mjs ja ko --dry-run    # 只列缺失 key，不调 API
  *   TARGET_LOCALES=ja,ko node scripts/translate-locales.mjs
  *
@@ -31,20 +32,43 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const MSG_DIR = resolve(__dirname, "..", "messages");
 const SRC_LOCALE = "zh-CN";
 
+// 从 i18n/config.ts 读取已注册语种，作为「不指定目标」时的默认集合。
+// 单一事实来源：新增语种只要在 config.ts 的 locales 里登记，翻译就会自动覆盖到它，
+// 不必再手动逐个列语种。
+function readConfigLocales() {
+  try {
+    const cfgPath = resolve(MSG_DIR, "..", "src", "i18n", "config.ts");
+    const src = readFileSync(cfgPath, "utf8");
+    const m = src.match(/export\s+const\s+locales\s*=\s*\[([^\]]*)\]/);
+    if (!m) return [];
+    return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 // ---------- 参数解析 ----------
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
-const locales = args.filter((a) => !a.startsWith("--"));
-if (!locales.length) {
-  const env = process.env.TARGET_LOCALES;
-  if (env) locales.push(...env.split(",").map((s) => s.trim()).filter(Boolean));
+let locales = args.filter((a) => !a.startsWith("--"));
+
+// 优先级：CLI 显式指定 > TARGET_LOCALES 环境变量 > config.ts 注册的全部语种（除源）。
+// 不指定时一次性同步所有已注册语种，避免语种变多后逐个执行。
+if (!locales.length && process.env.TARGET_LOCALES) {
+  locales = process.env.TARGET_LOCALES.split(",").map((s) => s.trim()).filter(Boolean);
 }
 if (!locales.length) {
-  console.error("用法: node scripts/translate-locales.mjs <locale> [locale2 ...] [--dry-run]");
-  console.error("示例: node scripts/translate-locales.mjs ja");
-  console.error("      node scripts/translate-locales.mjs ja ko --dry-run");
+  locales = readConfigLocales().filter((l) => l !== SRC_LOCALE);
+}
+if (!locales.length) {
+  console.error("用法: node scripts/translate-locales.mjs [locale ...] [--dry-run]");
+  console.error("不指定语种 → 默认翻译 config.ts 中注册的所有语种（除 zh-CN）。");
+  console.error("指定语种: node scripts/translate-locales.mjs ja ko");
+  console.error("环境变量: TARGET_LOCALES=ja,ko node scripts/translate-locales.mjs");
   process.exit(1);
 }
+
+console.log(`目标语种: ${locales.join(", ")}（源: ${SRC_LOCALE}）`);
 
 const ENGINE = process.env.TRANSLATE_ENGINE || "openai";
 
