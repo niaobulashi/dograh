@@ -27,7 +27,10 @@ from api.services.workflow.node_specs._base import (
     PropertyRendererOptions,
     PropertyType,
 )
-from api.services.workflow.node_specs.constants import DEFAULT_QA_SYSTEM_PROMPT
+from api.services.workflow.node_specs.constants import (
+    DEFAULT_QA_SYSTEM_PROMPT,
+    DEFAULT_QA_SYSTEM_PROMPT_ZH,
+)
 from api.services.workflow.node_specs.model_spec import node_spec, spec_field
 
 
@@ -906,7 +909,7 @@ class WebhookNodeData(BaseNodeData):
                 "`{node_summary}`, `{previous_conversation_summary}`, "
                 "`{transcript}`, `{metrics}`."
             ),
-            "spec_default": DEFAULT_QA_SYSTEM_PROMPT,
+            "spec_default": DEFAULT_QA_SYSTEM_PROMPT_ZH,
             "editor": "textarea",
         },
         "qa_min_call_duration": {
