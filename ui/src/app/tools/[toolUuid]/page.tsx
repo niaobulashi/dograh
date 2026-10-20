@@ -30,7 +30,7 @@ import {
     validateUrl,
 } from "@/components/http";
 import { PageShell } from "@/components/layout/PageShell";
-import { loadToolMessages, serializeToolMessages, singleStartMessages, type ToolMessagesForm, validateToolMessages } from "@/components/tools/toolMessages";
+import { loadToolMessages, serializeToolMessages, singleStartMessages, toolMessagesErrorKeys, type ToolMessagesForm, validateToolMessages } from "@/components/tools/toolMessages";
 import { ToolMessagesEditor } from "@/components/tools/ToolMessagesEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -484,7 +484,7 @@ export default function ToolDetailPage() {
                 transferAgentGreetingMode === "introduce_and_continue" &&
                 !transferAgentIntroduction.trim()
             ) {
-                setError("Enter what the destination agent should say when it picks up");
+                setError(t("detail.errorDestinationAgentMessage"));
                 return;
             }
         } else if (tool.category === "transfer_call") {
@@ -614,7 +614,7 @@ export default function ToolDetailPage() {
         const messageError = validateToolMessages(
             tool.category === "http_api" || tool.category === "mcp" ? messages : loadToolMessages({ messages: controlMessages })
         );
-        if (messageError) { setError(messageError); return; }
+        if (messageError) { setError(t(toolMessagesErrorKeys[messageError])); return; }
 
         try {
             setIsSaving(true);

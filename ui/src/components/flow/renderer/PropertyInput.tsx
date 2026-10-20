@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { translateSchemaText } from "@/i18n/schemaText";
+import { useSchemaText } from "@/i18n/schemaText";
 
 import { evaluateDisplayOptions } from "./displayOptions";
 import {
@@ -134,14 +134,15 @@ export function PropertyInput({ spec, value, onChange, context }: PropertyInputP
 // ─── Layout helpers ──────────────────────────────────────────────────────
 
 function StackedLabel({ spec }: { spec: PropertySpec }) {
+    const sch = useSchemaText();
     return (
         <>
             <Label>
-                {translateSchemaText(spec.display_name)}
+                {sch(spec.display_name)}
                 {spec.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             {spec.description && (
-                <Label className="text-xs text-muted-foreground">{translateSchemaText(spec.description)}</Label>
+                <Label className="text-xs text-muted-foreground">{sch(spec.description)}</Label>
             )}
         </>
     );
@@ -156,6 +157,7 @@ interface WidgetProps {
 }
 
 function StringWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     const v = (value as string | undefined) ?? "";
     const isMultiline = spec.editor === "textarea";
     return (
@@ -165,7 +167,7 @@ function StringWidget({ spec, value, onChange }: WidgetProps) {
                 <Textarea
                     value={v}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder={translateSchemaText(spec.placeholder) || undefined}
+                    placeholder={sch(spec.placeholder) || undefined}
                     className="min-h-[80px] max-h-[200px] resize-none"
                     style={{ overflowY: "auto" }}
                 />
@@ -173,7 +175,7 @@ function StringWidget({ spec, value, onChange }: WidgetProps) {
                 <Input
                     value={v}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder={translateSchemaText(spec.placeholder) || undefined}
+                    placeholder={sch(spec.placeholder) || undefined}
                 />
             )}
         </div>
@@ -181,6 +183,7 @@ function StringWidget({ spec, value, onChange }: WidgetProps) {
 }
 
 function NumberWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     const v = (value as number | undefined) ?? "";
     const isCompact = getPropertyColumnSpan(spec.renderer_options) < 12;
     const isFractional = isFractionalNumberInput(spec.renderer_options);
@@ -203,7 +206,7 @@ function NumberWidget({ spec, value, onChange }: WidgetProps) {
                     const next = e.target.value;
                     onChange(next === "" ? undefined : parseFloat(next));
                 }}
-                placeholder={translateSchemaText(spec.placeholder) || undefined}
+                placeholder={sch(spec.placeholder) || undefined}
                 className={isCompact ? "w-full" : "w-32"}
             />
         </div>
@@ -211,14 +214,15 @@ function NumberWidget({ spec, value, onChange }: WidgetProps) {
 }
 
 function BooleanWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     const v = !!value;
     return (
         <div className="flex items-center space-x-2">
             <Switch id={`prop-${spec.name}`} checked={v} onCheckedChange={onChange} />
-            <Label htmlFor={`prop-${spec.name}`}>{translateSchemaText(spec.display_name)}</Label>
+            <Label htmlFor={`prop-${spec.name}`}>{sch(spec.display_name)}</Label>
             {spec.description && (
                 <Label className="text-xs text-muted-foreground ml-2">
-                    {translateSchemaText(spec.description)}
+                    {sch(spec.description)}
                 </Label>
             )}
         </div>
@@ -226,6 +230,7 @@ function BooleanWidget({ spec, value, onChange }: WidgetProps) {
 }
 
 function OptionsWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     return (
         <div className="grid gap-2">
             <StackedLabel spec={spec} />
@@ -240,7 +245,7 @@ function OptionsWidget({ spec, value, onChange }: WidgetProps) {
             >
                 {spec.options?.map((o) => (
                     <option key={String(o.value)} value={String(o.value)}>
-                        {translateSchemaText(o.label)}
+                        {sch(o.label)}
                     </option>
                 ))}
             </select>
@@ -249,6 +254,7 @@ function OptionsWidget({ spec, value, onChange }: WidgetProps) {
 }
 
 function MultiOptionsWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     const selected = new Set(((value as unknown[]) ?? []).map((v) => String(v)));
     return (
         <div className="grid gap-2">
@@ -272,7 +278,7 @@ function MultiOptionsWidget({ spec, value, onChange }: WidgetProps) {
                                     );
                                 }}
                             />
-                            {translateSchemaText(o.label)}
+                            {sch(o.label)}
                         </label>
                     );
                 })}
@@ -387,13 +393,14 @@ function JsonWidget({ spec, value, onChange }: WidgetProps) {
 }
 
 function UrlWidget({ spec, value, onChange }: WidgetProps) {
+    const sch = useSchemaText();
     return (
         <div className="grid gap-2">
             <StackedLabel spec={spec} />
             <UrlInput
                 value={(value as string | undefined) ?? ""}
                 onChange={onChange}
-                placeholder={translateSchemaText(spec.placeholder) || undefined}
+                placeholder={sch(spec.placeholder) || undefined}
                 showValidation
             />
         </div>
@@ -406,13 +413,14 @@ function MentionWidget({
     onChange,
     recordings,
 }: WidgetProps & { recordings: RecordingResponseSchema[] }) {
+    const sch = useSchemaText();
     return (
         <div className="grid gap-2">
             <StackedLabel spec={spec} />
             <MentionTextarea
                 value={(value as string | undefined) ?? ""}
                 onChange={onChange}
-                placeholder={translateSchemaText(spec.placeholder) || undefined}
+                placeholder={sch(spec.placeholder) || undefined}
                 className="min-h-[100px] max-h-[300px] resize-none overflow-y-auto"
                 recordings={recordings}
             />
@@ -432,13 +440,14 @@ function ToolRefsWidget({
     mcpToolFilters: Record<string, string[]>;
     onMcpToolFiltersChange: (next: Record<string, string[]>) => void;
 }) {
+    const sch = useSchemaText();
     return (
         <ToolSelector
             value={(value as string[] | undefined) ?? []}
             onChange={onChange}
             tools={tools}
-            label={translateSchemaText(spec.display_name)}
-            description={translateSchemaText(spec.description)}
+            label={sch(spec.display_name)}
+            description={sch(spec.description)}
             mcpToolFilters={mcpToolFilters}
             onMcpToolFiltersChange={onMcpToolFiltersChange}
         />
@@ -451,13 +460,14 @@ function DocumentRefsWidget({
     onChange,
     documents,
 }: WidgetProps & { documents: DocumentResponseSchema[] }) {
+    const sch = useSchemaText();
     return (
         <DocumentSelector
             value={(value as string[] | undefined) ?? []}
             onChange={onChange}
             documents={documents}
-            label={translateSchemaText(spec.display_name)}
-            description={translateSchemaText(spec.description)}
+            label={sch(spec.display_name)}
+            description={sch(spec.description)}
         />
     );
 }

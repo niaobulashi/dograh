@@ -69,6 +69,6 @@ describe('TrafficSplitEditor', () => {
 
     it('allows latest and pinned for one agent but rejects duplicate pairs', () => {
         expect(trafficSplitError([{ workflow_id: 1, weight: 50 }, { workflow_id: 1, workflow_definition_id: 8, weight: 50 }])).toBeNull();
-        expect(trafficSplitError([{ workflow_id: 1, weight: 50 }, { workflow_id: 1, workflow_definition_id: null, weight: 50 }])).toMatch(/different agent or version/);
+        expect(trafficSplitError([{ workflow_id: 1, weight: 50 }, { workflow_id: 1, workflow_definition_id: null, weight: 50 }])).toBe('errors.distinctVariant');
     });
 });

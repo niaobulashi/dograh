@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { translateSchemaText } from "@/i18n/schemaText";
+import { useSchemaText } from "@/i18n/schemaText";
 
 interface SetupChecklistCardProps {
   checklist: ProviderSetupChecklist;
@@ -34,6 +34,7 @@ export function SetupChecklistCard({
   checklist,
   connectivity,
 }: SetupChecklistCardProps) {
+    const sch = useSchemaText();
   const t = useTranslations("Telephony");
   const remaining = checklist.steps.filter((step) => !step.complete).length;
 
@@ -101,10 +102,10 @@ export function SetupChecklistCard({
                       step.complete ? "text-muted-foreground" : ""
                     }`}
                   >
-                    {translateSchemaText(step.title)}
+                    {sch(step.title)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {translateSchemaText(step.description)}
+                    {sch(step.description)}
                   </p>
                 </div>
               </li>

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useAppConfig } from "@/context/AppConfigContext";
-import { translateSchemaText } from "@/i18n/schemaText";
+import { useSchemaText } from "@/i18n/schemaText";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 import { createUuid } from "@/lib/uuid";
@@ -155,6 +155,7 @@ function getBadgeForSpec(
     spec: NodeSpec | undefined,
     variant: NodeStyleVariant,
     t: (key: string) => string,
+    sch: (text?: string | null) => string,
 ): { label: string; className: string } {
     if (!spec) {
         return { label: t("nodeBadge"), className: "bg-zinc-500 text-white" };
@@ -176,7 +177,7 @@ function getBadgeForSpec(
         case "qa":
             return { label: t("qaAnalysisBadge"), className: "bg-teal-500 text-white" };
         case "integration":
-            return { label: translateSchemaText(spec.display_name), className: "bg-cyan-600 text-white" };
+            return { label: sch(spec.display_name), className: "bg-cyan-600 text-white" };
     }
 }
 
@@ -486,6 +487,7 @@ interface GenericNodeProps extends NodeProps {
 
 export const GenericNode = memo(({ data, selected, id, type }: GenericNodeProps) => {
     const t = useTranslations("Workflow");
+    const sch = useSchemaText();
     // Per-type metadata that StartCall/EndCall used to set via `additionalData`
     // (is_start / is_end). Pulled from the spec name here.
     const additionalData = useMemo<Record<string, boolean> | undefined>(() => {
@@ -622,7 +624,7 @@ export const GenericNode = memo(({ data, selected, id, type }: GenericNodeProps)
         (spec?.category === "integration"
             ? { source: false, target: false }
             : { source: true, target: true });
-    const badge = getBadgeForSpec(spec, styleVariant, t);
+    const badge = getBadgeForSpec(spec, styleVariant, t, sch);
     const Icon = spec ? resolveIcon(spec.icon) : Circle;
     const docUrl = spec?.docs_url ?? DOC_URL_BY_SPEC[type];
     const contentLabel = spec?.properties.some((p) => p.name === "prompt")
@@ -631,7 +633,7 @@ export const GenericNode = memo(({ data, selected, id, type }: GenericNodeProps)
 
     // Edit dialog title: "Edit {display_name}". Webhook keeps the original
     // "Edit Webhook" wording — display_name is "Webhook" so it works out.
-    const dialogTitle = spec ? t("editNamed", { name: translateSchemaText(spec.display_name) }) : t("editNode");
+    const dialogTitle = spec ? t("editNamed", { name: sch(spec.display_name) }) : t("editNode");
     const fallbackTitle = spec?.display_name ?? t("nodeBadge");
 
     return (

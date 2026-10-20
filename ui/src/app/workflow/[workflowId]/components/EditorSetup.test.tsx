@@ -54,10 +54,10 @@ describe("editor setup", () => {
 
     it("finds the variables prompts reference and which have no value", () => {
         expect(referencedVariables(nodes)).toEqual(["customer_name", "order_id"]);
-        expect(describeVariables({ customer_name: "Ada", order_id: " " }, nodes)).toEqual({ text: "1 set, 1 missing", missing: ["order_id"] });
-        expect(describeVariables({}, [])).toEqual({ text: "No variables", missing: [] });
+        expect(describeVariables({ customer_name: "Ada", order_id: " " }, nodes)).toEqual({ setCount: 1, missing: ["order_id"] });
+        expect(describeVariables({}, [])).toEqual({ setCount: 0, missing: [] });
         // Only the agent's own variables count, not what every object inherits.
-        expect(describeVariables({}, [{ ...nodes[0], data: { prompt: "{{toString}}" } }] as FlowNode[])).toEqual({ text: "0 set, 1 missing", missing: ["toString"] });
+        expect(describeVariables({}, [{ ...nodes[0], data: { prompt: "{{toString}}" } }] as FlowNode[])).toEqual({ setCount: 0, missing: ["toString"] });
     });
 
     it("offers the four views and switches on click", () => {

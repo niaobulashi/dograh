@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+
 import type { TransferAgentConfig } from "@/client/types.gen";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,21 +23,21 @@ export interface TransferAgentWorkflowOption {
 }
 
 /** How the destination agent opens, in the order the select offers them. */
-const GREETING_MODES: { value: TransferGreetingMode; label: string; hint: string }[] = [
+const GREETING_MODES: { value: TransferGreetingMode; labelKey: string; hintKey: string }[] = [
     {
         value: "start_greeting",
-        label: "Play its greeting, then wait",
-        hint: "The destination plays its Start Call greeting and waits for the caller to speak.",
+        labelKey: "transferAgent.greetingModeStartGreeting",
+        hintKey: "transferAgent.greetingModeStartGreetingHint",
     },
     {
         value: "continue",
-        label: "Continue the conversation",
-        hint: "No greeting. The destination opens with a reply based on the handover note.",
+        labelKey: "transferAgent.greetingModeContinue",
+        hintKey: "transferAgent.greetingModeContinueHint",
     },
     {
         value: "introduce_and_continue",
-        label: "Introduce itself, then continue",
-        hint: "The destination says the introduction below in its own voice, then replies based on the handover note.",
+        labelKey: "transferAgent.greetingModeIntroduce",
+        hintKey: "transferAgent.greetingModeIntroduceHint",
     },
 ];
 
@@ -153,7 +154,7 @@ export function TransferAgentToolConfig({
 
                 <div className="grid gap-2">
                     <Label htmlFor="transfer-agent-greeting-mode">
-                        When the destination agent picks up
+                        {t("transferAgent.greetingModeLabel")}
                     </Label>
                     <Select
                         value={greetingMode}
@@ -167,30 +168,28 @@ export function TransferAgentToolConfig({
                         <SelectContent>
                             {GREETING_MODES.map((mode) => (
                                 <SelectItem key={mode.value} value={mode.value}>
-                                    {mode.label}
+                                    {t(mode.labelKey)}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                     {selectedMode && (
-                        <p className="text-xs text-muted-foreground">{selectedMode.hint}</p>
+                        <p className="text-xs text-muted-foreground">{t(selectedMode.hintKey)}</p>
                     )}
                 </div>
 
                 {greetingMode === "introduce_and_continue" && (
                     <div className="grid gap-2">
-                        <Label htmlFor="transfer-agent-introduction">Introduction</Label>
+                        <Label htmlFor="transfer-agent-introduction">{t("transferAgent.introduction")}</Label>
                         <Label className="text-xs text-muted-foreground">
-                            Spoken in the destination agent&apos;s own voice before its
-                            first reply. Write it in the language that agent speaks.
-                            Supports template variables.
+                            {t("transferAgent.introductionHint")}
                         </Label>
                         <Textarea
                             id="transfer-agent-introduction"
                             maxLength={500}
                             value={introduction}
                             onChange={(e) => onIntroductionChange(e.target.value)}
-                            placeholder="Hi, this is Billing. I have your details from my colleague, so let's carry on."
+                            placeholder={t("transferAgent.introductionPlaceholder")}
                             rows={2}
                         />
                     </div>

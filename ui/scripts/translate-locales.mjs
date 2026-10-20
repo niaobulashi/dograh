@@ -54,6 +54,38 @@ function readConfigLocales() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ---------- .env 兜底加载 ----------
+// 直接在本机 cmd / PowerShell / Git Bash 里跑 npm script 时，父进程没有这些变量；
+// 这里手动解析 .env（不引入 dotenv 依赖），已显式设置的环境变量优先级更高、不覆盖。
+function loadEnvFile(p) {
+  if (!existsSync(p)) return;
+  for (const line of readFileSync(p, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) continue;
+    const k = m[1];
+    if (process.env[k] !== undefined) continue; // 显式传入的优先
+    let v = m[2].trim();
+    if (v.length >= 2 && ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")))) {
+      v = v.slice(1, -1);
+    }
+    process.env[k] = v;
+  }
+}
+
+// 依次尝试 ui/.env 和仓库根 .env（后者是 Docker 部署用的那份）
+for (const p of [resolve(__dirname, "..", ".env"), resolve(__dirname, "..", "..", ".env")]) {
+  loadEnvFile(p);
+}
+
+// DeepSeek 复用 OPENAI_* 变量：仓库 .env 里只有 DEEPSEEK_*，这里做一次别名映射，
+// 省掉每次手动 export。显式设置了 OPENAI_API_KEY 时不会走到这里。
+if (!process.env.OPENAI_API_KEY && process.env.DEEPSEEK_API_KEY) {
+  process.env.OPENAI_API_KEY = process.env.DEEPSEEK_API_KEY;
+  process.env.OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || process.env.DEEPSEEK_BASE_URL;
+  process.env.OPENAI_MODEL = process.env.OPENAI_MODEL || process.env.DEEPSEEK_MODEL;
+  process.env.TRANSLATE_ENGINE = process.env.TRANSLATE_ENGINE || "deepseek";
+}
+
 // ---------- 参数解析 ----------
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes("--dry-run");
@@ -108,11 +140,23 @@ function restoreICU(translated, tokens) {
 async function makeEngine() {
   if (ENGINE === "openai" || ENGINE === "deepseek") {
     const key = process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("OPENAI_API_KEY 未设置（DeepSeek 复用同一变量）");
-    const base =
+    if (!key) {
+      throw new Error(
+        "OPENAI_API_KEY 未设置（DeepSeek 复用同一变量）。ui/.env 与仓库根 .env 里都没找到 " +
+          "OPENAI_API_KEY / DEEPSEEK_API_KEY，请先在其中之一配置。"
+      );
+    }
+    // base 统一补 /v1：.env 里常写成 https://api.deepseek.com，直接拼 /chat/completions 虽可用，
+    // 但换成别的 OpenAI 兼容端点时多数必须带版本段。
+    const normalizeBase = (u) => {
+      const s = String(u || "").replace(/\/+$/, "");
+      return /\/v\d+$/.test(s) ? s : `${s}/v1`;
+    };
+    const base = normalizeBase(
       ENGINE === "deepseek"
-        ? process.env.OPENAI_BASE_URL || "https://api.deepseek.com/v1"
-        : process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+        ? process.env.OPENAI_BASE_URL || "https://api.deepseek.com"
+        : process.env.OPENAI_BASE_URL || "https://api.openai.com"
+    );
     const model =
       process.env.OPENAI_MODEL || (ENGINE === "deepseek" ? "deepseek-chat" : "gpt-4o-mini");
     return async (texts, to) => {

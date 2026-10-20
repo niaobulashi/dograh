@@ -274,7 +274,7 @@ function CredentialDialogForm({
                                 {t("savingEllipsis")}
                             </>
                         ) : (
-                            credential ? t("saveChanges") : t("create")
+                            credential ? t("credentialsSaveChanges") : t("create")
                         )}
                     </Button>
                 </DialogFooter>

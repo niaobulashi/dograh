@@ -6,7 +6,7 @@ import { useEffect, useMemo } from 'react';
 import type { NodeSpec } from '@/client/types.gen';
 import { useNodeSpecs } from '@/components/flow/renderer';
 import { Button } from '@/components/ui/button';
-import { translateSchemaText } from '@/i18n/schemaText';
+import { useSchemaText } from '@/i18n/schemaText';
 
 import { FlowNode, NodeType } from './types';
 
@@ -48,6 +48,7 @@ function NodeSection({
     onNodeSelect: (nodeType: NodeType) => void;
     nodeTypeCounts: Map<string, number>;
 }) {
+    const sch = useSchemaText();
     const t = useTranslations("Workflow");
     if (specs.length === 0) return null;
     return (
@@ -72,7 +73,7 @@ function NodeSection({
                             disabled={disabled}
                             title={
                                 disabled
-                                    ? t("nodeLimitReachedForWorkflow", { name: translateSchemaText(spec.display_name) })
+                                    ? t("nodeLimitReachedForWorkflow", { name: sch(spec.display_name) })
                                     : undefined
                             }
                         >
@@ -82,10 +83,10 @@ function NodeSection({
                                 </div>
                                 <div className="flex flex-col items-start text-left min-w-0">
                                         <span className="font-medium text-sm">
-                                            {translateSchemaText(spec.display_name)}
+                                            {sch(spec.display_name)}
                                         </span>
                                         <span className="text-xs text-muted-foreground whitespace-normal">
-                                            {translateSchemaText(spec.description)}
+                                            {sch(spec.description)}
                                         </span>
                                 </div>
                             </div>

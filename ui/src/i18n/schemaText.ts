@@ -1,3 +1,6 @@
+import { useLocale } from "next-intl";
+import { useCallback } from "react";
+
 /**
  * 后端 schema / metadata 透传文案的中文字典。
  *
@@ -237,7 +240,18 @@ export const SCHEMA_TEXT: Record<string, string> = {
 };
 
 /** 把后端透传的英文文案翻译成中文，未命中时原样返回（英文环境无影响）。 */
-export function translateSchemaText(text: string | undefined | null): string {
+export function translateSchemaText(text: string | undefined | null, locale?: string): string {
   if (!text) return "";
+  // The dictionary is zh-only; other locales keep the backend's own copy.
+  if (locale && !locale.toLowerCase().startsWith("zh")) return text;
   return SCHEMA_TEXT[text] ?? text;
+}
+
+/**
+ * Locale-aware translator for backend-provided schema copy. Components call
+ * this so the dictionary only applies to zh locales instead of every locale.
+ */
+export function useSchemaText() {
+  const locale = useLocale();
+  return useCallback((text?: string | null) => translateSchemaText(text, locale), [locale]);
 }

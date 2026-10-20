@@ -19,6 +19,21 @@
 - **`getTranslations` 仅限真正的 server 文件**（需 `import { getTranslations } from "next-intl/server"`）：目前只有 `app/layout.tsx`（generateMetadata）、`app/workflow/page.tsx`、`app/handler/[...stack]/page.tsx`。**"use client" 文件里一律用 `useTranslations`**，且必须声明在**组件/hook 顶层**，不能塞进事件回调或 `useEffect` 内部。
 - **`ui/i18n-fragments/` 是死代码**（`src/i18n/request.ts` 只加载 `messages/${locale}.json`，全仓无引用），只维护 `messages/`。
 - i18n 工具脚本（ui/ 根目录，未提交）：`i18n_run.mjs <file> [ns|auto] [--apply] [--nothrow]`（AST 提取替换）、`check_syntax2.mjs`（语法，`*.ts` 必须按 `ScriptKind.TS` 解析否则泛型被误判 JSX）、`check_t_defined.mjs`（`t` 是否在作用域内）、`check_t_dup.mjs`（同 block 重复 `const t`）。
+- **rebase 上游后必查两件事**（2026-10-19 教训）：① 上一轮的 i18n 提交可能只补了 `zh-CN.json`、漏了 `en.json`，en 环境会直接渲染出 `Workflow.xxx` 原始键名；② 上游新增的 .tsx 全是硬编码英文，`i18n_run.mjs ... --preview` 一把扫出来。快速自检脚本思路：遍历 `src/**/*.ts(x)` 提取 `useTranslations("NS")` + `t("key")`，逐个查 `messages/{en,zh-CN}.json`，两边都要有。
+- **后端透传文案用 `src/i18n/schemaText.ts` 的 `SCHEMA_TEXT`（英文原文→中文）**。原来 `translateSchemaText(text)` 不分语种一律翻中文（英文界面出现「提示词」），现已改为 `translateSchemaText(text, locale)`：locale 非 zh 直接返回原文；组件侧用 **`useSchemaText()` hook**（内部 `useLocale` + `useCallback`），纯函数里（如 GenericNode 的 `getBadgeForSpec`）把 `sch` 当参数传进去，不要在里面调 hook。
+- **`next build` 会跑 tsc + eslint，`npm run dev` 不会**。合并上游后本地自查：`./node_modules/.bin/tsc --noEmit`、`./node_modules/.bin/eslint .`、`./node_modules/.bin/vitest run` 三个都过了再构建镜像。
+- **`ui/vitest.setup.ts`（已提交，注册在 `vitest.config.mts` 的 setupFiles）**：mock `next-intl`，`useTranslations`/`useLocale` 在无 `NextIntlClientProvider` 时回退到 `messages/en.json`，有 provider 时走真实实现。上游新加的组件测试大多裸 render，没有这个 setup 会 231 个用例集体失败。`testTimeout: 15000` 是为了 ConfigurationFields 这类大组件在全量并发下超 5s。
+- **en.json 的英文必须是上游原文**（不是把中文再翻回英文）：上游测试按原文断言，措辞/大小写（`Save changes` vs `Save Changes`、`split tracks` 小写、`Edit details for v{number}`）差一点就会红。
+
+## 认证与「数据丢失」误报（2026-10-19）
+- 本项目是 OSS 模式（`NEXT_PUBLIC_NODE_ENV=oss`），**没有 Stack Auth**，走自签 JWT：`api/utils/auth.py` 用 `OSS_JWT_SECRET`（`api/constants.py` 读 `os.getenv`，默认 `change-me-in-production`）+ HS256，payload `sub`=user_id、`email`，有效期 `OSS_JWT_EXPIRY_HOURS` 默认 720h（30 天）。
+- **改 `.env` 里的 `OSS_JWT_SECRET` 会让所有已签发 token 立即失效**，前端拿到满屏 401，UI 列表渲染成空 —— 用户会以为「数据全丢了」。
+- 判断数据是否真丢的正确姿势：`docker exec dograh-postgres-1 psql -U postgres -d postgres -c "select id,name,status from workflows"`，并看 `pg_sequences.last_value`（序列值没被重置就说明没 truncate/没删库）。
+- 快速自证「API + 数据都正常」：容器内签个 token 再打接口
+  `TOKEN=$(docker exec dograh-api-1 python -c "from api.utils.auth import create_jwt_token; print(create_jwt_token(1,'<email>'))")`
+  `curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/workflow/fetch?status=active,archived`
+- 关键接口是 `/api/v1/workflow/fetch|count|summary`（单数），`/api/v1/workflows` 是 404，别用它判断。
+- 全量备份：`docker exec dograh-postgres-1 pg_dump -U postgres -Fc postgres > .backup/dograh-pg-$(date +%Y%m%d).dump`。
 
 ## Docker 部署（用户本地就是走 Docker，不是 npm run dev）
 - 启动：`docker-compose.yaml`（仓库根为构建上下文）。`ui` 服务**只有 image、没有 build 段**，默认拉 `dograhai/dograh-ui:latest`。

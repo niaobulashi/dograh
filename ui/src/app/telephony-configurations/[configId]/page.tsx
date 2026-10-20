@@ -235,24 +235,25 @@ export default function TelephonyConfigurationDetailPage() {
       const skipped = outcome?.skipped ?? [];
       const missing = outcome?.missing_at_provider ?? [];
       const parts = [
-        `${created} added`,
-        `${updated} refreshed`,
-        ...(skipped.length > 0 ? [`${skipped.length} skipped`] : []),
+        t("numbersAddedCount", { count: created }),
+        t("numbersRefreshedCount", { count: updated }),
+        ...(skipped.length > 0 ? [t("numbersSkippedCount", { count: skipped.length })] : []),
       ];
-      toast.success(`Numbers refreshed: ${parts.join(", ")}`);
+      toast.success(t("numbersRefreshed", { parts: parts.join(", ") }));
       for (const s of skipped) {
-        toast.warning(`${s.address} skipped: ${s.reason}`);
+        toast.warning(t("numberSkipped", { address: s.address, reason: s.reason }));
       }
       if (missing.length > 0) {
         toast.warning(
-          `${missing.length} number${missing.length === 1 ? " is" : "s are"} no longer listed by the provider: ${missing
-            .map((n) => n.address)
-            .join(", ")}`,
+          t("numbersMissingAtProvider", {
+            count: missing.length,
+            addresses: missing.map((n) => n.address).join(", "),
+          }),
         );
       }
       fetchAll();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to refresh numbers");
+      toast.error(err instanceof Error ? err.message : t("failedToRefreshNumbers"));
     } finally {
       setSyncingNumbers(false);
     }
@@ -416,15 +417,13 @@ export default function TelephonyConfigurationDetailPage() {
           )}
           {webhookVerifyToken ? (
             <div className="space-y-2 rounded-md border border-dashed p-3">
-              <p className="text-sm font-medium">Webhook for your Meta app</p>
+              <p className="text-sm font-medium">{t("metaWebhookTitle")}</p>
               <p className="text-xs text-muted-foreground">
-                Paste both into the app&apos;s webhook settings and verify, then
-                subscribe to the <code>calls</code> field. Until you do, calls to
-                your number never reach Dograh.
+                {t.rich("metaWebhookHint", { code: (chunks) => <code>{chunks}</code> })}
               </p>
               {[
-                { label: "Callback URL", value: providerWebhookUrl },
-                { label: "Verify token", value: webhookVerifyToken },
+                { label: t("callbackUrl"), value: providerWebhookUrl },
+                { label: t("verifyToken"), value: webhookVerifyToken },
               ].map(({ label, value }) => (
                 <div key={label} className="space-y-1">
                   <p className="text-xs text-muted-foreground">{label}</p>
@@ -432,10 +431,10 @@ export default function TelephonyConfigurationDetailPage() {
                     type="button"
                     onClick={() => {
                       copyTextToClipboard(value)
-                        .then(() => toast.success(`${label} copied`))
-                        .catch(() => toast.error("Failed to copy"));
+                        .then(() => toast.success(t("copiedLabel", { label })))
+                        .catch(() => toast.error(t("failedToCopy")));
                     }}
-                    title="Click to copy"
+                    title={t("clickToCopy")}
                     className="group flex w-full items-center gap-2 rounded-md border bg-muted/20 p-2 text-left font-mono text-xs transition-colors hover:bg-muted/40"
                   >
                     <code className="flex-1 truncate">{value}</code>
@@ -499,8 +498,8 @@ export default function TelephonyConfigurationDetailPage() {
             <CardTitle>{t("phoneNumbersTitle")}</CardTitle>
             <CardDescription>
               {config.supports_outbound === false
-                ? "Numbers this configuration answers calls on."
-                : "Numbers used as caller ID for outbound and accepted for inbound matching. SIP URIs and extensions are supported alongside PSTN numbers."}{" "}
+                ? t("phoneNumbersInboundOnlyDescription")
+                : t("phoneNumbersDescription")}{" "}
               <a
                 href="https://docs.dograh.com/integrations/telephony/inbound"
                 target="_blank"
@@ -522,7 +521,7 @@ export default function TelephonyConfigurationDetailPage() {
                 <RefreshCw
                   className={`h-4 w-4 mr-2 ${syncingNumbers ? "animate-spin" : ""}`}
                 />
-                Refresh numbers
+                {t("refreshNumbers")}
               </Button>
             )}
             <Button size="sm" onClick={() => openPhoneDialog(null)}>
@@ -533,15 +532,13 @@ export default function TelephonyConfigurationDetailPage() {
         <CardContent>
           {phoneNumbers.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No phone numbers yet.{" "}
               {config.supports_phone_number_sync
-                ? "Click Refresh numbers to import the numbers on your account, or add one"
-                : "Add one"}{" "}
-              to start{" "}
-              {config.supports_outbound === false
-                ? "receiving"
-                : "placing or receiving"}{" "}
-              calls on this configuration.
+                ? t("noPhoneNumbersWithSync", {
+                    mode: t(config.supports_outbound === false ? "callsReceiving" : "callsPlacingOrReceiving"),
+                  })
+                : t("noPhoneNumbersAdd", {
+                    mode: t(config.supports_outbound === false ? "callsReceiving" : "callsPlacingOrReceiving"),
+                  })}
             </p>
           ) : (
             <Table>

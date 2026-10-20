@@ -41,26 +41,47 @@ export function singleStartMessages(type: "none" | "custom" | "audio", text = ""
         : [{ event: "start", type: "text", text }];
 }
 
-export function validateToolMessages(messages: ToolMessagesForm): string | null {
+export type ToolMessagesErrorCode =
+    | "errorTooManyDelayed"
+    | "errorDelayRange"
+    | "errorDelayUnique"
+    | "errorVariantCount"
+    | "errorVariantText"
+    | "errorVariantRecording";
+
+/**
+ * next-intl message keys (under the `Tools` namespace) for each validation
+ * code. Callers resolve the code with `useTranslations("Tools")`.
+ */
+export const toolMessagesErrorKeys: Record<ToolMessagesErrorCode, string> = {
+    errorTooManyDelayed: "messages.errorTooManyDelayed",
+    errorDelayRange: "messages.errorDelayRange",
+    errorDelayUnique: "messages.errorDelayUnique",
+    errorVariantCount: "messages.errorVariantCount",
+    errorVariantText: "messages.errorVariantText",
+    errorVariantRecording: "messages.errorVariantRecording",
+};
+
+export function validateToolMessages(messages: ToolMessagesForm): ToolMessagesErrorCode | null {
     const delayed = messages.delayed;
-    if (delayed.length > 10) return "You can add up to 10 delayed updates.";
+    if (delayed.length > 10) return "errorTooManyDelayed";
     if (delayed.some(({ after_ms }) => !Number.isInteger(after_ms) || after_ms <= 0 || after_ms > 120000)) {
-        return "Each delay must be a whole number between 1 and 120000 milliseconds.";
+        return "errorDelayRange";
     }
     if (new Set(delayed.map(({ after_ms }) => after_ms)).size !== delayed.length) {
-        return "Each delayed update must have a different timing. Add variants within the same update.";
+        return "errorDelayUnique";
     }
     for (const group of [messages.start, ...delayed]) {
         if (!group) continue;
         if (!group.variants.length || group.variants.length > 20) {
-            return "Each message group must contain between 1 and 20 variants.";
+            return "errorVariantCount";
         }
         for (const variant of group.variants) {
             if (variant.type === "text" && !variant.text.trim()) {
-                return "Enter text for each variant, or remove it.";
+                return "errorVariantText";
             }
             if (variant.type === "audio" && (!Number.isInteger(variant.recording_id) || variant.recording_id <= 0)) {
-                return "Select a recording for each audio variant, or remove it.";
+                return "errorVariantRecording";
             }
         }
     }

@@ -87,8 +87,8 @@ describe("tool messages", () => {
 
     it("rejects blank variants and invalid timings before saving", () => {
         expect(validateToolMessages({ start: null, delayed: [] })).toBeNull();
-        expect(validateToolMessages({ delayed: [], start: { variants: [{ type: "text", text: " " }] } })).toContain("Enter text");
-        expect(validateToolMessages({ start: null, delayed: [{ after_ms: -1, variants: [{ type: "text", text: "Wait." }] }] })).toContain("whole number");
-        expect(validateToolMessages({ start: null, delayed: [{ after_ms: 3.5, variants: [{ type: "text", text: "Wait." }] }] })).toContain("whole number");
+        expect(validateToolMessages({ delayed: [], start: { variants: [{ type: "text", text: " " }] } })).toBe("errorVariantText");
+        expect(validateToolMessages({ start: null, delayed: [{ after_ms: -1, variants: [{ type: "text", text: "Wait." }] }] })).toBe("errorDelayRange");
+        expect(validateToolMessages({ start: null, delayed: [{ after_ms: 3.5, variants: [{ type: "text", text: "Wait." }] }] })).toBe("errorDelayRange");
     });
 });

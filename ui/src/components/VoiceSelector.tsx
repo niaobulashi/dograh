@@ -115,7 +115,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
         const providerKey = provider as VoiceCatalogProvider;
         if (providerKey !== "dograh" && !providerConnectionUuid) {
             setVoices([]);
-            setError("Select a provider connection to load voices.");
+            setError(t("selectProviderConnectionToLoadVoices"));
             setIsLoading(false);
             return;
         }
@@ -166,7 +166,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
             active = false;
             controller.abort();
         };
-    }, [provider, providerConnectionUuid, connectionRevision, model, language, authLoading, userId, reload, staticVoices]);
+    }, [provider, providerConnectionUuid, connectionRevision, model, language, authLoading, userId, reload, staticVoices, t]);
 
     // Cleanup audio on unmount or when popover closes
     useEffect(() => {
@@ -357,7 +357,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                         {error ? (
                             <div className="py-4 text-center">
                                 <p role="alert" className="text-sm text-red-500">{error}</p>
-                                <Button type="button" variant="ghost" size="sm" onClick={handleReload}>Retry</Button>
+                                <Button type="button" variant="ghost" size="sm" onClick={handleReload}>{t("retry")}</Button>
                             </div>
                             ) : isLoading ? (
                                 <div className="flex items-center justify-center py-4">

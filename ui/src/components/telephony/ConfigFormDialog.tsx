@@ -15,7 +15,7 @@ import type {
   TelephonyConfigurationDetail,
   TelephonyProviderMetadata,
 } from "@/client/types.gen";
-import { translateSchemaText } from "@/i18n/schemaText";
+import { useSchemaText } from "@/i18n/schemaText";
 
 type TelephonyConfigPayload = TelephonyConfigurationCreateRequest["config"];
 import { Button } from "@/components/ui/button";
@@ -106,6 +106,7 @@ export function ConfigFormDialog({
   suggestDefaultOutbound = false,
   onSaved,
 }: ConfigFormDialogProps) {
+    const sch = useSchemaText();
   const t = useTranslations("Telephony");
   const { user, getAccessToken } = useAuth();
   const [providers, setProviders] = useState<TelephonyProviderMetadata[]>([]);
@@ -343,7 +344,7 @@ export function ConfigFormDialog({
                     </div>
                   )}
                   <Label htmlFor={`cfg-field-${field.name}`}>
-                    {translateSchemaText(field.label)}
+                    {sch(field.label)}
                     {!field.required && field.type !== "readonly" && (
                       <span className="ml-1 text-xs text-muted-foreground">
                         {t("optionalParen")}
@@ -357,7 +358,7 @@ export function ConfigFormDialog({
                     isEdit={isEdit}
                   />
                   {field.description && (
-                    <p className="text-xs text-muted-foreground">{translateSchemaText(field.description)}</p>
+                    <p className="text-xs text-muted-foreground">{sch(field.description)}</p>
                   )}
                 </div>
               ))}

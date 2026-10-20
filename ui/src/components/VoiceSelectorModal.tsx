@@ -364,7 +364,7 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                         </Select>
 
                         <Input
-                            placeholder="Search voices..."
+                            placeholder={t("searchVoices")}
                             value={searchInput}
                             onChange={(event) => setSearchInput(event.target.value)}
                             className="h-9 min-w-[160px] flex-1"

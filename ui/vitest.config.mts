@@ -16,6 +16,10 @@ export default defineConfig({
     // its DOM cleanup between tests.
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['./vitest.setup.ts'],
+    // A few component tests render large provider catalogs and take well over
+    // the 5s default once the whole suite runs in parallel.
+    testTimeout: 15000,
     server: {
       deps: {
         // Inline @stackframe so vi.mock('@stackframe/stack') also intercepts the

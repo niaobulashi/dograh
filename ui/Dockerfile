@@ -8,6 +8,17 @@ WORKDIR /app
 # This helps with ARM64 builds and native module compilation
 RUN apk add --no-cache python3 make g++ libc6-compat
 
+# LOCAL PATCH: domestic npm mirror. Direct registry.npmjs.org access from CN
+# idle-times out at ~450s (npm error code EIDLETIMEOUT). package-lock.json
+# resolves everything to registry.npmjs.org, but npm's `replace-registry-host`
+# rewrites those URLs to NPM_CONFIG_REGISTRY automatically, so no lock edits
+# are needed. Revert with `git checkout ui/Dockerfile` if upstream polish matters.
+ENV NPM_CONFIG_REGISTRY="https://registry.npmmirror.com"
+ENV NPM_CONFIG_FETCH_TIMEOUT="600000"
+ENV NPM_CONFIG_FETCH_RETRIES="5"
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT="20000"
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT="120000"
+
 # Copy package files
 COPY ui/package*.json ./
 
