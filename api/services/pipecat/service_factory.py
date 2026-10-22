@@ -657,7 +657,11 @@ def create_stt_service(
             should_interrupt=False,  # Let UserAggregator take care of sending InterruptionFrame
             sample_rate=audio_config.transport_in_sample_rate,
         )
-    elif user_config.stt.provider == ServiceProviders.OPENAI.value:
+    elif user_config.stt.provider in (
+        ServiceProviders.OPENAI.value,
+        ServiceProviders.DASHSCOPE.value,
+        ServiceProviders.MINIMAX.value,
+    ):
         kwargs = {}
         base_url = getattr(user_config.stt, "base_url", None)
         if base_url:
@@ -923,16 +927,26 @@ def create_tts_service(
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,
         )
-    elif user_config.tts.provider == ServiceProviders.OPENAI.value:
+    elif user_config.tts.provider in (
+        ServiceProviders.OPENAI.value,
+        ServiceProviders.DASHSCOPE.value,
+    ):
         kwargs = {}
         base_url = getattr(user_config.tts, "base_url", None)
         if base_url:
             _validate_runtime_service_url(base_url, "base_url")
             kwargs["base_url"] = base_url
+        voice = getattr(user_config.tts, "voice", None)
+        settings_kwargs = {"model": user_config.tts.model}
+        if voice:
+            # Forward the voice field so non-OpenAI compatible-mode providers
+            # (e.g. DashScope) receive a speaker; OpenAI itself ignores an
+            # unknown voice via its own defaults.
+            settings_kwargs["voice"] = voice
         return OpenAITTSService(
             api_key=user_config.tts.api_key,
             sample_rate=OPENAI_SAMPLE_RATE,
-            settings=OpenAITTSSettings(model=user_config.tts.model),
+            settings=OpenAITTSSettings(**settings_kwargs),
             text_filters=[xml_function_tag_filter],
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,

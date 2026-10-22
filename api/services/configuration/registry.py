@@ -838,6 +838,24 @@ DASHSCOPE_MODELS = [
     "qwen3-max",
 ]
 
+# Aliyun DashScope OpenAI-compatible speech (hosted on the same compatible-mode
+# base URL as chat). STT/TTS ride the OpenAI-compatible /audio/transcriptions
+# and /audio/speech endpoints.
+DASHSCOPE_STT_MODELS = [
+    "qwen3-asr-flash",
+    "qwen-asr-flash",
+    "paraformer-v2",
+]
+DASHSCOPE_TTS_MODELS = [
+    "cosyvoice-v2",
+    "qwen3-tts-instruct-flash-realtime",
+    "qwen3-tts",
+]
+# MiniMax speech-to-text is OpenAI-compatible (/v1/audio/transcriptions).
+MINIMAX_STT_MODELS = [
+    "asr-1.0",
+]
+
 VOLCENGINE_API_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 VOLCENGINE_MODELS = [
     "doubao-seed-1.6",
@@ -1619,6 +1637,25 @@ class OpenAITTSService(BaseTTSConfiguration):
     )
 
 
+@register_tts(provider=DASHSCOPE_PROVIDER)
+class DashScopeTTSConfiguration(BaseTTSConfiguration):
+    provider: Literal[ServiceProviders.DASHSCOPE] = ServiceProviders.DASHSCOPE
+    model: str = Field(
+        default="cosyvoice-v2",
+        description="DashScope (Tongyi Qianwen) TTS model.",
+        json_schema_extra={"examples": DASHSCOPE_TTS_MODELS, "allow_custom_input": True},
+    )
+    voice: str = Field(
+        default="cosyvoice-v2",
+        description="DashScope voice/speaker identifier.",
+        json_schema_extra={"allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=DASHSCOPE_API_BASE_URL,
+        description="DashScope OpenAI-compatible API endpoint.",
+    )
+
+
 DOGRAH_TTS_MODELS = ["default"]
 
 
@@ -2109,6 +2146,7 @@ TTSConfig = Annotated[
         DeepgramTTSConfiguration,
         GoogleTTSConfiguration,
         OpenAITTSService,
+        DashScopeTTSConfiguration,
         ElevenlabsTTSConfiguration,
         CartesiaTTSConfiguration,
         InworldTTSConfiguration,
@@ -2237,6 +2275,34 @@ class OpenAISTTConfiguration(BaseSTTConfiguration):
     base_url: str = Field(
         default="https://api.openai.com/v1",
         description="Override only if using an OpenAI-compatible API (e.g. local STT, proxy).",
+    )
+
+
+@register_stt(provider=DASHSCOPE_PROVIDER)
+class DashScopeSTTConfiguration(BaseSTTConfiguration):
+    provider: Literal[ServiceProviders.DASHSCOPE] = ServiceProviders.DASHSCOPE
+    model: str = Field(
+        default="qwen3-asr-flash",
+        description="DashScope (Tongyi Qianwen) ASR model.",
+        json_schema_extra={"examples": DASHSCOPE_STT_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=DASHSCOPE_API_BASE_URL,
+        description="DashScope OpenAI-compatible API endpoint.",
+    )
+
+
+@register_stt(provider=MINIMAX_PROVIDER)
+class MiniMaxSTTConfiguration(BaseSTTConfiguration):
+    provider: Literal[ServiceProviders.MINIMAX] = ServiceProviders.MINIMAX
+    model: str = Field(
+        default="asr-1.0",
+        description="MiniMax speech-to-text model.",
+        json_schema_extra={"examples": MINIMAX_STT_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default="https://api.minimax.cn/v1",
+        description="MiniMax OpenAI-compatible API endpoint.",
     )
 
 
@@ -2600,6 +2666,8 @@ STTConfig = Annotated[
         DeepgramSTTConfiguration,
         CartesiaSTTConfiguration,
         OpenAISTTConfiguration,
+        DashScopeSTTConfiguration,
+        MiniMaxSTTConfiguration,
         GoogleSTTConfiguration,
         DograhSTTService,
         SpeechmaticsSTTConfiguration,
