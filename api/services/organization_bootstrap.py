@@ -17,7 +17,7 @@ from datetime import timedelta
 
 from loguru import logger
 
-from api.constants import AUTH_PROVIDER, DEPLOYMENT_MODE
+from api.constants import AUTH_PROVIDER, DEPLOYMENT_MODE, SKIP_MANAGED_PROVISIONING
 from api.db import db_client
 from api.db.organization_configuration_client import LEASE_COMPLETED
 from api.enums import OrganizationConfigurationKey
@@ -89,9 +89,10 @@ async def ensure_organization_bootstrapped(
         # Another request holds the lease and is provisioning right now.
         return False
 
-    if has_model_configuration and sip_provisioned:
-        # Provisioned before the sentinel existed. Record it so subsequent
-        # requests take the single-read fast path above.
+    if (has_model_configuration or SKIP_MANAGED_PROVISIONING) and sip_provisioned:
+        # Provisioned before the sentinel existed (or managed model
+        # provisioning is disabled). Record it so subsequent requests take the
+        # single-read fast path above.
         await db_client.complete_configuration_lease(
             organization_id, _BOOTSTRAP_KEY, owner_token
         )
@@ -148,7 +149,7 @@ async def _bootstrap_organization(
     Returns True when the organization ends up fully provisioned, i.e. when the
     lease may be marked terminal.
     """
-    if not has_model_configuration:
+    if not has_model_configuration and not SKIP_MANAGED_PROVISIONING:
         # Billing is best effort: it is recoverable out of band, and failing the
         # whole bootstrap over it would also cost the org its model config.
         try:
@@ -176,6 +177,15 @@ async def _bootstrap_organization(
             credentials={"api_key": service_key},
             configuration_name=DEFAULT_CONFIGURATION_NAME,
             configuration_for=dograh_model_configuration_spec,
+        )
+    elif not has_model_configuration and SKIP_MANAGED_PROVISIONING:
+        # Managed model provisioning disabled: the org configures its own BYOK
+        # providers. No MPS service key is minted and no MPS billing account is
+        # initialized.
+        logger.info(
+            "Skipping managed model provisioning for organization {} "
+            "(SKIP_MANAGED_PROVISIONING is set)",
+            organization_id,
         )
 
     if sip_provisioned:

@@ -146,6 +146,22 @@ TEMPERATURE_POLICIES = {
         "maximum": 2.0,
         "docs_url": "https://docs.sarvam.ai/api-reference/chat/chat-completions-v1",
     },
+    "deepseek": {
+        "maximum": 2.0,
+        "docs_url": "https://api-docs.deepseek.com/api-reference/chat-completions",
+    },
+    "dashscope": {
+        "maximum": 2.0,
+        "docs_url": "https://help.aliyun.com/zh/model-studio/api-reference",
+    },
+    "volcengine": {
+        "maximum": 2.0,
+        "docs_url": "https://www.volcengine.com/docs/82379/1298454",
+    },
+    "zhipu": {
+        "maximum": 2.0,
+        "docs_url": "https://open.bigmodel.cn/dev/api#chatglm",
+    },
 }
 
 

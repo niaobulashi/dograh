@@ -1394,6 +1394,10 @@ def create_llm_service_from_provider(
     if provider in (
         ServiceProviders.OPENAI.value,
         ServiceProviders.ATLASCLOUD.value,
+        ServiceProviders.DEEPSEEK.value,
+        ServiceProviders.DASHSCOPE.value,
+        ServiceProviders.VOLCENGINE.value,
+        ServiceProviders.ZHIPU.value,
     ):
         # Voicemail and QA configs with their own provider pass no base_url;
         # without this default the OpenAI client sends the Atlas Cloud key to OpenAI.
@@ -1908,6 +1912,10 @@ def _create_single_llm_service(
     if provider in (
         ServiceProviders.OPENAI.value,
         ServiceProviders.ATLASCLOUD.value,
+        ServiceProviders.DEEPSEEK.value,
+        ServiceProviders.DASHSCOPE.value,
+        ServiceProviders.VOLCENGINE.value,
+        ServiceProviders.ZHIPU.value,
     ):
         kwargs["base_url"] = user_config.llm.base_url
     elif provider == ServiceProviders.OPENROUTER.value:

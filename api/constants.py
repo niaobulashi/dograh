@@ -81,6 +81,10 @@ DOGRAH_DEVOPS_SECRET = os.getenv("DOGRAH_DEVOPS_SECRET") or None
 # Set WORKFLOW_TEMPLATE_GENERATOR=local to generate from a self-hosted LLM
 # (DeepSeek by default) instead of delegating to MPS.
 WORKFLOW_TEMPLATE_GENERATOR = os.getenv("WORKFLOW_TEMPLATE_GENERATOR", "mps").lower()
+# When true, a fresh organization is NOT given a Dograh-managed (MPS) default
+# model configuration. The org must configure its own BYOK providers instead.
+# This breaks the implicit MPS dependency for self-hosted / local deployments.
+SKIP_MANAGED_PROVISIONING = os.getenv("SKIP_MANAGED_PROVISIONING", "false").lower() == "true"
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")

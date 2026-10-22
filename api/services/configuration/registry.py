@@ -125,6 +125,10 @@ class ServiceProviders(str, Enum):
     LMNT = "lmnt"
     SPEECHIFY = "speechify"
     SONIOX = "soniox"
+    DEEPSEEK = "deepseek"
+    DASHSCOPE = "dashscope"
+    VOLCENGINE = "volcengine"
+    ZHIPU = "zhipu"
 
 
 @dataclass(frozen=True)
@@ -186,6 +190,10 @@ class BaseServiceConfiguration(BaseModel):
         ServiceProviders.LMNT,
         ServiceProviders.SPEECHIFY,
         ServiceProviders.SONIOX,
+        ServiceProviders.DEEPSEEK,
+        ServiceProviders.DASHSCOPE,
+        ServiceProviders.VOLCENGINE,
+        ServiceProviders.ZHIPU,
     ]
     api_key: str | list[str]
 
@@ -434,6 +442,10 @@ CARTESIA_PROVIDER = Provider("cartesia", "Cartesia")
 XAI_PROVIDER = Provider("xai", "xAI")
 LMNT_PROVIDER = Provider("lmnt", "LMNT")
 MINIMAX_PROVIDER = Provider("minimax", "MiniMax")
+DEEPSEEK_PROVIDER = Provider("deepseek", "DeepSeek")
+DASHSCOPE_PROVIDER = Provider("dashscope", "阿里百炼")
+VOLCENGINE_PROVIDER = Provider("volcengine", "火山方舟")
+ZHIPU_PROVIDER = Provider("zhipu", "智谱 AI")
 SPEECHIFY_PROVIDER = Provider(
     "speechify",
     "Speechify",
@@ -808,6 +820,98 @@ class MiniMaxLLMConfiguration(BaseChatLLMConfiguration):
     base_url: str = Field(
         default="https://api.minimax.io/v1",
         description="MiniMax OpenAI-compatible API endpoint.",
+    )
+
+
+DEEPSEEK_API_BASE_URL = "https://api.deepseek.com/v1"
+DEEPSEEK_MODELS = [
+    "deepseek-chat",
+    "deepseek-reasoner",
+]
+
+DASHSCOPE_API_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+DASHSCOPE_MODELS = [
+    "qwen-plus",
+    "qwen-max",
+    "qwen-turbo",
+    "qwen-long",
+    "qwen3-max",
+]
+
+VOLCENGINE_API_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+VOLCENGINE_MODELS = [
+    "doubao-seed-1.6",
+    "doubao-1.5-pro-32k",
+    "doubao-1.5-lite-32k",
+]
+
+ZHIPU_API_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
+ZHIPU_MODELS = [
+    "glm-4-plus",
+    "glm-4-air",
+    "glm-4-airx",
+    "glm-4-flash",
+    "glm-4.5",
+]
+
+
+@register_llm(provider=DEEPSEEK_PROVIDER)
+class DeepSeekLLMConfiguration(BaseChatLLMConfiguration):
+    temperature: float | None = temperature_field("deepseek", 0.1)
+    provider: Literal[ServiceProviders.DEEPSEEK] = ServiceProviders.DEEPSEEK
+    model: str = Field(
+        default="deepseek-chat",
+        description="DeepSeek chat model identifier.",
+        json_schema_extra={"examples": DEEPSEEK_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=DEEPSEEK_API_BASE_URL,
+        description="DeepSeek OpenAI-compatible API endpoint.",
+    )
+
+
+@register_llm(provider=DASHSCOPE_PROVIDER)
+class DashScopeLLMConfiguration(BaseChatLLMConfiguration):
+    temperature: float | None = temperature_field("dashscope", 0.1)
+    provider: Literal[ServiceProviders.DASHSCOPE] = ServiceProviders.DASHSCOPE
+    model: str = Field(
+        default="qwen-plus",
+        description="Alibaba DashScope (Tongyi Qianwen) model identifier.",
+        json_schema_extra={"examples": DASHSCOPE_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=DASHSCOPE_API_BASE_URL,
+        description="DashScope OpenAI-compatible API endpoint.",
+    )
+
+
+@register_llm(provider=VOLCENGINE_PROVIDER)
+class VolcengineLLMConfiguration(BaseChatLLMConfiguration):
+    temperature: float | None = temperature_field("volcengine", 0.1)
+    provider: Literal[ServiceProviders.VOLCENGINE] = ServiceProviders.VOLCENGINE
+    model: str = Field(
+        default="doubao-seed-1.6",
+        description="Volcengine Ark model or endpoint identifier.",
+        json_schema_extra={"examples": VOLCENGINE_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=VOLCENGINE_API_BASE_URL,
+        description="Volcengine Ark OpenAI-compatible API endpoint.",
+    )
+
+
+@register_llm(provider=ZHIPU_PROVIDER)
+class ZhipuLLMConfiguration(BaseChatLLMConfiguration):
+    temperature: float | None = temperature_field("zhipu", 0.1)
+    provider: Literal[ServiceProviders.ZHIPU] = ServiceProviders.ZHIPU
+    model: str = Field(
+        default="glm-4-plus",
+        description="Zhipu AI (GLM) model identifier.",
+        json_schema_extra={"examples": ZHIPU_MODELS, "allow_custom_input": True},
+    )
+    base_url: str = Field(
+        default=ZHIPU_API_BASE_URL,
+        description="Zhipu AI OpenAI-compatible API endpoint.",
     )
 
 
