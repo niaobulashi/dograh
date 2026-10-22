@@ -225,7 +225,7 @@ export function PhoneNumberDialog({
             <Label htmlFor="pn-address">{t("address")}</Label>
             <Input
               id="pn-address"
-              placeholder="+19781899185, sip:101@asterisk.local, or 101"
+              placeholder={t("addressPlaceholder")}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               onBlur={() => setAddressTouched(true)}

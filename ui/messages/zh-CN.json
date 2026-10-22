@@ -1281,6 +1281,7 @@
     "disabled": "禁用",
     "back": "返回",
     "address": "地址",
+    "addressPlaceholder": "+19781899185、sip:101@asterisk.local 或 101",
     "none": "（无）",
     "copiedLabel": "已复制{label}",
     "failedToCopyLabel": "复制 {label} 失败",
