@@ -299,6 +299,16 @@ export const SCHEMA_TEXT: Record<string, string> = {
   "Always": "始终",
   "Inbound calls only": "仅入站呼叫",
   "Outbound calls only": "仅出站呼叫",
+
+  // DashScope / 阿里百炼语音配置（STT/TTS）
+  "DashScope (Tongyi Qianwen) ASR model.": "DashScope（通义千问）语音识别模型。",
+  "DashScope (Tongyi Qianwen) TTS model.": "DashScope（通义千问）语音合成模型。",
+  "DashScope voice ID. CosyVoice voices end in _v2; qwen-audio-*-tts models need a v3.1 voice instead.":
+    "DashScope 音色 ID。CosyVoice 音色以 _v2 结尾；qwen-audio-*-tts 模型需改用 v3.1 音色。",
+  "DashScope websocket endpoint, used by qwen-audio-*-tts models. The workspace-specific host is also accepted.":
+    "DashScope WebSocket 地址，供 qwen-audio-*-tts 模型使用；也可填业务空间专属域名。",
+  "DashScope websocket endpoint, used by the realtime qwen-audio-*-asr-* models. The workspace-specific host is also accepted.":
+    "DashScope WebSocket 地址，供实时 qwen-audio-*-asr-* 模型使用；也可填业务空间专属域名。",
 };
 
 /** 把后端透传的英文文案翻译成中文，未命中时原样返回（英文环境无影响）。 */

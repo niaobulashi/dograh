@@ -433,17 +433,25 @@ def _validate_runtime_service_url(url: str, field_name: str) -> None:
 def _is_dashscope_realtime_asr(model: str | None) -> bool:
     """Whether a DashScope ASR model id speaks the duplex websocket protocol.
 
-    Only the realtime families qualify: the ``-streaming`` / ``-message`` /
-    ``-realtime`` variants of ``qwen*-asr*`` plus ``fun-asr-realtime``. Their
-    non-realtime siblings (``-filetrans``, plain ``qwen-audio-*-asr-flash``,
-    ``paraformer-v2``) are batch APIs and belong on the OpenAI-compatible
-    ``/audio/transcriptions`` path instead.
+    Only models served at ``/api-ws/v1/inference`` qualify: the
+    ``-streaming`` / ``-message`` variants of ``qwen-audio-*-asr-*`` plus
+    ``fun-asr-realtime`` / ``paraformer-realtime``.
+
+    Deliberately excluded:
+
+    * ``qwen3-asr-flash-realtime`` - it uses the AOQ protocol at
+      ``/api-ws/v1/realtime`` with OpenAI-Realtime style events, a different
+      wire format.
+    * ``-filetrans`` and plain ``qwen-audio-*-asr-flash`` - batch HTTP APIs
+      that belong on the OpenAI-compatible ``/audio/transcriptions`` path.
     """
     model = (model or "").strip()
     if model.startswith(("fun-asr-realtime", "paraformer-realtime")):
         return True
-    return model.startswith("qwen") and "asr" in model and model.endswith(
-        ("-streaming", "-message", "-realtime")
+    return (
+        model.startswith("qwen-audio-")
+        and "asr" in model
+        and model.endswith(("-streaming", "-message"))
     )
 
 
