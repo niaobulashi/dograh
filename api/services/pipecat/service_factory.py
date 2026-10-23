@@ -23,8 +23,11 @@ from api.services.configuration.options import (
 )
 from api.services.configuration.registry import (
     ATLASCLOUD_API_BASE_URL,
+    DASHSCOPE_STREAMING_WS_URL,
     ELEVENLABS_DIALOGUE_TTS_MODEL_PATTERN,
     HOPPER_API_BASE_URL,
+    MINIMAX_API_BASE_URL,
+    MINIMAX_TTS_API_BASE_URL,
     REGISTRY,
     BaseSTTConfiguration,
     ServiceProviders,
@@ -40,7 +43,10 @@ from api.services.pipecat.google_credentials import (
     get_google_credentials,
     prepare_google_credentials,
 )
+from api.services.pipecat.minimax_stt import MiniMaxSTTService
 from api.services.pipecat.openai_spoken_tool_calls import OpenAISpokenToolCallMixin
+from api.services.pipecat.qwen_streaming_stt import QwenStreamingSTTService
+from api.services.pipecat.qwen_tts import QwenAudioTTSService
 from api.services.pipecat.spoken_tool_calls import SpokenToolCallMixin
 from api.utils.url_security import validate_user_configured_service_url
 from pipecat.processors.aggregators.llm_context import LLMContext
@@ -322,8 +328,45 @@ class HuggingFaceLLMService(OpenAISpokenToolCallMixin, BaseHuggingFaceLLMService
     """HuggingFace streaming service with spoken-tool recovery."""
 
 
+# MiniMax needs a non-empty chat; a system-only context is not enough.
+def _minimax_opening_user_message(system_instruction: str | None) -> str:
+    """Opening instruction written in the workflow's own language.
+
+    The instruction must not pull the reply into another language, so it
+    follows the script of the system instruction the workflow already uses.
+    """
+    text = system_instruction or ""
+    if any("\u4e00" <= char <= "\u9fff" for char in text):
+        return "（通话已接通，请先开口回复来电者。）"
+    return "(The call has connected. Please greet the caller.)"
+
+
 class MiniMaxLLMService(OpenAISpokenToolCallMixin, BaseMiniMaxLLMService):
     """MiniMax streaming service with spoken-tool recovery."""
+
+    def build_chat_completion_params(self, params_from_context):
+        """Keep the request acceptable to MiniMax's chat validation.
+
+        MiniMax rejects a request whose messages contain nothing but the
+        system prompt ("invalid params, chat content is empty (2013)"), while
+        OpenAI-compatible providers accept it. The pipeline legitimately asks
+        the LLM for the call opening before the caller has spoken, which sends a
+        system-only context, so the opening turn is added as a user message.
+        """
+        params = super().build_chat_completion_params(params_from_context)
+        # Copy the list: it may be the very list held by the shared context.
+        messages = list(params.get("messages") or [])
+        if not any(message.get("role") != "system" for message in messages):
+            messages.append(
+                {
+                    "role": "user",
+                    "content": _minimax_opening_user_message(
+                        self._settings.system_instruction
+                    ),
+                }
+            )
+            params["messages"] = messages
+        return params
 
 
 class OpenAILLMService(OpenAISpokenToolCallMixin, BaseOpenAILLMService):
@@ -385,6 +428,46 @@ def _validate_runtime_service_url(url: str, field_name: str) -> None:
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+def _is_dashscope_realtime_asr(model: str | None) -> bool:
+    """Whether a DashScope ASR model id speaks the duplex websocket protocol.
+
+    Only the realtime families qualify: the ``-streaming`` / ``-message`` /
+    ``-realtime`` variants of ``qwen*-asr*`` plus ``fun-asr-realtime``. Their
+    non-realtime siblings (``-filetrans``, plain ``qwen-audio-*-asr-flash``,
+    ``paraformer-v2``) are batch APIs and belong on the OpenAI-compatible
+    ``/audio/transcriptions`` path instead.
+    """
+    model = (model or "").strip()
+    if model.startswith(("fun-asr-realtime", "paraformer-realtime")):
+        return True
+    return model.startswith("qwen") and "asr" in model and model.endswith(
+        ("-streaming", "-message", "-realtime")
+    )
+
+
+def _is_dashscope_qwen_tts(model: str | None) -> bool:
+    """Whether a DashScope TTS model id is a Qwen-Audio-TTS model.
+
+    Those are served over the inference websocket, unlike the cosyvoice models
+    that ride ``/audio/speech``, and they use their own v3.1 voice ids.
+    """
+    model = (model or "").strip()
+    return model.startswith("qwen-audio-") and "tts" in model
+
+
+def _dashscope_websocket_url(service_config) -> str:
+    """Resolve and validate the DashScope websocket endpoint for a service."""
+    url = (getattr(service_config, "ws_url", None) or DASHSCOPE_STREAMING_WS_URL).strip()
+    if "://" not in url:
+        url = f"wss://{url}"
+    elif url.startswith("https://"):
+        url = "wss://" + url[len("https://") :]
+    elif url.startswith("http://"):
+        url = "ws://" + url[len("http://") :]
+    _validate_runtime_service_url(url, "ws_url")
+    return url
 
 
 def _deepgram_base_url(service_config) -> str:
@@ -657,10 +740,33 @@ def create_stt_service(
             should_interrupt=False,  # Let UserAggregator take care of sending InterruptionFrame
             sample_rate=audio_config.transport_in_sample_rate,
         )
+    elif user_config.stt.provider == ServiceProviders.MINIMAX.value:
+        # MiniMax serves speech recognition at POST {base_url}/speech_to_text.
+        # The OpenAI-compatible /v1/audio/transcriptions path does not exist
+        # on the MiniMax API host (it answers 404).
+        base_url = getattr(user_config.stt, "base_url", None) or MINIMAX_API_BASE_URL
+        _validate_runtime_service_url(base_url, "base_url")
+        return MiniMaxSTTService(
+            api_key=user_config.stt.api_key,
+            base_url=base_url,
+            model=user_config.stt.model or "asr-1.0",
+            should_interrupt=False,  # Let UserAggregator own interruption confirmation.
+        )
+    elif user_config.stt.provider == ServiceProviders.DASHSCOPE.value and (
+        _is_dashscope_realtime_asr(user_config.stt.model)
+    ):
+        # Realtime Qwen/Fun ASR: duplex websocket, transcript arrives while the
+        # caller is still speaking. See qwen_streaming_stt for the protocol.
+        return QwenStreamingSTTService(
+            api_key=user_config.stt.api_key,
+            url=_dashscope_websocket_url(user_config.stt),
+            model=user_config.stt.model,
+            sample_rate=audio_config.pipeline_sample_rate,
+            should_interrupt=False,  # Let UserAggregator own interruption confirmation.
+        )
     elif user_config.stt.provider in (
         ServiceProviders.OPENAI.value,
         ServiceProviders.DASHSCOPE.value,
-        ServiceProviders.MINIMAX.value,
     ):
         kwargs = {}
         base_url = getattr(user_config.stt, "base_url", None)
@@ -927,6 +1033,22 @@ def create_tts_service(
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,
         )
+    elif user_config.tts.provider == ServiceProviders.DASHSCOPE.value and (
+        _is_dashscope_qwen_tts(user_config.tts.model)
+    ):
+        # Qwen-Audio-TTS is served over the inference websocket, not
+        # /audio/speech, and needs a v3.1 voice id.
+        voice = getattr(user_config.tts, "voice", None) or "longanlingxin_v3.1"
+        return QwenAudioTTSService(
+            api_key=user_config.tts.api_key,
+            url=_dashscope_websocket_url(user_config.tts),
+            model=user_config.tts.model,
+            voice=voice,
+            sample_rate=audio_config.pipeline_sample_rate,
+            text_filters=[xml_function_tag_filter],
+            skip_aggregator_types=["recording_router", "recording"],
+            silence_time_s=1.0,
+        )
     elif user_config.tts.provider in (
         ServiceProviders.OPENAI.value,
         ServiceProviders.DASHSCOPE.value,
@@ -1185,8 +1307,7 @@ def create_tts_service(
         # Pipecat appends "?GroupId=..." to base_url as-is, so /t2a_v2 must
         # already be in the path.
         base_url = (
-            getattr(user_config.tts, "base_url", None)
-            or "https://api.minimax.io/v1/t2a_v2"
+            getattr(user_config.tts, "base_url", None) or MINIMAX_TTS_API_BASE_URL
         ).rstrip("/")
         if not base_url.endswith("/t2a_v2"):
             base_url = f"{base_url}/t2a_v2"
@@ -1556,7 +1677,7 @@ def create_llm_service_from_provider(
             settings=HuggingFaceLLMSettings(model=model, **sampling_settings),
         )
     elif provider == ServiceProviders.MINIMAX.value:
-        base_url = base_url or "https://api.minimax.io/v1"
+        base_url = base_url or MINIMAX_API_BASE_URL
         _validate_runtime_service_url(base_url, "base_url")
         return MiniMaxLLMService(
             enable_direct_mode=enable_direct_mode,

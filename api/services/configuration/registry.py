@@ -442,6 +442,12 @@ CARTESIA_PROVIDER = Provider("cartesia", "Cartesia")
 XAI_PROVIDER = Provider("xai", "xAI")
 LMNT_PROVIDER = Provider("lmnt", "LMNT")
 MINIMAX_PROVIDER = Provider("minimax", "MiniMax")
+# MiniMax API endpoints are region-specific: the mainland China deployment
+# (platform.minimax.cn) is served by api.minimax.cn, while the international
+# deployment (platform.minimax.io) is served by api.minimax.io. A key from one
+# region is rejected by the other.
+MINIMAX_API_BASE_URL = "https://api.minimax.cn/v1"
+MINIMAX_TTS_API_BASE_URL = "https://api.minimax.cn/v1/t2a_v2"
 DEEPSEEK_PROVIDER = Provider("deepseek", "DeepSeek")
 DASHSCOPE_PROVIDER = Provider("dashscope", "阿里百炼")
 VOLCENGINE_PROVIDER = Provider("volcengine", "火山方舟")
@@ -802,9 +808,9 @@ class HuggingFaceLLMConfiguration(BaseChatLLMConfiguration):
 
 
 MINIMAX_MODELS = [
-    "MiniMax-M2.7",
-    "MiniMax-M2.7-highspeed",
+    # The MiniMax 2.x line was retired (API error 2069 "no longer available").
     "MiniMax-M3",
+    "MiniMax-M3.1-Flash",
 ]
 
 
@@ -813,12 +819,12 @@ class MiniMaxLLMConfiguration(BaseChatLLMConfiguration):
     temperature: float | None = temperature_field("minimax", 1.0)
     provider: Literal[ServiceProviders.MINIMAX] = ServiceProviders.MINIMAX
     model: str = Field(
-        default="MiniMax-M2.7",
+        default="MiniMax-M3",
         description="MiniMax chat model.",
         json_schema_extra={"examples": MINIMAX_MODELS, "allow_custom_input": True},
     )
     base_url: str = Field(
-        default="https://api.minimax.io/v1",
+        default=MINIMAX_API_BASE_URL,
         description="MiniMax OpenAI-compatible API endpoint.",
     )
 
@@ -838,20 +844,55 @@ DASHSCOPE_MODELS = [
     "qwen3-max",
 ]
 
-# Aliyun DashScope OpenAI-compatible speech (hosted on the same compatible-mode
-# base URL as chat). STT/TTS ride the OpenAI-compatible /audio/transcriptions
-# and /audio/speech endpoints.
+# Aliyun DashScope serves two families of speech services, on two protocols:
+#
+# * OpenAI-compatible speech rides the same compatible-mode base URL as chat,
+#   through /audio/transcriptions and /audio/speech. These are batch calls.
+# * Qwen-Audio realtime ASR/TTS use DashScope's own duplex websocket protocol
+#   at /api-ws/v1/inference, which is what the live call pipeline wants.
+#
+# The model id decides which branch the service factory takes.
+DASHSCOPE_STREAMING_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+
+# Realtime recognition. `-streaming` is the general purpose continuous model;
+# `-message` targets short utterances with a lower first-token latency. The
+# file-transcription models (`-filetrans`) are non-realtime and take a public
+# file URL, so they are deliberately absent.
+DASHSCOPE_ASR_STREAMING_MODELS = [
+    "qwen-audio-3.1-asr-flash-streaming",
+    "qwen-audio-3.1-asr-flash-message",
+    "qwen-audio-3.0-asr-flash-streaming",
+    "fun-asr-realtime",
+]
+
 DASHSCOPE_STT_MODELS = [
     "qwen3-asr-flash",
     "qwen-asr-flash",
     "paraformer-v2",
+    *DASHSCOPE_ASR_STREAMING_MODELS,
 ]
+
+# Qwen-Audio-TTS speaks the inference websocket, not /audio/speech, and its
+# voices are the v3.1 set rather than the cosyvoice *_v2 ids.
+DASHSCOPE_TTS_PLUS_MODELS = [
+    "qwen-audio-3.1-tts-plus",
+    "qwen-audio-3.1-tts-flash",
+]
+
+DASHSCOPE_TTS_PLUS_VOICES = [
+    "longanlingxin_v3.1",  # 龙安灵心 女声
+    "xunanchuan_v3.1",  # 许南川 男声
+    "longanhuan_v3.1",  # 龙安欢 女声
+    "longanfengyue_v3.1",  # 龙安风悦 女声
+]
+
 DASHSCOPE_TTS_MODELS = [
     "cosyvoice-v2",
     "qwen3-tts-instruct-flash-realtime",
     "qwen3-tts",
+    *DASHSCOPE_TTS_PLUS_MODELS,
 ]
-# MiniMax speech-to-text is OpenAI-compatible (/v1/audio/transcriptions).
+# MiniMax speech-to-text is served at POST {base_url}/speech_to_text.
 MINIMAX_STT_MODELS = [
     "asr-1.0",
 ]
@@ -1366,6 +1407,10 @@ LLMConfig = Annotated[
         HuggingFaceLLMConfiguration,
         MiniMaxLLMConfiguration,
         SarvamLLMConfiguration,
+        DeepSeekLLMConfiguration,
+        DashScopeLLMConfiguration,
+        VolcengineLLMConfiguration,
+        ZhipuLLMConfiguration,
     ],
     Field(discriminator="provider"),
 ]
@@ -1618,6 +1663,24 @@ class GoogleTTSConfiguration(BaseTTSConfiguration):
 
 OPENAI_TTS_MODELS = ["gpt-4o-mini-tts"]
 
+# CosyVoice-V2 system voices (https://help.aliyun.com/document_detail/2920817.html).
+DASHSCOPE_TTS_VOICES = [
+    "longxiaochun_v2",  # 龙小淳 温柔姐姐
+    "longwan_v2",  # 龙婉 普通话女声
+    "longxiaoxia_v2",  # 龙小夏 温柔女声
+    "loongbella_v2",  # Bella2.0 新闻女声
+    "longcheng_v2",  # 龙橙 阳光男声
+    "longshu_v2",  # 龙书 新闻男声
+    "longnan_v2",  # 龙楠 睿智青年男
+    "longyuan_v2",  # 龙媛 温暖治愈女
+    "longmiao_v2",  # 龙妙 抑扬顿挫女
+    "longhua_v2",  # 龙华 活泼女童
+    "longjielidou_v2",  # 龙杰力豆 阳光顽皮男
+    "longlaotie_v2",  # 龙老铁 东北直率男
+    # Qwen-Audio-TTS 3.1 voices; only valid for the qwen-audio-*-tts models.
+    *DASHSCOPE_TTS_PLUS_VOICES,
+]
+
 
 @register_tts(provider=OPENAI_PROVIDER)
 class OpenAITTSService(BaseTTSConfiguration):
@@ -1646,13 +1709,23 @@ class DashScopeTTSConfiguration(BaseTTSConfiguration):
         json_schema_extra={"examples": DASHSCOPE_TTS_MODELS, "allow_custom_input": True},
     )
     voice: str = Field(
-        default="cosyvoice-v2",
-        description="DashScope voice/speaker identifier.",
-        json_schema_extra={"allow_custom_input": True},
+        default="longxiaochun_v2",
+        description=(
+            "DashScope voice ID. CosyVoice voices end in _v2; "
+            "qwen-audio-*-tts models need a v3.1 voice instead."
+        ),
+        json_schema_extra={"examples": DASHSCOPE_TTS_VOICES, "allow_custom_input": True},
     )
     base_url: str = Field(
         default=DASHSCOPE_API_BASE_URL,
         description="DashScope OpenAI-compatible API endpoint.",
+    )
+    ws_url: str = Field(
+        default=DASHSCOPE_STREAMING_WS_URL,
+        description=(
+            "DashScope websocket endpoint, used by qwen-audio-*-tts models. "
+            "The workspace-specific host is also accepted."
+        ),
     )
 
 
@@ -1884,8 +1957,20 @@ class SpeachesTTSConfiguration(BaseTTSConfiguration):
     )
 
 
-MINIMAX_TTS_MODELS = ["speech-2.8-hd", "speech-2.8-turbo"]
+MINIMAX_TTS_MODELS = ["speech-2.8-turbo", "speech-2.8-hd"]
 MINIMAX_TTS_VOICES = [
+    # Chinese system voices (https://platform.minimaxi.com/docs/faq/system-voice-id).
+    "female-shaonv",  # 少女
+    "female-yujie",  # 御姐
+    "female-tianmei",  # 甜美女性
+    "female-shaonv-jingpin",  # 少女 beta
+    "qiaopi_mengmei",  # 俏皮萌妹
+    "wumei_yujie",  # 妩媚御姐
+    "male-qn-qingse",  # 青涩青年
+    "male-qn-jingying",  # 精英青年
+    "Cantonese_CuteGirl",  # 可爱女孩（粤语）
+    "Cantonese_GentleLady",  # 温柔女声（粤语）
+    # English system voices.
     "English_Graceful_Lady",
     "English_Insightful_Speaker",
     "English_radiant_girl",
@@ -1899,21 +1984,21 @@ MINIMAX_TTS_VOICES = [
 class MiniMaxTTSConfiguration(BaseTTSConfiguration):
     provider: Literal[ServiceProviders.MINIMAX] = ServiceProviders.MINIMAX
     model: str = Field(
-        default="speech-2.8-hd",
-        description="MiniMax TTS model.",
+        default="speech-2.8-turbo",
+        description="MiniMax TTS model. Defaults to the cheaper turbo tier.",
         json_schema_extra={"examples": MINIMAX_TTS_MODELS},
     )
     voice: str = Field(
-        default="English_Graceful_Lady",
-        description="MiniMax voice ID.",
-        json_schema_extra={"examples": MINIMAX_TTS_VOICES, "allow_custom_input": True},
+        default="female-shaonv",
+        description="MiniMax voice ID. Pick from the catalog (with preview) or type a custom ID.",
+        json_schema_extra={"voice_catalog": "dialog", "allow_custom_input": True},
     )
     base_url: str = Field(
-        default="https://api.minimax.io/v1/t2a_v2",
+        default=MINIMAX_TTS_API_BASE_URL,
         description=(
             "MiniMax TTS API endpoint (must include the /v1/t2a_v2 path). "
-            "Defaults to the global endpoint; override with "
-            "https://api.minimaxi.chat/v1/t2a_v2 (mainland China) or "
+            "Defaults to the mainland China endpoint; override with "
+            "https://api.minimax.io/v1/t2a_v2 (international) or "
             "https://api-uw.minimax.io/v1/t2a_v2 (US-West)."
         ),
     )
@@ -2290,6 +2375,13 @@ class DashScopeSTTConfiguration(BaseSTTConfiguration):
         default=DASHSCOPE_API_BASE_URL,
         description="DashScope OpenAI-compatible API endpoint.",
     )
+    ws_url: str = Field(
+        default=DASHSCOPE_STREAMING_WS_URL,
+        description=(
+            "DashScope websocket endpoint, used by the realtime "
+            "qwen-audio-*-asr-* models. The workspace-specific host is also accepted."
+        ),
+    )
 
 
 @register_stt(provider=MINIMAX_PROVIDER)
@@ -2301,8 +2393,11 @@ class MiniMaxSTTConfiguration(BaseSTTConfiguration):
         json_schema_extra={"examples": MINIMAX_STT_MODELS, "allow_custom_input": True},
     )
     base_url: str = Field(
-        default="https://api.minimax.cn/v1",
-        description="MiniMax OpenAI-compatible API endpoint.",
+        default=MINIMAX_API_BASE_URL,
+        description=(
+            "MiniMax API endpoint. Speech recognition is served at "
+            "{base_url}/speech_to_text."
+        ),
     )
 
 

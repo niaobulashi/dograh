@@ -191,7 +191,10 @@ COPY --chown=dograh:dograh \
      ./scripts/run_ari_manager.sh \
      ./scripts/run_campaign_orchestrator.sh \
      ./scripts/drain_web.sh \
-     ./scripts/
+     ./scripts/sync_minimax_voices.py \
+     ./scripts/transfer_vendor_voices_previews.py \
+     ./scripts/minimax_voices.json \
+     /app/scripts/
 
 # ts_validator Node deps (built in ts-deps stage with full node:22-slim image).
 # The validator runs as a short-lived subprocess from api/mcp_server/ts_bridge.py.

@@ -8,7 +8,9 @@ here to avoid leaking sockets/FDs on shutdown.
 from contextlib import aclosing
 
 import aiohttp
+from loguru import logger
 
+from api.services.pipecat.diagnostics import truncate_text
 from api.services.pipecat.tts_cache.cache import SpeechCache
 from api.services.pipecat.tts_cache.models import SynthesisRequest
 from api.services.pipecat.tts_cache.synthesis import cached_synthesis
@@ -44,6 +46,14 @@ class MiniMaxCachingTTSService(MiniMaxOwnedSessionTTSService):
 
     @traced_tts
     async def run_tts(self, text: str, context_id: str):
+        settings = getattr(self, "_settings", None)
+        logger.info(
+            "MiniMax TTS request: "
+            f"model={getattr(settings, 'model', '?')} "
+            f"voice={getattr(settings, 'voice', '?')} "
+            f"speed={getattr(settings, 'speed', '?')} "
+            f"text=[{truncate_text(text)}]"
+        )
         payload = self._build_request(text)
         outcome = MiniMaxSynthesisOutcome()
 

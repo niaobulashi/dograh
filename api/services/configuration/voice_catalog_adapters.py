@@ -369,13 +369,58 @@ class SarvamVoiceCatalog(VoiceCatalog):
         return voices
 
 
+# MiniMax voices are served from the local vendor_voices table, not the MiniMax
+# web voice library, because the web listing requires a logged-in session token
+# and must not be queried per request. The table is populated by a manual/admin
+# sync (see scripts/sync_minimax_voices.py).
+class MiniMaxVoiceCatalog(VoiceCatalog):
+    name = "MiniMax"
+    # No HTTP endpoint is contacted at request time, so there is no auth header
+    # requirement and voice listing does not depend on the TTS connection's key.
+    auth_header = None
+
+    def __init__(self, api_key: str | None, base_url: str | None):
+        # Keep self.url falsy so the caller skips URL validation and the httpx
+        # client. Voices come from the database via db_client.
+        self.url = None
+        self.headers = {}
+
+    async def voices(self, client, query):
+        from api.db import db_client
+
+        rows = await db_client.list_vendor_voices(
+            "minimax",
+            language=query.language,
+            q=query.q,
+            gender=query.gender,
+        )
+        voices = []
+        seen = set()
+        for row in rows:
+            if row.voice_id in seen:
+                continue
+            seen.add(row.voice_id)
+            voices.append(
+                VoiceInfo(
+                    voice_id=row.voice_id,
+                    name=row.name,
+                    description=row.description,
+                    accent=row.accent,
+                    gender=row.gender,
+                    language=row.language,
+                    preview_url=row.preview_audio_url or row.preview_url,
+                )
+            )
+        return voices
+
+
 VOICE_CATALOGS: dict[str, type[VoiceCatalog]] = {
     "elevenlabs": ElevenLabsVoiceCatalog,
     "cartesia": CartesiaVoiceCatalog,
     "deepgram": DeepgramVoiceCatalog,
     "rime": RimeVoiceCatalog,
     "sarvam": SarvamVoiceCatalog,
-}
+    "minimax": MiniMaxVoiceCatalog,}
 
 
 def create_voice_catalog(

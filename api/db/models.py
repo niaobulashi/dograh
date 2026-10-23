@@ -1598,3 +1598,44 @@ class KnowledgeBaseChunkModel(Base):
             postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
     )
+
+
+class VendorVoiceModel(Base):
+    """Global, organization-independent vendor voice catalog.
+
+    Populated out-of-band (a manual/admin sync) from vendor voice libraries that
+    require a logged-in session and therefore cannot be queried at request time.
+    Initially seeded with MiniMax voices; designed to also hold Ali (DashScope)
+    and other vendors behind the same `provider` column.
+    """
+
+    __tablename__ = "vendor_voices"
+
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(32), nullable=False)  # "minimax", "dashscope", ...
+    voice_id = Column(String(128), nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    gender = Column(String(16), nullable=True)  # female / male / neutral
+    language = Column(String(16), nullable=True)  # e.g. zh, en, ja
+    age = Column(String(16), nullable=True)  # child / youth / middle / elder
+    accent = Column(String(64), nullable=True)
+    preview_url = Column(Text, nullable=True)  # sample audio for 试听 (vendor CDN)
+    preview_audio_url = Column(Text, nullable=True)  # 本地下MinIO镜像的试听mp3 (转存脚本写入)
+    sample_text = Column(Text, nullable=True)
+    tags = Column(JSON, nullable=True, default=dict)  # raw vendor tag lists
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "provider", "voice_id", name="uq_vendor_voices_provider_voice"
+        ),
+        Index("ix_vendor_voices_provider_language", "provider", "language"),
+        Index("ix_vendor_voices_provider_gender", "provider", "gender"),
+        Index("ix_vendor_voices_provider_age", "provider", "age"),
+    )

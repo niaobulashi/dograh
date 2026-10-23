@@ -1,19 +1,26 @@
 """Voice discovery using an organization's saved provider connection."""
 
 import asyncio
+import time
 from random import choice
 
 import httpx
 from fastapi import HTTPException
 
 from api.db import db_client
-from api.schemas.voices import VoicesResponse
+from api.schemas.voices import VoiceFacets, VoicesResponse
 from api.services.configuration.voice_catalog_adapters import (
     VOICE_CATALOGS,
     VoiceQuery,
     create_voice_catalog,
 )
 from api.utils.url_security import validate_user_configured_service_url
+
+# Voice catalogs change rarely; cache the full unfiltered list per
+# (provider, connection, model) so facets stay cheap to compute and repeated
+# filter changes don't re-fetch thousands of voices from the provider.
+_VOICE_FACET_CACHE: dict[tuple, tuple[float, list]] = {}
+_VOICE_FACET_CACHE_TTL = 300.0
 
 
 async def get_connection_voices(
@@ -71,9 +78,18 @@ async def get_connection_voices(
             asyncio.timeout(30),
             httpx.AsyncClient(timeout=10, follow_redirects=False) as client,
         ):
-            voices = await catalog.voices(
-                client, VoiceQuery(model, language, q, gender, accent)
-            )
+            # Fetch the full catalog for this model (no language/gender/accent/q)
+            # so facets reflect the entire voice universe, then filter locally for
+            # the displayed list. Cached per (provider, connection, model)
+            # because voice catalogs change rarely.
+            cache_key = (provider, connection_uuid, model)
+            now = time.monotonic()
+            cached = _VOICE_FACET_CACHE.get(cache_key)
+            if cached is not None and now - cached[0] < _VOICE_FACET_CACHE_TTL:
+                full_voices = cached[1]
+            else:
+                full_voices = await catalog.voices(client, VoiceQuery(model=model))
+                _VOICE_FACET_CACHE[cache_key] = (now, full_voices)
     except (TimeoutError, httpx.TimeoutException):
         raise HTTPException(
             status_code=504, detail=f"{name} took too long to load voices. Try again."
@@ -104,25 +120,26 @@ async def get_connection_voices(
             status_code=502, detail=f"Could not load voices from {name}. Try again."
         ) from None
 
-    # Language/model compatibility is provider-specific and handled by adapters.
-    # Preserve provider search semantics, apply remaining filters, and deduplicate.
+    # Facets are derived from the entire voice universe, independent of the
+    # active filter, so the dropdowns always offer every available option.
+    facets = VoiceFacets(
+        genders=sorted({voice.gender for voice in full_voices if voice.gender}),
+        languages=sorted({voice.language for voice in full_voices if voice.language}),
+        accents=sorted({voice.accent for voice in full_voices if voice.accent}),
+    )
+
+    # Apply the requested filters locally for the displayed list. All four
+    # dimensions are filtered here so behaviour is uniform across providers.
     filtered = {}
-    for voice in voices:
-        if (
-            gender
-            and "gender" not in catalog.server_filters
-            and (voice.gender or "").casefold() != gender.casefold()
-        ):
+    for voice in full_voices:
+        if language and (voice.language or "").casefold() != language.casefold():
             continue
-        if (
-            accent
-            and "accent" not in catalog.server_filters
-            and (voice.accent or "").casefold() != accent.casefold()
-        ):
+        if gender and (voice.gender or "").casefold() != gender.casefold():
+            continue
+        if accent and (voice.accent or "").casefold() != accent.casefold():
             continue
         if (
             q
-            and "q" not in catalog.server_filters
             and q.casefold()
             not in " ".join(
                 filter(None, (voice.voice_id, voice.name, voice.description))
@@ -133,4 +150,5 @@ async def get_connection_voices(
     return VoicesResponse(
         provider=provider,
         voices=sorted(filtered.values(), key=lambda voice: voice.name.casefold()),
+        facets=facets,
     )

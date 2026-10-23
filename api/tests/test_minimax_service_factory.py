@@ -24,7 +24,7 @@ class TestMiniMaxLLMConfiguration:
         config = MiniMaxLLMConfiguration(api_key="test-key")
         assert config.provider == ServiceProviders.MINIMAX
         assert config.model == "MiniMax-M2.7"
-        assert config.base_url == "https://api.minimax.io/v1"
+        assert config.base_url == "https://api.minimax.cn/v1"
 
     def test_custom_model(self):
         config = MiniMaxLLMConfiguration(
@@ -80,7 +80,7 @@ class TestMiniMaxLLMServiceFactory:
         assert mock_service.call_count == 1
         kwargs = mock_service.call_args.kwargs
         assert kwargs["api_key"] == "test-key"
-        assert kwargs["base_url"] == "https://api.minimax.io/v1"
+        assert kwargs["base_url"] == "https://api.minimax.cn/v1"
         assert kwargs["settings"].model == "MiniMax-M2.7"
         assert kwargs["settings"].temperature == 1.0
 

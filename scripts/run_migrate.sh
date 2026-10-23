@@ -9,4 +9,6 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 
 cd "$BASE_DIR"
-exec alembic -c "$BASE_DIR/api/alembic.ini" upgrade head
+# 仓库存在多个 alembic head，必须用 `upgrade heads`（复数），否则 `upgrade head`
+# 在多 head 下报错中断。
+exec alembic -c "$BASE_DIR/api/alembic.ini" upgrade heads

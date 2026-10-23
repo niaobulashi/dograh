@@ -13,7 +13,9 @@ from api.schemas.ai_model_configuration import (
     EffectiveAIModelConfiguration,
 )
 from api.services.configuration.registry import (
+    DEEPSEEK_API_BASE_URL,
     HOPPER_API_BASE_URL,
+    MINIMAX_API_BASE_URL,
     ServiceConfig,
     ServiceProviders,
 )
@@ -39,10 +41,12 @@ class APIKeyStatusResponse(TypedDict):
 _OPENAI_COMPATIBLE_PROVIDER_NAMES = {
     ServiceProviders.ATLASCLOUD.value: "Atlas Cloud",
     ServiceProviders.HOPPER.value: "Hopper",
+    ServiceProviders.DEEPSEEK.value: "DeepSeek",
 }
 
 _OPENAI_COMPATIBLE_PROVIDER_BASE_URLS = {
     ServiceProviders.HOPPER.value: HOPPER_API_BASE_URL,
+    ServiceProviders.DEEPSEEK.value: DEEPSEEK_API_BASE_URL,
 }
 
 
@@ -53,6 +57,7 @@ class UserConfigurationValidator:
             ServiceProviders.OPENAI.value: self._check_openai_api_key,
             ServiceProviders.ATLASCLOUD.value: self._check_openai_api_key,
             ServiceProviders.HOPPER.value: self._check_openai_api_key,
+            ServiceProviders.DEEPSEEK.value: self._check_openai_api_key,
             ServiceProviders.DEEPGRAM.value: self._check_deepgram_api_key,
             ServiceProviders.GROQ.value: self._check_groq_api_key,
             ServiceProviders.OPENROUTER.value: self._check_openrouter_api_key,
@@ -293,7 +298,9 @@ class UserConfigurationValidator:
             ServiceProviders.OPENAI.value,
             ServiceProviders.ATLASCLOUD.value,
             ServiceProviders.HOPPER.value,
+            ServiceProviders.DEEPSEEK.value,
             ServiceProviders.OPENAI_REALTIME.value,
+            ServiceProviders.MINIMAX.value,
         ):
             return validator(provider, api_key, service_config)
         return validator(provider, api_key)
@@ -586,7 +593,41 @@ class UserConfigurationValidator:
     def _check_rime_api_key(self, model: str, api_key: str) -> bool:
         return True
 
-    def _check_minimax_api_key(self, model: str, api_key: str) -> bool:
+    def _check_minimax_api_key(
+        self, model: str, api_key: str, service_config: Optional[ServiceConfig] = None
+    ) -> bool:
+        # MiniMax has no dedicated key-introspection endpoint, but GET /v1/models
+        # authenticates the key and costs nothing. Without this check an invalid
+        # key creates a connection successfully and only fails mid-call with a
+        # bare "invalid api key (2049)".
+        base_url = (
+            getattr(service_config, "base_url", None) if service_config else None
+        ) or MINIMAX_API_BASE_URL
+        url = f"{base_url.rstrip('/')}/models"
+        try:
+            response = httpx.get(
+                url,
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=10.0,
+            )
+        except httpx.RequestError as exc:
+            raise ValueError(
+                f"Could not connect to the MiniMax API at {base_url}. "
+                "Please verify that the base_url is correct and reachable, and try again."
+            ) from exc
+        if response.status_code in (401, 403):
+            raise ValueError(
+                f"Invalid MiniMax API key. The key was rejected by the API at "
+                f"{base_url}. Please check that your API key is correct and has not "
+                "been revoked. MiniMax keys are region-specific: a mainland China "
+                "key (platform.minimaxi.chat) only works on api.minimaxi.chat, and "
+                "an international key only works on api.minimax.io."
+            )
+        if response.status_code >= 400:
+            raise ValueError(
+                f"The MiniMax API at {base_url} returned an error while validating "
+                "the API key. Please try again later."
+            )
         return True
 
     def _check_smallest_api_key(self, model: str, api_key: str) -> bool:

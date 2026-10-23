@@ -2,9 +2,11 @@
 
 import json
 
+from loguru import logger
 from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCallFunction
 
+from api.services.pipecat.diagnostics import log_llm_input
 from api.services.pipecat.spoken_tool_calls import SpokenToolCallMixin
 
 
@@ -17,6 +19,10 @@ class OpenAISpokenToolCallMixin(SpokenToolCallMixin):
     """
 
     async def get_chat_completions(self, context):
+        # Surface the exact messages (system prompt + history + latest user
+        # turn) before they leave for the provider. INFO-level so it is visible
+        # under the default LOG_LEVEL=INFO; bodies are truncated in diagnostics.
+        log_llm_input(self, context)
         advertised = context.tools
         tool_choice = context.tool_choice
         guard = self._new_spoken_tool_guard(advertised)

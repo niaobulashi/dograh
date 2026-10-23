@@ -129,7 +129,16 @@ export function configurationForMode(mode: ConfigurationEditorMode, configuratio
     result.llm_fallback = configuration.llm_fallback;
     for (const role of mode === "realtime" ? ["llm", "realtime", "embeddings"] as const : ["llm", "stt", "tts", "embeddings"] as const) {
         const previous = configuration[role];
-        if (previous && compatibleConnections(catalog, connections, role).some(connection => connection.uuid === previous.provider_connection_uuid)) result[role] = previous;
+        if (!previous) continue;
+        // Embeddings are independent of the LLM/STT/TTS cascade choice. Keep an
+        // existing embeddings selection even when it targets the managed
+        // (dograh) connection; otherwise switching to BYOK silently drops it and
+        // the knowledge-base guard rejects the save with a 422.
+        if (role === "embeddings") {
+            if (connections.some(connection => connection.uuid === previous.provider_connection_uuid)) result[role] = previous;
+            continue;
+        }
+        if (compatibleConnections(catalog, connections, role).some(connection => connection.uuid === previous.provider_connection_uuid)) result[role] = previous;
     }
     return result;
 }

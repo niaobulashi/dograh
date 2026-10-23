@@ -176,8 +176,8 @@ export const SCHEMA_TEXT: Record<string, string> = {
 
   // ---- API Trigger ----
   "API key for the chosen provider.": "所选服务提供方的 API 密钥。",
-  "Path segment that uniquely identifies this trigger. Used in both URLs:   • Production: `/api/v1/public/agent/<trigger_path>` — executes the published agent.   • Test: `/api/v1/public/agent/test/<trigger_path>` — executes the latest draft. Can be customized to a descriptive value up to 36 characters using letters, numbers, hyphens, or underscores.":
-    "唯一标识该触发器的路径段。用于两个 URL：  • 生产：`/api/v1/public/agent/<trigger_path>` —— 执行已发布的智能体。  • 测试：`/api/v1/public/agent/test/<trigger_path>` —— 执行最新草稿。可自定义为不超过 36 个字符的描述性值，仅含字母、数字、连字符或下划线。",
+  "Path segment that uniquely identifies this trigger. Used in both URLs:\n  • Production: `/api/v1/public/agent/<trigger_path>` — executes the published agent.\n  • Test: `/api/v1/public/agent/test/<trigger_path>` — executes the latest draft.\nCan be customized to a descriptive value up to 36 characters using letters, numbers, hyphens, or underscores.":
+    "唯一标识该触发器的路径段。用于两个 URL：\n  • 生产：`/api/v1/public/agent/<trigger_path>` —— 执行已发布的智能体。\n  • 测试：`/api/v1/public/agent/test/<trigger_path>` —— 执行最新草稿。\n可自定义为不超过 36 个字符的描述性值，仅含字母、数字、连字符或下划线。",
   "When false, the trigger URL returns 404.": "为 false 时，触发器 URL 返回 404。",
 
   // ---- Agent Node（field_overrides 覆盖）----
@@ -237,6 +237,68 @@ export const SCHEMA_TEXT: Record<string, string> = {
   "Each entry declares one variable to capture from the conversation, with its name, data type, and a per-variable extraction hint.":
     "每条声明一个待从对话中提取的变量，包含名称、数据类型与逐变量提取提示。",
   "Documents the agent can reference.": "智能体可引用的文档。",
+
+  // ---- 节点字段 display_name（Start Call / 通用 / QA 等）----
+  "Name": "名称",
+  "Greeting Type": "问候类型",
+  "Greeting Text": "问候文本",
+  "Greeting Recording": "问候录音",
+  "Allow Greeting Interruption": "允许打断问候",
+  "Minimum Words to Interrupt": "打断所需最少字数",
+  "Allow Interruptions After Greeting": "问候后允许打断",
+  "Delayed Start": "延迟开始",
+  "Delay Duration (seconds)": "延迟时长（秒）",
+  "Pre-Call Data Fetch": "呼叫前数据获取",
+  "Endpoint URL": "端点 URL",
+  "Authentication": "认证",
+  "Global Prompt": "全局提示词",
+  "Trigger Path": "触发路径",
+  "HTTP Method": "HTTP 方法",
+  "Custom Headers": "自定义请求头",
+  "Payload Template": "请求体模板",
+  "System Prompt": "系统提示词",
+  "Minimum Call Duration (seconds)": "最短通话时长（秒）",
+  "Include Voicemail Calls": "包含语音留言呼叫",
+  "Sample Rate (%)": "抽样比例（%）",
+  "Use Workflow's LLM": "使用工作流的大模型",
+  "QA LLM Provider": "质检大模型提供方",
+  "QA Model": "质检模型",
+  "API Key": "API 密钥",
+  "Azure Endpoint": "Azure 端点",
+
+  // ---- 节点字段 description / placeholder（Start Call 等）----
+  "Let the caller interrupt the opening greeting. When off, caller speech is retained until the greeting finishes. Applies to cascade and realtime openings. Realtime uses provider or local speech detection according to the adapter when interruptions are allowed.":
+    "允许来电者打断开场问候。关闭时，来电者的语音会保留至问候结束。适用于级联与实时开场。允许打断时，实时模式按适配器使用服务方或本地语音检测。",
+  "Cascade only: interrupt when the caller's transcription contains at least this many words. Realtime providers do not support this word threshold; they use provider or local speech detection according to the adapter.":
+    "仅级联模式：当来电者的转写文本至少包含这么多个词时打断。实时提供方不支持该词数阈值；它们按适配器使用服务方或本地语音检测。",
+  "Pre-recorded audio file played at the start of the call. Required when Greeting Type is Pre-recorded Audio.":
+    "通话开始时播放的预录音频文件。当问候类型为“预录音频”时必填。",
+  "Allow the caller to interrupt responses after the opening greeting.":
+    "允许来电者在开场问候之后打断回复。",
+  "Listen before the opening in cascade and realtime calls. If the caller speaks first, respond to them instead. Enabled voicemail handling can resolve a human answer sooner.":
+    "在级联与实时通话开场前先监听。若来电者先开口，则改为回应他们。启用语音留言处理后，可更快判定真人应答。",
+  "Seconds to listen for a silent answer before opening. 0–10. With voicemail handling, replaces its default 1.2-second window.":
+    "开场前静音等待应答的秒数。0–10。启用语音留言处理后，替换其默认的 1.2 秒窗口。",
+  "Greet the caller warmly and ask how you can help today.":
+    "热情地问候来电者，并询问今天有什么可以帮忙。",
+  "Establishes a consistent persona across the call.":
+    "在整个通话中建立一致的人设。",
+  "Hi {{first_name}}, this is Sarah from Acme.":
+    "你好 {{first_name}}，我是 Acme 的 Sarah。",
+  "You are a friendly assistant calling on behalf of {{company_name}}.":
+    "你是一名代表 {{company_name}} 致电的友好助手。",
+  "Thank the caller and confirm next steps before ending the call.":
+    "在结束通话前感谢来电者并确认后续步骤。",
+  "When false, calls flagged as voicemail are skipped.":
+    "为 false 时，被标记为语音留言的呼叫将被跳过。",
+
+  // ---- 节点字段下拉选项 label（品牌名与 HTTP 方法保持原样）----
+  "Text (TTS)": "文本（TTS）",
+  "Pre-recorded Audio": "预录音频",
+  "Disabled": "禁用",
+  "Always": "始终",
+  "Inbound calls only": "仅入站呼叫",
+  "Outbound calls only": "仅出站呼叫",
 };
 
 /** 把后端透传的英文文案翻译成中文，未命中时原样返回（英文环境无影响）。 */
@@ -244,7 +306,10 @@ export function translateSchemaText(text: string | undefined | null, locale?: st
   if (!text) return "";
   // The dictionary is zh-only; other locales keep the backend's own copy.
   if (locale && !locale.toLowerCase().startsWith("zh")) return text;
-  return SCHEMA_TEXT[text] ?? text;
+  // Backend strings occasionally carry a trailing/leading space (implicit
+  // string concatenation), so fall back to a trimmed lookup.
+  const hit = SCHEMA_TEXT[text] ?? SCHEMA_TEXT[text.trim()];
+  return hit ?? text;
 }
 
 /**

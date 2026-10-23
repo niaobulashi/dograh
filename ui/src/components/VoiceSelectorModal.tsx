@@ -24,10 +24,12 @@ import { cn } from "@/lib/utils";
 
 const ALL_FILTER_VALUE = "__all__";
 
-// Defaults so the modal opens on a focused set instead of the full catalog.
-const DEFAULT_GENDER = "female";
-const DEFAULT_ACCENT = "us"; // American
-const DEFAULT_LANGUAGE = "en";
+// Open on the full catalog so facets (and the list) populate for every
+// provider. For MiniMax most voices have no accent, so a non-"all" default
+// (e.g. accent=us) would silently empty the list.
+const DEFAULT_GENDER = ALL_FILTER_VALUE;
+const DEFAULT_ACCENT = ALL_FILTER_VALUE;
+const DEFAULT_LANGUAGE = ALL_FILTER_VALUE;
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -433,6 +435,11 @@ export const VoiceSelectorModal: React.FC<VoiceSelectorModalProps> = ({
                                                 {voiceTraits(voice) && (
                                                     <span className="truncate text-xs text-muted-foreground">
                                                         {voiceTraits(voice)}
+                                                    </span>
+                                                )}
+                                                {voice.description && (
+                                                    <span className="line-clamp-2 text-[11px] text-muted-foreground/70">
+                                                        {voice.description}
                                                     </span>
                                                 )}
                                                 <span className="truncate text-[11px] text-muted-foreground/70">

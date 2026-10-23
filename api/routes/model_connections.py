@@ -283,11 +283,16 @@ async def update_configuration(
             user.selected_organization_id, request.configuration
         )
         default = await get_default(user.selected_organization_id)
+        new_config = changes.get("configuration") or {}
+        # Only re-validate embedding compatibility when the request explicitly
+        # carries an embeddings field (a real change). A partial update that
+        # omits embeddings must not be treated as removing it.
         if (
             default is not None
             and default.uuid == configuration_uuid
-            and existing.configuration.get("embeddings")
-            != changes["configuration"].get("embeddings")
+            and "embeddings" in new_config
+            and new_config.get("embeddings")
+            != existing.configuration.get("embeddings")
         ):
             await validate_embedding_compatibility(
                 user.selected_organization_id, resolved.effective
