@@ -47,7 +47,13 @@ except ModuleNotFoundError as e:  # pragma: no cover - dependency is pinned
     raise Exception(f"Missing module: {e}") from e
 
 
-DASHSCOPE_STREAMING_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+# Workspace-specific DashScope host (Beijing). The shared
+# ``wss://dashscope.aliyuncs.com/api-ws/v1/inference`` host still works, but the
+# per-workspace subdomain is what Alibaba now recommends. The API key must come
+# from the same region as the host.
+DASHSCOPE_STREAMING_WS_URL = (
+    "wss://llm-kb8cnhojfztojv7i.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference"
+)
 DASHSCOPE_STREAMING_ASR_MODEL = "qwen-audio-3.1-asr-flash-streaming"
 
 # DashScope splits sentences server-side. Keep the silence threshold close to

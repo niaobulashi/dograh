@@ -852,7 +852,17 @@ DASHSCOPE_MODELS = [
 #   at /api-ws/v1/inference, which is what the live call pipeline wants.
 #
 # The model id decides which branch the service factory takes.
-DASHSCOPE_STREAMING_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+#
+# Workspace-specific host (Beijing). DashScope replaced the shared
+# dashscope.aliyuncs.com host with per-workspace subdomains; the workspace id
+# here is the one shown in the Bailian console. Override `ws_url` on the model
+# connection to use a different workspace or region - note that the API key must
+# belong to the same region as the host.
+DASHSCOPE_STREAMING_WS_URL = (
+    "wss://llm-kb8cnhojfztojv7i.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference"
+)
+# Shared host, still accepted as a fallback:
+# "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
 
 # Realtime recognition. `-streaming` is the general purpose continuous model;
 # `-message` targets short utterances with a lower first-token latency. The
