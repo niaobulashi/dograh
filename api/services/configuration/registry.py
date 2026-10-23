@@ -844,25 +844,22 @@ DASHSCOPE_MODELS = [
     "qwen3-max",
 ]
 
-# Aliyun DashScope serves two families of speech services, on two protocols:
+# Aliyun DashScope speech is websocket-only.
 #
-# * OpenAI-compatible speech rides the same compatible-mode base URL as chat,
-#   through /audio/transcriptions and /audio/speech. These are batch calls.
-# * Qwen-Audio realtime ASR/TTS use DashScope's own duplex websocket protocol
-#   at /api-ws/v1/inference, which is what the live call pipeline wants.
+# verified against the live API on 2026-10-23: the compatible-mode base URL that
+# serves chat returns 404 for both /audio/transcriptions and /audio/speech, so
+# there is no OpenAI-compatible speech surface to fall back to. Every DashScope
+# ASR/TTS model therefore goes through the duplex websocket protocol at
+# /api-ws/v1/inference (see qwen_streaming_stt / qwen_tts). Offering the batch
+# model ids here only produced dead connections, so they are gone.
 #
-# The model id decides which branch the service factory takes.
-#
-# Workspace-specific host (Beijing). DashScope replaced the shared
-# dashscope.aliyuncs.com host with per-workspace subdomains; the workspace id
-# here is the one shown in the Bailian console. Override `ws_url` on the model
-# connection to use a different workspace or region - note that the API key must
-# belong to the same region as the host.
-DASHSCOPE_STREAMING_WS_URL = (
-    "wss://llm-kb8cnhojfztojv7i.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference"
-)
-# Shared host, still accepted as a fallback:
-# "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+# The realtime endpoint is a per-deployment setting. Alibaba serves it from
+# per-workspace subdomains (wss://{WorkspaceId}.{region}.maas.aliyuncs.com/
+# api-ws/v1/inference) whose workspace id differs per install, so it is resolved
+# from the DASHSCOPE_WS_URL environment variable or the model connection's own
+# `ws_url` field - never from this module. Only the shared, workspace-free host
+# is kept here as the last-resort default.
+DASHSCOPE_STREAMING_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
 
 # Realtime recognition. `-streaming` is the general purpose continuous model;
 # `-message` targets short utterances with a lower first-token latency. The
@@ -875,19 +872,17 @@ DASHSCOPE_ASR_STREAMING_MODELS = [
     "fun-asr-realtime",
 ]
 
-DASHSCOPE_STT_MODELS = [
-    "qwen3-asr-flash",
-    "qwen-asr-flash",
-    "paraformer-v2",
-    *DASHSCOPE_ASR_STREAMING_MODELS,
-]
+DASHSCOPE_STT_MODELS = [*DASHSCOPE_ASR_STREAMING_MODELS]
+DASHSCOPE_STT_DEFAULT_MODEL = "qwen-audio-3.1-asr-flash-streaming"
 
-# Qwen-Audio-TTS speaks the inference websocket, not /audio/speech, and its
-# voices are the v3.1 set rather than the cosyvoice *_v2 ids.
+# Qwen-Audio-TTS speaks the inference websocket too, and its voices are the
+# v3.1 set. The cosyvoice models are gone with the /audio/speech surface they
+# were served from.
 DASHSCOPE_TTS_PLUS_MODELS = [
     "qwen-audio-3.1-tts-plus",
     "qwen-audio-3.1-tts-flash",
 ]
+DASHSCOPE_TTS_DEFAULT_MODEL = "qwen-audio-3.1-tts-plus"
 
 DASHSCOPE_TTS_PLUS_VOICES = [
     "longanlingxin_v3.1",  # 龙安灵心 女声
@@ -896,12 +891,7 @@ DASHSCOPE_TTS_PLUS_VOICES = [
     "longanfengyue_v3.1",  # 龙安风悦 女声
 ]
 
-DASHSCOPE_TTS_MODELS = [
-    "cosyvoice-v2",
-    "qwen3-tts-instruct-flash-realtime",
-    "qwen3-tts",
-    *DASHSCOPE_TTS_PLUS_MODELS,
-]
+DASHSCOPE_TTS_MODELS = [*DASHSCOPE_TTS_PLUS_MODELS]
 # MiniMax speech-to-text is served at POST {base_url}/speech_to_text.
 MINIMAX_STT_MODELS = [
     "asr-1.0",
@@ -1674,22 +1664,9 @@ class GoogleTTSConfiguration(BaseTTSConfiguration):
 OPENAI_TTS_MODELS = ["gpt-4o-mini-tts"]
 
 # CosyVoice-V2 system voices (https://help.aliyun.com/document_detail/2920817.html).
-DASHSCOPE_TTS_VOICES = [
-    "longxiaochun_v2",  # 龙小淳 温柔姐姐
-    "longwan_v2",  # 龙婉 普通话女声
-    "longxiaoxia_v2",  # 龙小夏 温柔女声
-    "loongbella_v2",  # Bella2.0 新闻女声
-    "longcheng_v2",  # 龙橙 阳光男声
-    "longshu_v2",  # 龙书 新闻男声
-    "longnan_v2",  # 龙楠 睿智青年男
-    "longyuan_v2",  # 龙媛 温暖治愈女
-    "longmiao_v2",  # 龙妙 抑扬顿挫女
-    "longhua_v2",  # 龙华 活泼女童
-    "longjielidou_v2",  # 龙杰力豆 阳光顽皮男
-    "longlaotie_v2",  # 龙老铁 东北直率男
-    # Qwen-Audio-TTS 3.1 voices; only valid for the qwen-audio-*-tts models.
-    *DASHSCOPE_TTS_PLUS_VOICES,
-]
+# Qwen-Audio-TTS system voices. The cosyvoice *_v2 voices are gone together
+# with the /audio/speech endpoint that served them.
+DASHSCOPE_TTS_VOICES = [*DASHSCOPE_TTS_PLUS_VOICES]
 
 
 @register_tts(provider=OPENAI_PROVIDER)
@@ -1714,27 +1691,28 @@ class OpenAITTSService(BaseTTSConfiguration):
 class DashScopeTTSConfiguration(BaseTTSConfiguration):
     provider: Literal[ServiceProviders.DASHSCOPE] = ServiceProviders.DASHSCOPE
     model: str = Field(
-        default="cosyvoice-v2",
-        description="DashScope (Tongyi Qianwen) TTS model.",
+        default=DASHSCOPE_TTS_DEFAULT_MODEL,
+        description="DashScope (Tongyi Qianwen) realtime TTS model.",
         json_schema_extra={"examples": DASHSCOPE_TTS_MODELS, "allow_custom_input": True},
     )
     voice: str = Field(
-        default="longxiaochun_v2",
-        description=(
-            "DashScope voice ID. CosyVoice voices end in _v2; "
-            "qwen-audio-*-tts models need a v3.1 voice instead."
-        ),
+        default=DASHSCOPE_TTS_PLUS_VOICES[0],
+        description="Qwen-Audio-TTS voice ID (v3.1 voices).",
         json_schema_extra={"examples": DASHSCOPE_TTS_VOICES, "allow_custom_input": True},
     )
     base_url: str = Field(
         default=DASHSCOPE_API_BASE_URL,
-        description="DashScope OpenAI-compatible API endpoint.",
+        description=(
+            "DashScope OpenAI-compatible endpoint. Used by the LLM role; "
+            "realtime speech always uses the websocket endpoint below."
+        ),
     )
     ws_url: str = Field(
-        default=DASHSCOPE_STREAMING_WS_URL,
+        default="",
         description=(
-            "DashScope websocket endpoint, used by qwen-audio-*-tts models. "
-            "The workspace-specific host is also accepted."
+            "DashScope realtime speech endpoint. Accepts a workspace id "
+            "(for example llm-abc123xyz) or a full wss:// URL. Leave blank to use "
+            "the server's DASHSCOPE_WS_URL setting."
         ),
     )
 
@@ -2377,19 +2355,23 @@ class OpenAISTTConfiguration(BaseSTTConfiguration):
 class DashScopeSTTConfiguration(BaseSTTConfiguration):
     provider: Literal[ServiceProviders.DASHSCOPE] = ServiceProviders.DASHSCOPE
     model: str = Field(
-        default="qwen3-asr-flash",
-        description="DashScope (Tongyi Qianwen) ASR model.",
+        default=DASHSCOPE_STT_DEFAULT_MODEL,
+        description="DashScope (Tongyi Qianwen) realtime ASR model.",
         json_schema_extra={"examples": DASHSCOPE_STT_MODELS, "allow_custom_input": True},
     )
     base_url: str = Field(
         default=DASHSCOPE_API_BASE_URL,
-        description="DashScope OpenAI-compatible API endpoint.",
+        description=(
+            "DashScope OpenAI-compatible endpoint. Used by the LLM role; "
+            "realtime speech always uses the websocket endpoint below."
+        ),
     )
     ws_url: str = Field(
-        default=DASHSCOPE_STREAMING_WS_URL,
+        default="",
         description=(
-            "DashScope websocket endpoint, used by the realtime "
-            "qwen-audio-*-asr-* models. The workspace-specific host is also accepted."
+            "DashScope realtime speech endpoint. Accepts a workspace id "
+            "(for example llm-abc123xyz) or a full wss:// URL. Leave blank to use "
+            "the server's DASHSCOPE_WS_URL setting."
         ),
     )
 

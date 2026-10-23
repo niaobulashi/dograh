@@ -9,7 +9,7 @@ import aiohttp
 from fastapi import HTTPException
 from loguru import logger
 
-from api.constants import MPS_API_URL
+from api.constants import DASHSCOPE_WS_URL, MPS_API_URL
 from api.errors.failure import (
     ErrorSource,
     annotate_failure_metadata,
@@ -48,6 +48,7 @@ from api.services.pipecat.openai_spoken_tool_calls import OpenAISpokenToolCallMi
 from api.services.pipecat.qwen_streaming_stt import QwenStreamingSTTService
 from api.services.pipecat.qwen_tts import QwenAudioTTSService
 from api.services.pipecat.spoken_tool_calls import SpokenToolCallMixin
+from api.utils.dashscope_endpoint import expand_dashscope_endpoint
 from api.utils.url_security import validate_user_configured_service_url
 from pipecat.processors.aggregators.llm_context import LLMContext
 from pipecat.processors.frame_processor import FrameProcessorSetup
@@ -430,50 +431,24 @@ def _validate_runtime_service_url(url: str, field_name: str) -> None:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-def _is_dashscope_realtime_asr(model: str | None) -> bool:
-    """Whether a DashScope ASR model id speaks the duplex websocket protocol.
-
-    Only models served at ``/api-ws/v1/inference`` qualify: the
-    ``-streaming`` / ``-message`` variants of ``qwen-audio-*-asr-*`` plus
-    ``fun-asr-realtime`` / ``paraformer-realtime``.
-
-    Deliberately excluded:
-
-    * ``qwen3-asr-flash-realtime`` - it uses the AOQ protocol at
-      ``/api-ws/v1/realtime`` with OpenAI-Realtime style events, a different
-      wire format.
-    * ``-filetrans`` and plain ``qwen-audio-*-asr-flash`` - batch HTTP APIs
-      that belong on the OpenAI-compatible ``/audio/transcriptions`` path.
-    """
-    model = (model or "").strip()
-    if model.startswith(("fun-asr-realtime", "paraformer-realtime")):
-        return True
-    return (
-        model.startswith("qwen-audio-")
-        and "asr" in model
-        and model.endswith(("-streaming", "-message"))
-    )
-
-
-def _is_dashscope_qwen_tts(model: str | None) -> bool:
-    """Whether a DashScope TTS model id is a Qwen-Audio-TTS model.
-
-    Those are served over the inference websocket, unlike the cosyvoice models
-    that ride ``/audio/speech``, and they use their own v3.1 voice ids.
-    """
-    model = (model or "").strip()
-    return model.startswith("qwen-audio-") and "tts" in model
-
-
 def _dashscope_websocket_url(service_config) -> str:
-    """Resolve and validate the DashScope websocket endpoint for a service."""
-    url = (getattr(service_config, "ws_url", None) or DASHSCOPE_STREAMING_WS_URL).strip()
-    if "://" not in url:
-        url = f"wss://{url}"
-    elif url.startswith("https://"):
-        url = "wss://" + url[len("https://") :]
-    elif url.startswith("http://"):
-        url = "ws://" + url[len("http://") :]
+    """Resolve the DashScope websocket endpoint for an STT/TTS config section.
+
+    Precedence, most specific first:
+
+    1. ``ws_url`` on the model connection - lets one workflow point at a
+       different workspace or region without touching the deployment.
+    2. ``DASHSCOPE_WS_URL`` from the environment - the operator setting for
+       workspace-specific subdomains, which embed a per-install workspace id.
+    3. The shared host, which needs no workspace id.
+
+    The API key must belong to the same region as the resolved host.
+    """
+    url = expand_dashscope_endpoint(
+        getattr(service_config, "ws_url", None)
+        or DASHSCOPE_WS_URL
+        or DASHSCOPE_STREAMING_WS_URL
+    )
     _validate_runtime_service_url(url, "ws_url")
     return url
 
@@ -760,11 +735,10 @@ def create_stt_service(
             model=user_config.stt.model or "asr-1.0",
             should_interrupt=False,  # Let UserAggregator own interruption confirmation.
         )
-    elif user_config.stt.provider == ServiceProviders.DASHSCOPE.value and (
-        _is_dashscope_realtime_asr(user_config.stt.model)
-    ):
-        # Realtime Qwen/Fun ASR: duplex websocket, transcript arrives while the
-        # caller is still speaking. See qwen_streaming_stt for the protocol.
+    elif user_config.stt.provider == ServiceProviders.DASHSCOPE.value:
+        # DashScope has no OpenAI-compatible transcription endpoint - the
+        # compatible-mode host answers 404 for /audio/transcriptions - so every
+        # ASR model goes through the duplex websocket. See qwen_streaming_stt.
         return QwenStreamingSTTService(
             api_key=user_config.stt.api_key,
             url=_dashscope_websocket_url(user_config.stt),
@@ -772,10 +746,7 @@ def create_stt_service(
             sample_rate=audio_config.pipeline_sample_rate,
             should_interrupt=False,  # Let UserAggregator own interruption confirmation.
         )
-    elif user_config.stt.provider in (
-        ServiceProviders.OPENAI.value,
-        ServiceProviders.DASHSCOPE.value,
-    ):
+    elif user_config.stt.provider == ServiceProviders.OPENAI.value:
         kwargs = {}
         base_url = getattr(user_config.stt, "base_url", None)
         if base_url:
@@ -1041,11 +1012,10 @@ def create_tts_service(
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,
         )
-    elif user_config.tts.provider == ServiceProviders.DASHSCOPE.value and (
-        _is_dashscope_qwen_tts(user_config.tts.model)
-    ):
-        # Qwen-Audio-TTS is served over the inference websocket, not
-        # /audio/speech, and needs a v3.1 voice id.
+    elif user_config.tts.provider == ServiceProviders.DASHSCOPE.value:
+        # DashScope has no OpenAI-compatible synthesis endpoint either (404 for
+        # /audio/speech), and pipecat's OpenAI TTS rejects non-OpenAI voice ids
+        # before it even sends a request. Realtime Qwen-Audio-TTS only.
         voice = getattr(user_config.tts, "voice", None) or "longanlingxin_v3.1"
         return QwenAudioTTSService(
             api_key=user_config.tts.api_key,
@@ -1057,10 +1027,7 @@ def create_tts_service(
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,
         )
-    elif user_config.tts.provider in (
-        ServiceProviders.OPENAI.value,
-        ServiceProviders.DASHSCOPE.value,
-    ):
+    elif user_config.tts.provider == ServiceProviders.OPENAI.value:
         kwargs = {}
         base_url = getattr(user_config.tts, "base_url", None)
         if base_url:

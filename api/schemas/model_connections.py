@@ -14,6 +14,9 @@ CONNECTION_FIELDS = frozenset(
     {
         "base_url",
         "endpoint",
+        # DashScope serves realtime speech from per-workspace hosts, so the
+        # endpoint belongs to the account connection, not to each model choice.
+        "ws_url",
         "project_id",
         "location",
         "aws_region",

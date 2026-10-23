@@ -23,21 +23,10 @@ function sarvamStyleName(styleKey: string): string {
     return styleKey.replaceAll("_", " ").split(" ").map(capitalize).join(" ");
 }
 
-// DashScope CosyVoice-V2 system voices (help.aliyun.com/document_detail/2920817.html).
+// DashScope Qwen-Audio-TTS system voices. The cosyvoice *_v2 voices are gone:
+// DashScope serves no /audio/speech endpoint, so every speech model now runs on
+// the realtime websocket and uses the v3.1 voice set.
 const DASHSCOPE_VOICE_NAMES: Record<string, { name: string; gender?: string; language?: string }> = {
-    "longxiaochun_v2": { name: "龙小淳（温柔姐姐）", gender: "female", language: "zh" },
-    "longwan_v2": { name: "龙婉（普通话女声）", gender: "female", language: "zh" },
-    "longxiaoxia_v2": { name: "龙小夏（温柔女声）", gender: "female", language: "zh" },
-    "loongbella_v2": { name: "Bella2.0（新闻女声）", gender: "female", language: "zh" },
-    "longcheng_v2": { name: "龙橙（阳光男声）", gender: "male", language: "zh" },
-    "longshu_v2": { name: "龙书（新闻男声）", gender: "male", language: "zh" },
-    "longnan_v2": { name: "龙楠（睿智青年男）", gender: "male", language: "zh" },
-    "longyuan_v2": { name: "龙媛（温暖治愈女）", gender: "female", language: "zh" },
-    "longmiao_v2": { name: "龙妙（抑扬顿挫女）", gender: "female", language: "zh" },
-    "longhua_v2": { name: "龙华（活泼女童）", gender: "female", language: "zh" },
-    "longjielidou_v2": { name: "龙杰力豆（阳光顽皮男）", gender: "male", language: "zh" },
-    "longlaotie_v2": { name: "龙老铁（东北直率男）", gender: "male", language: "zh" },
-    // Qwen-Audio-TTS 3.1 voices (qwen-audio-*-tts models only).
     "longanlingxin_v3.1": { name: "龙安灵心（温柔女声）", gender: "female", language: "zh" },
     "xunanchuan_v3.1": { name: "许南川（磁性男声）", gender: "male", language: "zh" },
     "longanhuan_v3.1": { name: "龙安欢（活力女声）", gender: "female", language: "zh" },
@@ -54,13 +43,7 @@ const DASHSCOPE_VOICE_NAMES: Record<string, { name: string; gender?: string; lan
 export function getStaticVoices(provider: string, options?: string[], model?: string): VoiceInfo[] | undefined {
     if (provider === "dashscope") {
         if (!options?.length) return undefined;
-        // Voice ids are model-specific: the v3.1 set only works on
-        // qwen-audio-*-tts, the *_v2 set only on cosyvoice.
-        const isQwenAudioTts = Boolean(model?.startsWith("qwen-audio-"));
-        const filtered = options.filter((id) =>
-            isQwenAudioTts ? id.endsWith("_v3.1") : !id.endsWith("_v3.1"),
-        );
-        return (filtered.length ? filtered : options).map((id) => {
+        return options.map((id) => {
             const meta = DASHSCOPE_VOICE_NAMES[id];
             return {
                 voice_id: id,

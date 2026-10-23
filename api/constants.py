@@ -88,6 +88,19 @@ SKIP_MANAGED_PROVISIONING = os.getenv("SKIP_MANAGED_PROVISIONING", "false").lowe
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+
+# DashScope (Aliyun Bailian) realtime speech endpoint for Qwen-Audio ASR/TTS.
+#
+# Alibaba now serves realtime inference from per-workspace subdomains that embed
+# the Bailian workspace id:
+#   wss://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference
+# The workspace id (and region) differ per deployment, so it is an operator
+# setting, not a source constant. Leaving DASHSCOPE_WS_URL empty falls back to
+# the shared host, which needs no workspace id. A model connection can also
+# override the endpoint with its own `ws_url` field.
+DASHSCOPE_WS_URL = os.getenv("DASHSCOPE_WS_URL", "").strip()
+DASHSCOPE_WS_DEFAULT_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+
 ENABLE_PROMETHEUS_METRICS = (
     os.getenv("ENABLE_PROMETHEUS_METRICS", "false").lower() == "true"
 )

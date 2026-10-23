@@ -30,6 +30,7 @@ from api.services.configuration.registry import (
     get_provider_definition,
     get_service_configuration,
 )
+from api.utils.dashscope_endpoint import expand_dashscope_endpoint
 from api.utils.url_security import validate_user_configured_service_url
 
 ROLES = ("llm", "stt", "tts", "realtime", "embeddings")
@@ -154,6 +155,20 @@ def _validate_connection_urls(connection_settings):
                 validate_user_configured_service_url(url, field_name=field)
             except ValueError:
                 raise _invalid(f"Invalid {field} connection setting") from None
+
+    # ws_url accepts a bare DashScope workspace id as well as a full URL, so it
+    # is expanded before validation - otherwise the SaaS SSRF check would reject
+    # "llm-kb8cnhojfztojv7i" for lacking a scheme.
+    ws_url = connection_settings.get("ws_url")
+    if ws_url:
+        if not isinstance(ws_url, str):
+            raise _invalid("Invalid ws_url connection setting")
+        try:
+            validate_user_configured_service_url(
+                expand_dashscope_endpoint(ws_url), field_name="ws_url"
+            )
+        except ValueError:
+            raise _invalid("Invalid ws_url connection setting") from None
 
 
 def validate_provider_connection(provider, credentials, connection_settings):

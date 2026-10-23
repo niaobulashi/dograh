@@ -301,14 +301,13 @@ export const SCHEMA_TEXT: Record<string, string> = {
   "Outbound calls only": "仅出站呼叫",
 
   // DashScope / 阿里百炼语音配置（STT/TTS）
-  "DashScope (Tongyi Qianwen) ASR model.": "DashScope（通义千问）语音识别模型。",
-  "DashScope (Tongyi Qianwen) TTS model.": "DashScope（通义千问）语音合成模型。",
-  "DashScope voice ID. CosyVoice voices end in _v2; qwen-audio-*-tts models need a v3.1 voice instead.":
-    "DashScope 音色 ID。CosyVoice 音色以 _v2 结尾；qwen-audio-*-tts 模型需改用 v3.1 音色。",
-  "DashScope websocket endpoint, used by qwen-audio-*-tts models. The workspace-specific host is also accepted.":
-    "DashScope WebSocket 地址，供 qwen-audio-*-tts 模型使用；也可填业务空间专属域名。",
-  "DashScope websocket endpoint, used by the realtime qwen-audio-*-asr-* models. The workspace-specific host is also accepted.":
-    "DashScope WebSocket 地址，供实时 qwen-audio-*-asr-* 模型使用；也可填业务空间专属域名。",
+  "DashScope (Tongyi Qianwen) realtime ASR model.": "DashScope（通义千问）实时语音识别模型。",
+  "DashScope (Tongyi Qianwen) realtime TTS model.": "DashScope（通义千问）实时语音合成模型。",
+  "Qwen-Audio-TTS voice ID (v3.1 voices).": "Qwen-Audio-TTS 音色 ID（v3.1 音色）。",
+  "DashScope OpenAI-compatible endpoint. Used by the LLM role; realtime speech always uses the websocket endpoint below.":
+    "DashScope OpenAI 兼容地址，供大模型角色使用；实时语音始终走下面的 WebSocket 地址。",
+  "DashScope realtime speech endpoint. Accepts a workspace id (for example llm-abc123xyz) or a full wss:// URL. Leave blank to use the server's DASHSCOPE_WS_URL setting.":
+    "DashScope 实时语音地址。可填业务空间 ID（如 llm-abc123xyz）或完整 wss:// 地址；留空则使用服务端的 DASHSCOPE_WS_URL 配置。",
 };
 
 /** 把后端透传的英文文案翻译成中文，未命中时原样返回（英文环境无影响）。 */

@@ -13,6 +13,7 @@ from api.schemas.ai_model_configuration import (
     EffectiveAIModelConfiguration,
 )
 from api.services.configuration.registry import (
+    DASHSCOPE_API_BASE_URL,
     DEEPSEEK_API_BASE_URL,
     HOPPER_API_BASE_URL,
     MINIMAX_API_BASE_URL,
@@ -42,11 +43,13 @@ _OPENAI_COMPATIBLE_PROVIDER_NAMES = {
     ServiceProviders.ATLASCLOUD.value: "Atlas Cloud",
     ServiceProviders.HOPPER.value: "Hopper",
     ServiceProviders.DEEPSEEK.value: "DeepSeek",
+    ServiceProviders.DASHSCOPE.value: "DashScope",
 }
 
 _OPENAI_COMPATIBLE_PROVIDER_BASE_URLS = {
     ServiceProviders.HOPPER.value: HOPPER_API_BASE_URL,
     ServiceProviders.DEEPSEEK.value: DEEPSEEK_API_BASE_URL,
+    ServiceProviders.DASHSCOPE.value: DASHSCOPE_API_BASE_URL,
 }
 
 
@@ -58,6 +61,10 @@ class UserConfigurationValidator:
             ServiceProviders.ATLASCLOUD.value: self._check_openai_api_key,
             ServiceProviders.HOPPER.value: self._check_openai_api_key,
             ServiceProviders.DEEPSEEK.value: self._check_openai_api_key,
+            # DashScope (Aliyun Bailian) exposes an OpenAI-compatible surface on
+            # compatible-mode/v1, so /models is a valid credential probe. Without
+            # this entry every DashScope connection failed validation outright.
+            ServiceProviders.DASHSCOPE.value: self._check_openai_api_key,
             ServiceProviders.DEEPGRAM.value: self._check_deepgram_api_key,
             ServiceProviders.GROQ.value: self._check_groq_api_key,
             ServiceProviders.OPENROUTER.value: self._check_openrouter_api_key,
@@ -178,9 +185,12 @@ class UserConfigurationValidator:
                 return [{"model": service_name, "message": "API key is missing"}]
             return []  # Optional service not configured is OK
 
-        provider = service_config.provider
+        # Service configs keep the provider as a str-Enum member; normalise it
+        # here so lookups, comparisons and error messages use "dashscope" rather
+        # than "ServiceProviders.DASHSCOPE".
+        provider = getattr(service_config.provider, "value", service_config.provider)
 
-        for url_field in ("base_url", "endpoint"):
+        for url_field in ("base_url", "endpoint", "ws_url"):
             url = getattr(service_config, url_field, None)
             if url:
                 try:
@@ -299,6 +309,7 @@ class UserConfigurationValidator:
             ServiceProviders.ATLASCLOUD.value,
             ServiceProviders.HOPPER.value,
             ServiceProviders.DEEPSEEK.value,
+            ServiceProviders.DASHSCOPE.value,
             ServiceProviders.OPENAI_REALTIME.value,
             ServiceProviders.MINIMAX.value,
         ):

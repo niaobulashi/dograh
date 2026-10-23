@@ -230,6 +230,14 @@ services:
       DEEPSEEK_BASE_URL: "${DEEPSEEK_BASE_URL:-https://api.deepseek.com}"
       DEEPSEEK_MODEL: "${DEEPSEEK_MODEL:-deepseek-chat}"
 
+      # DashScope (Aliyun Bailian) realtime speech endpoint for Qwen-Audio ASR/TTS.
+      # Alibaba serves it from per-workspace subdomains that embed an
+      # install-specific workspace id, e.g.
+      #   wss://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api-ws/v1/inference
+      # Leave unset to fall back to the shared host (needs no workspace id). A
+      # model connection's own ws_url field overrides this per connection.
+      DASHSCOPE_WS_URL: "${DASHSCOPE_WS_URL:-}"
+
       # Trust X-Forwarded-* headers from any peer so uvicorn honors nginx's
       # `X-Forwarded-Proto: https`. nginx runs as its own container and reaches
       # uvicorn from a Docker-network IP (not loopback), but uvicorn trusts only
